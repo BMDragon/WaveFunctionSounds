@@ -49,9 +49,20 @@ eng = np.multiply(vn, vn) * 2 / (mass * length * length)
 if not harmonics:
     eng = eng[:1]
 k = np.sqrt(2 * mass * eng)
-x = np.linspace(0, length, int(sampleRate/freq))[:-1]
+x = np.linspace(-length/2, length/2, int(sampleRate/freq))
 alpha = np.sqrt(2*mass * (potentialDiff - eng))
 
-    
+# x is position, n is energy level where ground is n=0
+def region1(x, n):
+    return (-1)**n * np.exp(alpha[n] * x)
+
+def region2(x, n):
+    scaling = math.exp(-alpha[n] * length/2) / (((n+1)%2) * math.cos(k[n] * length/2) + (n%2) * math.sin(k[n] * length/2))
+    return scaling * (((n+1)%2) * np.cos(k[n]*x) + (n%2) * np.sin(k[n]*x))
+
+def region3(x, n):
+    return np.exp(-alpha[n] * x)
+
+
 
 # write('./audio/finiteSqWell.wav', len(x)*freq, scale(np.tile(wavefunction, freq*nSeconds)))
