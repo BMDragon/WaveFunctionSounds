@@ -2,6 +2,7 @@ import numpy as np
 import math
 from scipy.io.wavfile import write
 from scipy.optimize import root
+import matplotlib.pyplot as plt
 
 def scale(waveform):
     return np.int16(waveform / np.max(np.abs(waveform)) * 32767)
@@ -14,7 +15,7 @@ nSeconds = 5
 sampleRate = 44000
 harmonics = True
 
-potentialDiff = 5
+potentialDiff = 500
 length = 1
 mass = 1
 
@@ -49,7 +50,6 @@ eng = np.multiply(vn, vn) * 2 / (mass * length * length)
 if not harmonics:
     eng = eng[:1]
 k = np.sqrt(2 * mass * eng)
-x = np.linspace(-length/2, length/2, int(sampleRate/freq))
 alpha = np.sqrt(2*mass * (potentialDiff - eng))
 
 # x is position, n is energy level where ground is n=0
@@ -63,6 +63,28 @@ def region2(x, n):
 def region3(x, n):
     return np.exp(-alpha[n] * x)
 
+def makeTail(xlim, unitsize, stepsize):
+    currLength = xlim - length/2
+    needToAdd = unitsize - (currLength/stepsize)%unitsize
+    return np.arange(length/2, xlim + needToAdd*stepsize, stepsize)
 
+reg2 = np.linspace(-length/2, length/2, int(sampleRate/freq))
+stepsize = reg2[1]-reg2[0]
+superposition = np.zeros(len(reg2))
+for z in range(len(eng)):
+    wavefunction = np.array([])
+    xlim = length/2 - math.log(0.01)/alpha[z]
+    reg3 = makeTail(xlim, len(reg2), stepsize)
+    reg1 = np.flip(-reg3)
 
-# write('./audio/finiteSqWell.wav', len(x)*freq, scale(np.tile(wavefunction, freq*nSeconds)))
+    wavefunction = np.append(wavefunction, region1(reg1, z)[1:])
+    wavefunction = np.append(wavefunction, region2(reg2, z))
+    wavefunction = np.append(wavefunction, region3(reg3, z)[:-1])
+    wavefunction = normalize(wavefunction)
+
+    for m in range(int(len(wavefunction)/len(superposition))):
+        superposition = np.add(superposition, wavefunction[m*len(superposition):(m+1)*len(superposition)])
+    plt.plot(superposition)
+    plt.show()
+
+write('./audio/finiteSqWell.wav', len(superposition)*freq, scale(np.tile(superposition, freq*nSeconds)))
