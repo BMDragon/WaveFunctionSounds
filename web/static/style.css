@@ -52,11 +52,13 @@ h2 .sub { text-transform: none; letter-spacing: 0; font-weight: 400; }
 .controls label.inline { display: flex; gap: 6px; align-items: center; }
 input[type=range] { width: 100%; accent-color: var(--accent); }
 select { width: 100%; padding: 6px; border-radius: 6px; border: 1px solid var(--border); background: var(--panel); color: var(--text); }
-.segmented { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.segmented { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
 .segmented button {
-  flex: 1; padding: 7px 4px; border: 0; background: transparent; color: var(--text); cursor: pointer; font: inherit; font-size: 12px;
+  padding: 7px 4px; border: 1px solid var(--border); border-radius: 6px; background: transparent; color: var(--text);
+  cursor: pointer; font: inherit; font-size: 12px;
 }
-.segmented button + button { border-left: 1px solid var(--border); }
+.segmented button.active { border-color: var(--accent); }
+#potentialHint { margin: 8px 0 0; }
 .segmented button.active { background: var(--accent); color: #fff; }
 button.primary { padding: 7px 16px; border: 0; border-radius: 6px; background: var(--accent); color: #fff; cursor: pointer; font: inherit; }
 button.primary:disabled { opacity: 0.5; cursor: default; }
@@ -69,6 +71,7 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 @media (max-width: 1100px) { .grid { grid-template-columns: 1fr; } }
 canvas { width: 100%; display: block; }
 .specwrap { position: relative; }
+.specwrap canvas { height: 260px; }
 .specwrap #spectrogram { background: #000004; border-radius: 6px; }
 .specwrap #specAxis { position: absolute; inset: 0; pointer-events: none; }
 .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }

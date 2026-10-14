@@ -25,8 +25,25 @@ function params() {
     weighting: $('weighting').value,
     temperatureMode: document.querySelector('input[name=tmode]:checked').value,
     temperature: Math.pow(10, +$('temperature').value),
+    barrierFraction: +$('barrierFraction').value,
+    blochPhase: +$('blochPhase').value,
   };
 }
+
+// slider labels and a one-line description for each potential; no `depth` hides that slider
+const POTENTIALS = {
+  infinite: { length: 'Well width', hint: 'A particle in a box with infinitely high walls.' },
+  finite: { length: 'Well width', depth: 'Well depth', hint: 'A box with walls of finite height: the states leak into the walls.' },
+  oscillator: { length: 'Ground-state width', hint: 'V = ½mω²x²: evenly spaced levels.' },
+  doublewell: { length: 'Well separation', depth: 'Barrier height',
+                hint: 'Two wells side by side: below the barrier the levels pair up, split only by tunnelling.' },
+  morse: { length: 'Range', depth: 'Dissociation energy',
+           hint: 'A molecular bond: lopsided, with levels crowding together towards dissociation.' },
+  lattice: { length: 'Lattice spacing', depth: 'Barrier height', lattice: true,
+             hint: 'A Kronig–Penney crystal. Bloch phases other than 0 and π make the partials inharmonic.' },
+  linear: { length: 'Width', depth: 'Height at the edges',
+            hint: 'V = V₀|x| / (width/2): Airy-function states whose levels crowd together.' },
+};
 
 function fmt(v, digits = 3) {
   if (v === 0) return '0';
@@ -46,8 +63,14 @@ function refreshOutputs() {
   $('releaseOut').textContent = `${(+$('release').value).toFixed(2)} s`;
   $('volumeOut').textContent = `${Math.round($('volume').value * 100)}%`;
   $('secondsOut').textContent = `${$('seconds').value} s`;
-  $('lengthLabel').textContent = state.potential === 'oscillator' ? 'Ground-state width' : 'Well width';
-  $('depthRow').hidden = state.potential !== 'finite';
+  const kind = POTENTIALS[state.potential];
+  $('lengthLabel').textContent = kind.length;
+  $('depthLabel').textContent = kind.depth || '';
+  $('depthRow').hidden = !kind.depth;
+  $('barrierRow').hidden = $('blochRow').hidden = !kind.lattice;
+  $('potentialHint').textContent = kind.hint;
+  $('barrierFractionOut').textContent = `${Math.round(p.barrierFraction * 100)}% of the spacing`;
+  $('blochPhaseOut').textContent = `${p.blochPhase.toFixed(2)} π`;
   $('temperatureRows').hidden = p.weighting !== 'boltzmann';
   $('temperatureRow').hidden = p.temperatureMode !== 'fixed';
 }
@@ -114,22 +137,76 @@ function periodicWave(note) {
   return ctx.createPeriodicWave(real, imag, { disableNormalization: true });
 }
 
+const isHarmonic = note => note.m.every(r => r >= 1 && Math.abs(r - Math.round(r)) < 1e-9);
+
+function buildVoice(note, freq, start) {
+  // An audio node playing the note, and the sources to stop when it is released
+  if (isHarmonic(note)) {
+    const osc = ctx.createOscillator();
+    osc.setPeriodicWave(periodicWave(note));
+    osc.frequency.value = freq;
+    osc.start(start);
+    return { output: osc, sources: [osc] };
+  }
+  // Inharmonic partials at (n + offset) freq with integer n (the lattice's Bloch phase):
+  // the waveform is Re(e^{2πi offset freq t} V(t)) with V(t) = sum c_n e^{2πi n freq t}
+  // periodic, i.e. cos(2π offset freq t) Re V - sin(2π offset freq t) Im V. Re V and Im V
+  // play as periodic waves, ring-modulated by a cosine and a sine at offset * freq.
+  const offset = note.m[0] - Math.floor(note.m[0]);
+  const ns = note.m.map(r => Math.round(r - offset));
+  const size = Math.max(1, ...ns.map(Math.abs)) + 1;
+  const reCos = new Float32Array(size), reSin = new Float32Array(size);
+  const imCos = new Float32Array(size), imSin = new Float32Array(size);
+  let total = 0, dcRe = 0, dcIm = 0;
+  note.m.forEach((r, i) => { total += Math.hypot(note.re[i], note.im[i]); });
+  ns.forEach((n, i) => {
+    const re = note.re[i] / total, im = note.im[i] / total, k = Math.abs(n), s = Math.sign(n);
+    if (n === 0) { dcRe += re; dcIm += im; return; }
+    // c e^{inθ} = (re cos kθ - s im sin kθ) + i (s re sin kθ + im cos kθ) with k = |n|, s = sign(n)
+    reCos[k] += re; reSin[k] -= s * im;
+    imCos[k] += im; imSin[k] += s * re;
+  });
+  const sum = ctx.createGain();
+  const sources = [];
+  const wave = (cos, sin) => ctx.createPeriodicWave(cos, sin, { disableNormalization: true });
+  const branch = (cos, sin, dc, carrierWave, sign) => {
+    const mixer = ctx.createGain();
+    mixer.gain.value = 0;                   // the carrier drives this gain: a ring modulator
+    const osc = ctx.createOscillator();
+    osc.setPeriodicWave(wave(cos, sin));
+    osc.frequency.value = freq;
+    osc.connect(mixer);
+    const constant = ctx.createConstantSource();
+    constant.offset.value = dc;
+    constant.connect(mixer);
+    const carrier = ctx.createOscillator();
+    carrier.setPeriodicWave(carrierWave);
+    carrier.frequency.value = offset * freq;
+    carrier.connect(mixer.gain);
+    const out = ctx.createGain();
+    out.gain.value = sign;
+    mixer.connect(out).connect(sum);
+    sources.push(osc, constant, carrier);
+  };
+  branch(reCos, reSin, dcRe, wave(new Float32Array([0, 1]), new Float32Array([0, 0])), 1);    // cosine carrier
+  branch(imCos, imSin, dcIm, wave(new Float32Array([0, 0]), new Float32Array([0, 1])), -1);   // sine carrier
+  sources.forEach(source => source.start(start));
+  return { output: sum, sources };
+}
+
 function noteOn(n) {
   const note = state.notes[n];
   if (!note || !note.m.length) return;
   audio();
   if (voices[n]) releaseVoice(n, 0.01);
-  const osc = ctx.createOscillator();
-  osc.setPeriodicWave(periodicWave(note));
-  osc.frequency.value = midiFreq(n);
-  const gain = ctx.createGain();
   const now = ctx.currentTime, attack = +$('attack').value / 1000;
+  const { output, sources } = buildVoice(note, midiFreq(n), now);
+  const gain = ctx.createGain();
   gain.gain.setValueAtTime(0, now);
   gain.gain.linearRampToValueAtTime(0.3, now + attack);
   gain.gain.setTargetAtTime(0, now + attack, +$('decay').value);   // exp(-t / decay)
-  osc.connect(gain).connect(master);
-  osc.start(now);
-  voices[n] = { osc, gain, sustained: false };
+  output.connect(gain).connect(master);
+  voices[n] = { sources, gain, sustained: false };
   keyElement(n)?.classList.add('active');
   if (state.focus !== n) {
     state.focus = n;
@@ -153,7 +230,7 @@ function releaseVoice(n, release = +$('release').value) {
   voice.gain.gain.cancelScheduledValues(now);
   voice.gain.gain.setValueAtTime(voice.gain.gain.value, now);
   voice.gain.gain.setTargetAtTime(0, now, release);
-  voice.osc.stop(now + 10 * release);
+  voice.sources.forEach(source => source.stop(now + 10 * release));
 }
 
 function releaseSustained() {
@@ -279,9 +356,17 @@ function drawWavefunctions() {
   const { x, V, energies, psi } = state.data.plot;
   const amps = state.data.levels.amplitudes;
   const count = energies.length;
-  const gaps = energies.slice(1).map((e, i) => e - energies[i]);
-  const spacing = gaps.length ? Math.min(...gaps) : energies[0];
-  const top = energies[count - 1] + 0.6 * (gaps[gaps.length - 1] ?? spacing);
+  // gaps to the nearest distinct level: tunnelling pairs are nearly degenerate, so the two
+  // states of a pair share a gap instead of squeezing each other flat
+  const tolerance = count > 1 ? 0.02 * (energies[count - 1] - energies[0]) / (count - 1) : 0;
+  const nearest = (e, side) => {
+    const others = energies.filter(o => side * (o - e) > tolerance);
+    return others.length ? Math.abs((side > 0 ? Math.min(...others) : Math.max(...others)) - e) : Infinity;
+  };
+  const below = energies.map(e => nearest(e, -1)), above = energies.map(e => nearest(e, 1));
+  const distinct = below.concat(above).filter(Number.isFinite);
+  const spacing = distinct.length ? Math.min(...distinct) : Math.abs(energies[0]) || 1;
+  const top = energies[count - 1] + 0.6 * (Number.isFinite(below[count - 1]) ? below[count - 1] : spacing);
   const finiteV = V.filter(v => v !== null);
   const bottom = Math.min(0, ...finiteV);
   const yr = [bottom - 0.06 * (top - bottom), top];
@@ -313,8 +398,9 @@ function drawWavefunctions() {
   // levels and wavefunctions, each scaled to fit between its neighbours, opacity
   // following each level's weight
   const amax = Math.max(...amps.slice(0, count));
+  const labels = [];      // one label per distinct level, e.g. "n=0,1" for a tunnelling pair
   for (let k = 0; k < count; k++) {
-    const room = Math.min(gaps[k] ?? gaps[k - 1] ?? spacing, gaps[k - 1] ?? Infinity);
+    const room = Number.isFinite(Math.min(below[k], above[k])) ? Math.min(below[k], above[k]) : spacing;
     const scale = 0.42 * room / Math.max(...psi[k].map(Math.abs));
     const color = LEVEL_COLORS[k % LEVEL_COLORS.length];
     g.globalAlpha = 0.3 + 0.7 * (amps[k] / amax);
@@ -330,11 +416,16 @@ function drawWavefunctions() {
       if (i) g.lineTo(px, py); else g.moveTo(px, py);
     });
     g.stroke();
-    g.fillStyle = color;
-    g.textAlign = 'left';
-    g.textBaseline = 'bottom';
-    g.font = '11px system-ui, sans-serif';
-    g.fillText(`n=${levelIndex(k)}`, f.L + 4, Y(energies[k]) - 2);
+    if (k && energies[k] - energies[k - 1] <= tolerance) labels[labels.length - 1].text += `,${levelIndex(k)}`;
+    else labels.push({ text: `n=${levelIndex(k)}`, energy: energies[k], color, alpha: g.globalAlpha });
+  }
+  g.textAlign = 'left';
+  g.textBaseline = 'bottom';
+  g.font = '11px system-ui, sans-serif';
+  for (const label of labels) {
+    g.globalAlpha = label.alpha;
+    g.fillStyle = label.color;
+    g.fillText(label.text, f.L + 4, Y(label.energy) - 2);
   }
   g.globalAlpha = 1;
   g.restore();
@@ -367,17 +458,21 @@ function waveform(note, phases) {
 
 function drawPeriod() {
   const note = state.data.focusNote;
-  const phases = range(0, 801).map(i => i / 400);
+  const harmonic = isHarmonic(note);
+  const cycles = harmonic ? 2 : 4;
+  const phases = range(0, 400 * cycles + 1).map(i => i / 400);
   const y = waveform(note, phases);
   const peak = Math.max(...y.map(Math.abs)) || 1;
-  const f = frame($('period'), [0, 2], [-1.1, 1.1], { xlabel: 'periods', ylabel: 'amplitude', yticks: [-1, 0, 1] });
+  const f = frame($('period'), [0, cycles], [-1.1, 1.1],
+                  { xlabel: harmonic ? 'periods' : 'cycles of the key', ylabel: 'amplitude', yticks: [-1, 0, 1] });
   const { g, X, Y, css } = f;
   g.strokeStyle = css.accent;
   g.lineWidth = 2;
   g.beginPath();
   phases.forEach((ph, i) => { if (i) g.lineTo(X(ph), Y(y[i] / peak)); else g.moveTo(X(ph), Y(y[i] / peak)); });
   g.stroke();
-  $('periodSub').textContent = `${noteName(state.focus)}, ${fmt(midiFreq(state.focus))} Hz`;
+  $('periodSub').textContent = `${noteName(state.focus)}, ${fmt(midiFreq(state.focus))} Hz` +
+    (harmonic ? '' : ' — inharmonic, so it never repeats');
 }
 
 function drawSpectrum() {
@@ -386,15 +481,17 @@ function drawSpectrum() {
   const top = Math.max(...mags);
   const db = mags.map(v => 20 * Math.log10(v / top));
   const floor = -60;
-  const shown = note.m.filter((m, i) => db[i] > floor);
+  const position = note.m.map(Math.abs);          // partial frequency / key frequency
+  const shown = position.filter((r, i) => db[i] > floor);
   const maxM = Math.min(64, Math.max(8, ...shown));
-  const f = frame($('spectrum'), [0.4, maxM + 0.6], [floor, 3], { xlabel: 'harmonic', ylabel: 'dB', yticks: [-60, -40, -20, 0] });
+  const f = frame($('spectrum'), [0, maxM + 0.6], [floor, 3],
+                  { xlabel: isHarmonic(note) ? 'harmonic' : 'frequency / key frequency', ylabel: 'dB', yticks: [-60, -40, -20, 0] });
   const { g, X, Y, css } = f;
-  const bw = Math.max(2, (X(1) - X(0)) * 0.7);
+  const bw = Math.max(2, (X(1) - X(0)) * 0.35);
   g.fillStyle = css.accent;
-  note.m.forEach((m, i) => {
-    if (m > maxM || db[i] <= floor) return;
-    g.fillRect(X(m) - bw / 2, Y(db[i]), bw, Y(floor) - Y(db[i]));
+  position.forEach((r, i) => {
+    if (r > maxM || db[i] <= floor) return;
+    g.fillRect(X(r) - bw / 2, Y(db[i]), bw, Y(floor) - Y(db[i]));
   });
 }
 
@@ -404,6 +501,10 @@ function drawInfo() {
   if (state.potential === 'oscillator') rows.push(`Level spacing ħω: <b>${fmt(info.hbarOmega_meV)} meV</b>`);
   rows.push(`Ground state: <b>${fmt(info.groundEnergy_meV)} meV</b> (${fmt(info.groundEnergy_K)} K)`);
   if (info.boundStates !== undefined) rows.push(`Bound states: <b>${info.boundStates}</b>, depth ${fmt(info.depth_K)} K`);
+  if (info.statesBelowBarrier !== undefined) rows.push(`States below the barrier: <b>${info.statesBelowBarrier}</b>` +
+    (info.lowestSplitting_meV !== undefined ? `; lowest pair split by ${fmt(info.lowestSplitting_meV)} meV` : ''));
+  if (info.bands !== undefined) rows.push(`Bands: <b>${info.bands}</b> (${info.bandsBelowBarrier} below the barrier), ` +
+    `Bloch phase ${fmt(info.blochPhase)} π`);
   rows.push(`Levels above 1% at ${noteName(state.focus)}: <b>${info.levelsAudible}</b>`);
   $('info').innerHTML = rows.map(r => `<div>${r}</div>`).join('') +
     warnings.map(w => `<div class="warning">${w}</div>`).join('');
@@ -525,7 +626,7 @@ document.querySelectorAll('#potential button').forEach(button => {
     scheduleUpdate(0);
   });
 });
-['mass', 'length', 'depth', 'temperature', 'weighting'].forEach(id => {
+['mass', 'length', 'depth', 'temperature', 'weighting', 'barrierFraction', 'blochPhase'].forEach(id => {
   $(id).addEventListener('input', () => { refreshOutputs(); scheduleUpdate(); });
 });
 document.querySelectorAll('input[name=tmode]').forEach(r => r.addEventListener('change', () => { refreshOutputs(); scheduleUpdate(0); }));

@@ -17,6 +17,10 @@ sys.path.insert(0, os.path.join(repoRoot, 'backend'))
 import infiniteSquareWell
 import finiteSquareWell
 import harmonicOscillator
+import doubleWell
+import morsePotential
+import latticePotential
+import linearPotential
 import unSospiro
 
 electronMass = 9.1093837e-31
@@ -27,16 +31,28 @@ levelsShown = 30            # levels in the weights chart
 lock = threading.Lock()     # the models cache coefficients lazily, so compute one request at a time
 
 @functools.lru_cache(maxsize=16)
-def model(potential, mass, length, depth):
-    # mass in electron masses, length in nm, depth in eV
+def model(potential, mass, length, depth, barrierFraction=0.2, blochPhase=0.8):
+    # mass in electron masses, length in nm, depth (or barrier/height) in eV, Bloch phase in units of pi
+    m, L, V = mass * electronMass, length * 1e-9, depth * eV
     if potential == 'infinite':
-        return infiniteSquareWell.InfiniteSquareWell(mass * electronMass, length * 1e-9)
+        return infiniteSquareWell.InfiniteSquareWell(m, L)
     if potential == 'finite':
-        return finiteSquareWell.FiniteSquareWell(mass * electronMass, length * 1e-9, depth * eV)
-    return harmonicOscillator.HarmonicOscillator(mass * electronMass, length * 1e-9)
+        return finiteSquareWell.FiniteSquareWell(m, L, V)
+    if potential == 'doublewell':
+        return doubleWell.DoubleWell(m, L, V)
+    if potential == 'morse':
+        return morsePotential.MorsePotential(m, L, V)
+    if potential == 'lattice':
+        return latticePotential.LatticePotential(m, L, V, barrierFraction, blochPhase)
+    if potential == 'linear':
+        return linearPotential.LinearPotential(m, L, V)
+    return harmonicOscillator.HarmonicOscillator(m, L)
 
 def requestModel(req):
-    return model(req['potential'], float(req['mass']), float(req['length']), float(req.get('depth', 1.6)))
+    lattice = req['potential'] == 'lattice'
+    return model(req['potential'], float(req['mass']), float(req['length']), float(req.get('depth', 1.6)),
+                 float(req.get('barrierFraction', 0.2)) if lattice else 0.2,
+                 float(req.get('blochPhase', 0.8)) if lattice else 0.8)
 
 def temperatureFor(req, freq):
     return float(req['temperature']) if req.get('temperatureMode') == 'fixed' else freq
@@ -55,7 +71,7 @@ def describe(req):
 
     plot = m.plotData(int(req.get('plotStates', 8)))
     count = levelsShown if isinstance(m, (infiniteSquareWell.InfiniteSquareWell, harmonicOscillator.HarmonicOscillator)) \
-        else min(levelsShown, len(m.vn))
+        else min(levelsShown, len(m.vn) if isinstance(m, finiteSquareWell.FiniteSquareWell) else len(m.eng))
     amps = levelAmplitudes(m, focusT, weighting, count)
 
     def note(f):
@@ -76,6 +92,24 @@ def describe(req):
         last = m.amplitudes(focusT, weighting)[-1]
         if weighting == 'boltzmann' and last > 1e-4:
             warnings.append(f'Only the lowest {harmonicOscillator.numStates} levels are included; '
+                            f'the top one still has amplitude {last:.1e}, so the hottest notes are truncated.')
+    if isinstance(m, doubleWell.DoubleWell):
+        info['statesBelowBarrier'] = m.statesBelowBarrier()
+        pairs = [(m.eng[2*k + 1] - m.eng[2*k]) * 1e3 for k in range(m.statesBelowBarrier() // 2)]
+        if pairs:
+            info['lowestSplitting_meV'] = pairs[0]
+    if isinstance(m, morsePotential.MorsePotential):
+        info['boundStates'] = len(m.eng)
+        info['depth_K'] = m.D * eV / kB
+    if isinstance(m, latticePotential.LatticePotential):
+        info['bands'] = len(m.eng)
+        info['bandsBelowBarrier'] = int((m.eng < m.barrier / eV).sum())
+        info['blochPhase'] = m.blochPhase
+    truncatable = (doubleWell.DoubleWell, linearPotential.LinearPotential, latticePotential.LatticePotential)
+    if isinstance(m, truncatable) or (isinstance(m, morsePotential.MorsePotential) and len(m.eng) == m.maxStates):
+        last = m.amplitudes(focusT, weighting)[-1]
+        if weighting == 'boltzmann' and last > 1e-4:
+            warnings.append(f'Only the lowest {len(m.eng)} levels are included; '
                             f'the top one still has amplitude {last:.1e}, so the hottest notes are truncated.')
 
     return {'plot': {k: (v.tolist() if isinstance(v, np.ndarray) else v) for k, v in plot.items()

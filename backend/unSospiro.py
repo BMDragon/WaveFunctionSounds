@@ -6,6 +6,10 @@ from scipy.io.wavfile import write
 import infiniteSquareWell
 import finiteSquareWell
 import harmonicOscillator
+import doubleWell
+import morsePotential
+import latticePotential
+import linearPotential
 
 # Plays the opening of Liszt's Un sospiro with every note's timbre built from a potential's
 # eigenstates at that note's pitch (temperature in kelvin = pitch in Hz, so higher notes
@@ -67,12 +71,26 @@ def render(notes, harmonicContent, nSeconds=nSeconds, attackTime=attackTime, dec
         i0 = int(start * sampleRate)
         t = np.arange(min(len(out) - i0, int(duration * sampleRate))) / sampleRate
 
-        # one period as a fine table, Re(sum c_m exp(2 pi i m phase)), read out at the
-        # note's exact pitch
-        spectrum = np.zeros(tableSize // 2 + 1, complex)
-        spectrum[m] = c
-        table = np.fft.irfft(spectrum, tableSize) * tableSize / 2
-        wave = np.interp((freq * t) % 1 * tableSize, np.arange(tableSize + 1), np.append(table, table[0]))
+        if np.allclose(m, np.round(m)):
+            # one period as a fine table, Re(sum c_m exp(2 pi i m phase)), read out at the
+            # note's exact pitch
+            spectrum = np.zeros(tableSize // 2 + 1, complex)
+            spectrum[m] = c
+            table = np.fft.irfft(spectrum, tableSize) * tableSize / 2
+            wave = np.interp((freq * t) % 1 * tableSize, np.arange(tableSize + 1), np.append(table, table[0]))
+        else:
+            # inharmonic partials at (n + offset) freq with integer n and a common offset (the
+            # lattice's Bloch phase): one period of the complex sum over n as a table, turned
+            # by exp(2 pi i offset freq t)
+            offset = m[0] - math.floor(m[0])
+            n = np.round(m - offset).astype(int)
+            spectrum = np.zeros(tableSize, complex)
+            np.add.at(spectrum, n % tableSize, c)
+            table = np.fft.ifft(spectrum) * tableSize
+            table = np.append(table, table[0])
+            phase, grid = (freq * t) % 1 * tableSize, np.arange(tableSize + 1)
+            period = np.interp(phase, grid, table.real) + 1j * np.interp(phase, grid, table.imag)
+            wave = np.real(np.exp(2j * np.pi * offset * freq * t) * period)
 
         envelope = np.minimum(t / attackTime, 1) * np.exp(-t / decayTime)
         envelope[t > held] *= np.exp(-(t[t > held] - held) / releaseTime)
@@ -86,6 +104,8 @@ if __name__ == '__main__':
     midiPath = sys.argv[1] if len(sys.argv) > 1 else defaultMidiPath
     notes = readNotes(midiPath, nSeconds)
     for name, module in (('infiniteSqWell', infiniteSquareWell), ('finiteSqWell', finiteSquareWell),
-                         ('harmonicOscillator', harmonicOscillator)):
+                         ('harmonicOscillator', harmonicOscillator), ('doubleWell', doubleWell),
+                         ('morsePotential', morsePotential), ('latticePotential', latticePotential),
+                         ('linearPotential', linearPotential)):
         audio = render(notes, module.harmonicContent)
         write(f'./audio/unSospiro_{name}.wav', sampleRate, infiniteSquareWell.scale(audio))
