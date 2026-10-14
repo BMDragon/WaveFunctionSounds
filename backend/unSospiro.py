@@ -1,4 +1,5 @@
 import sys
+import math
 import numpy as np
 import mido
 from scipy.io.wavfile import write
@@ -12,11 +13,12 @@ import finiteSquareWell
 midiPath = sys.argv[1] if len(sys.argv) > 1 else './midi/unSospiro.mid'
 
 sampleRate = 44100
-nSeconds = 5
+nSeconds = 60
 attackTime = 0.005      # s, ramp at the start of each note so it doesn't click
 decayTime = 1.5         # s, exponential decay of a held note, like a struck string
 releaseTime = 0.1       # s, fade once the key and sustain pedal are both up
-fadeOutTime = 0.3       # s, fade at the end of the excerpt
+fadeOutTime = 1.0       # s, fade at the end of the excerpt
+silence = 1e-5          # envelope level below which a note is no longer computed
 
 def readNotes(path, nSeconds):
     # (start, end, midi note, velocity) for the notes beginning within nSeconds of the
@@ -58,17 +60,19 @@ def render(notes, harmonicContent):
         keep = np.abs(c) > 1e-4 * np.abs(c).max()      # skip inaudible harmonics
         m, c = m[keep], c[keep]
 
+        # stop once the decay or the release has taken the note below `silence`
+        held = end - start
+        duration = -math.log(silence) * min(decayTime, releaseTime + held / -math.log(silence))
         i0 = int(start * sampleRate)
-        t = np.arange(len(out) - i0) / sampleRate
+        t = np.arange(min(len(out) - i0, int(duration * sampleRate))) / sampleRate
         wave = np.zeros(len(t))
         for mi, ci in zip(m, c):
             phase = 2 * np.pi * mi * freq * t
             wave += ci.real * np.cos(phase) - ci.imag * np.sin(phase)
 
         envelope = np.minimum(t / attackTime, 1) * np.exp(-t / decayTime)
-        held = end - start
         envelope[t > held] *= np.exp(-(t[t > held] - held) / releaseTime)
-        out[i0:] += velocity / 127 * envelope * wave / np.abs(c).sum()
+        out[i0:i0 + len(t)] += velocity / 127 * envelope * wave / np.abs(c).sum()
 
     fade = int(fadeOutTime * sampleRate)
     out[-fade:] *= np.linspace(1, 0, fade)
