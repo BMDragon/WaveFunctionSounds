@@ -23,10 +23,14 @@ u0 = math.sqrt(mass * length * length * potentialDiff / 2)
 numBound = math.ceil(2 * u0 / math.pi)
 solutions = set({})
 
+# root() passes v as a 1-element array; .item() makes it a float so math.sqrt
+# still raises ValueError past u0, which the scan loop below relies on
 def symmetricTranscendental(v):
+    v = np.asarray(v).item()
     return math.sqrt(u0*u0 - v*v) - v*math.tan(v)
 
 def antiSymTranscendental(v):
+    v = np.asarray(v).item()
     return math.sqrt(u0*u0 - v*v) + v*math.tan(v)**-1
 
 step = u0/(20*numBound)
