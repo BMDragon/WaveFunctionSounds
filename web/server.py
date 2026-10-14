@@ -91,7 +91,10 @@ def renderPiece(req):
     m = requestModel(req)
     weighting = req.get('weighting', 'boltzmann')
     seconds = min(max(float(req.get('seconds', 15)), 1), 120)
-    notes = unSospiro.readNotes(path, seconds)
+    try:
+        notes = unSospiro.readNotes(path, seconds)
+    except ImportError:
+        raise FileNotFoundError('rendering needs the mido package: pip install mido')
     audio = unSospiro.render(
         notes, lambda f, sr: m.harmonicContent(f, sr, temperatureFor(req, f), weighting),
         nSeconds=seconds, attackTime=float(req.get('attack', 0.005)),

@@ -1,7 +1,6 @@
 import sys
 import math
 import numpy as np
-import mido
 from scipy.io.wavfile import write
 
 import infiniteSquareWell
@@ -26,6 +25,7 @@ def readNotes(path, nSeconds):
     # (start, end, midi note, velocity) for the notes beginning within nSeconds of the
     # first note, with times measured from the first note. A note released while the
     # sustain pedal is down keeps sounding until the pedal comes up.
+    import mido     # only needed here, so the web app runs without it until a render is asked for
     t = 0.0
     pedalDown = False
     held = {}           # note -> [(start, velocity)] of keys still down

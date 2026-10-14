@@ -1,0 +1,4 @@
+numpy
+scipy
+matplotlib    # frontend/visualizeWave.py
+mido          # reading the Un sospiro MIDI file
