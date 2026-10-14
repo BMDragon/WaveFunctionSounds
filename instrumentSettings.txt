@@ -1,0 +1,223 @@
+Wavefunction Sounds: settings that sound most like real instruments
+====================================================================
+
+For the web app (python3 web/server.py). Each instrument was matched to a real recording:
+the strengths of its first 20 harmonics (for the snare drum, its 1/3-octave spectrum) were
+compared with what every app setting produces at the same pitch, and the closest setting
+was refined and snapped to values the sliders can reach. "Match" is the RMS difference in dB
+over those 20 harmonics (anything below -60 dB counts as silent): about 1-3 dB is very close,
+5-7 dB is recognisably similar, above 10 dB is not really the same sound.
+
+Settings with Boltzmann weights use "Fixed temperature" mode, so the harmonic recipe is the same
+on every key (temperature has no effect with Equal or 1 / level weights).
+Envelope values come from the recordings: attack is the 10-90% rise / 0.8, decay is the fitted
+exponential time constant, release is the fitted fall after the note ends.
+
+Summary
+-------
+Instrument  Potential        Mass   Width      Depth  Weights                  Temp.  Attack  Decay  Release    Match
+Piano       Finite well       1 me   2.3 nm   0.282 eV  Boltzmann (thermal)    1,259 K   19 ms  2.4 s   0.15 s   3.9 dB
+Violin      Finite well       1 me  11.8 nm   0.135 eV  Boltzmann (thermal)      302 K  300 ms    6 s   0.21 s   6.2 dB
+Trombone    Finite well       1 me   7.9 nm    3.02 eV  Boltzmann (thermal)    3,311 K  300 ms    6 s   0.14 s   1.4 dB
+Trumpet     Finite well       1 me   2.0 nm    1.51 eV  Boltzmann (thermal)    8,128 K  225 ms    6 s  0.051 s   4.4 dB
+Oboe        Finite well       1 me   1.0 nm    3.55 eV  Equal                        -  300 ms    6 s  0.057 s   7.1 dB
+Flute       Finite well       1 me   2.0 nm   0.389 eV  Equal                        -  300 ms    6 s  0.057 s   5.6 dB
+Snare drum  Oscillator        1 me   2.0 nm          -  1 / level                    -    6 ms  0.1 s    0.1 s  13.1 dB
+Harp        Finite well       1 me   5.0 nm  0.0724 eV  Boltzmann (thermal)      126 K   12 ms 0.55 s   0.55 s   5.4 dB
+Cello       Finite well       1 me   3.1 nm    1.91 eV  Boltzmann (thermal)    3,715 K  300 ms    6 s   0.25 s   4.9 dB
+Bassoon     Finite well       1 me   7.9 nm   0.372 eV  Boltzmann (thermal)      178 K  300 ms    6 s   0.04 s   7.1 dB
+
+Piano
+-----
+  Potential:     Finite well
+  Mass:          1 m_e
+  Width:         2.3 nm
+  Depth:         0.282 eV   (2 bound states)
+  Level weights: Boltzmann (thermal)
+  Temperature:   Fixed, 1,259 K
+  Attack:        19 ms
+  Decay:         2.4 s
+  Release:       0.15 s
+  Play:          anywhere
+  Match:         3.9 dB RMS (close), against Iowa MIS, Piano mf A4, measured 441 Hz
+  Note:          release 0.15 s stands in for the dampers (the recording has no key release)
+  Harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):         0   -8  -24  -22  -31  -37  -38  -50  -60  -60  -60  -60
+  App (dB):          0   -8  -25  -29  -37  -40  -46  -48  -52  -53  -57  -58
+
+Violin
+------
+  Potential:     Finite well
+  Mass:          1 m_e
+  Width:         11.8 nm
+  Depth:         0.135 eV   (8 bound states)
+  Level weights: Boltzmann (thermal)
+  Temperature:   Fixed, 302 K
+  Attack:        300 ms
+  Decay:         6 s
+  Release:       0.21 s
+  Play:          G3 and up
+  Match:         6.2 dB RMS (fair), against Iowa MIS, Violin arco ff A4 (A string), measured 442 Hz
+  Note:          the real note takes 1.41 s to swell in; 300 ms is the slider maximum
+  Note:          sustained in reality; 6 s is the slowest decay the app allows (it has no sustain stage)
+  Harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):         0   -8  -12  -12   -5  -10   -6  -22  -38  -18  -26  -34
+  App (dB):          0   -2   -4   -6   -9  -12  -14  -19  -24  -26  -29  -31
+
+Trombone
+--------
+  Potential:     Finite well
+  Mass:          1 m_e
+  Width:         7.9 nm
+  Depth:         3.02 eV   (23 bound states)
+  Level weights: Boltzmann (thermal)
+  Temperature:   Fixed, 3,311 K
+  Attack:        300 ms
+  Decay:         6 s
+  Release:       0.14 s
+  Play:          C3 to F4
+  Match:         1.4 dB RMS (very close), against Iowa MIS, Tenor Trombone ff A3, measured 221 Hz
+  Note:          the real note takes 0.45 s to swell in; 300 ms is the slider maximum
+  Note:          sustained in reality; 6 s is the slowest decay the app allows (it has no sustain stage)
+  Harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):        -4   -1    0   -1   -1   -4   -6   -6   -8   -9  -10  -11
+  App (dB):          0   -1   -1   -2   -2   -3   -4   -5   -6   -8   -9  -10
+
+Trumpet
+-------
+  Potential:     Finite well
+  Mass:          1 m_e
+  Width:         2.0 nm
+  Depth:         1.51 eV   (5 bound states)
+  Level weights: Boltzmann (thermal)
+  Temperature:   Fixed, 8,128 K
+  Attack:        225 ms
+  Decay:         6 s
+  Release:       0.051 s
+  Play:          F#3 and up
+  Match:         4.4 dB RMS (close), against Iowa MIS, Bb Trumpet ff A4, no vibrato, measured 442 Hz
+  Note:          sustained in reality; 6 s is the slowest decay the app allows (it has no sustain stage)
+  Harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):        -9   -3    0   -4   -8  -13  -19  -22  -29  -31  -34  -37
+  App (dB):          0   -2   -3   -5  -14  -20  -24  -28  -31  -33  -36  -38
+
+Oboe
+----
+  Potential:     Finite well
+  Mass:          1 m_e
+  Width:         1.0 nm
+  Depth:         3.55 eV   (4 bound states)
+  Level weights: Equal
+  Attack:        300 ms
+  Decay:         6 s
+  Release:       0.057 s
+  Play:          Bb3 and up
+  Match:         7.1 dB RMS (loose), against Iowa MIS, Oboe ff A4, measured 440 Hz
+  Note:          the real note takes 0.27 s to swell in; 300 ms is the slider maximum
+  Note:          sustained in reality; 6 s is the slowest decay the app allows (it has no sustain stage)
+  Harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):       -15   -9    0  -12  -31  -22  -22  -21  -27  -22  -34  -32
+  App (dB):         -1  -10    0   -6  -17  -20  -26  -28  -33  -35  -38  -39
+
+Flute
+-----
+  Potential:     Finite well
+  Mass:          1 m_e
+  Width:         2.0 nm
+  Depth:         0.389 eV   (3 bound states)
+  Level weights: Equal
+  Attack:        300 ms
+  Decay:         6 s
+  Release:       0.057 s
+  Play:          C4 and up
+  Match:         5.6 dB RMS (fair), against Iowa MIS, Flute ff A4, no vibrato, measured 444 Hz
+  Note:          the real note takes 0.32 s to swell in; 300 ms is the slider maximum
+  Note:          sustained in reality; 6 s is the slowest decay the app allows (it has no sustain stage)
+  Harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):        -4    0   -4  -19  -32  -16  -37  -52  -37  -41  -51  -47
+  App (dB):         -7    0  -10  -21  -26  -32  -35  -40  -41  -45  -47  -50
+
+Snare drum
+----------
+  Potential:     Oscillator
+  Mass:          1 m_e
+  Width (ground state):2.0 nm
+  Level weights: 1 / level
+  Attack:        6 ms
+  Decay:         0.1 s
+  Release:       0.1 s
+  Play:          C3 (lowest key)
+  Match:         13.1 dB RMS (poor), against VSCO-2 CE, Snare2 hit, snares on
+  Note:          the real hit dies away with a 0.06 s time constant; 0.1 s is the slider minimum
+
+Harp
+----
+  Potential:     Finite well
+  Mass:          1 m_e
+  Width:         5.0 nm
+  Depth:         0.0724 eV   (3 bound states)
+  Level weights: Boltzmann (thermal)
+  Temperature:   Fixed, 126 K
+  Attack:        12 ms
+  Decay:         0.55 s
+  Release:       0.55 s
+  Play:          anywhere
+  Match:         5.4 dB RMS (fair), against VSCO-2 CE, KS Harp A4 mf, measured 437 Hz
+  Note:          release equals the decay so letting go of a key does not cut the ringing string
+  Harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):         0  -21   -6  -32  -35  -38  -36  -57  -60  -60  -60  -60
+  App (dB):          0  -12  -22  -34  -35  -44  -43  -52  -49  -58  -55  -60
+
+Cello
+-----
+  Potential:     Finite well
+  Mass:          1 m_e
+  Width:         3.1 nm
+  Depth:         1.91 eV   (7 bound states)
+  Level weights: Boltzmann (thermal)
+  Temperature:   Fixed, 3,715 K
+  Attack:        300 ms
+  Decay:         6 s
+  Release:       0.25 s
+  Play:          C3 to A4
+  Match:         4.9 dB RMS (fair), against Iowa MIS, Cello arco ff A3 (D string), measured 221 Hz
+  Note:          the real note takes 2.54 s to swell in; 300 ms is the slider maximum
+  Note:          sustained in reality; 6 s is the slowest decay the app allows (it has no sustain stage)
+  Harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):         0   -2   -9  -15   -9  -16  -15  -36  -22  -25  -23  -29
+  App (dB):          0   -2   -4   -7  -10  -13  -16  -23  -25  -29  -31  -34
+
+Bassoon
+-------
+  Potential:     Finite well
+  Mass:          1 m_e
+  Width:         7.9 nm
+  Depth:         0.372 eV   (8 bound states)
+  Level weights: Boltzmann (thermal)
+  Temperature:   Fixed, 178 K
+  Attack:        300 ms
+  Decay:         6 s
+  Release:       0.04 s
+  Play:          C3 to E4
+  Match:         7.1 dB RMS (loose), against Iowa MIS, Bassoon ff A3, measured 222 Hz
+  Note:          the real note takes 0.26 s to swell in; 300 ms is the slider maximum
+  Note:          sustained in reality; 6 s is the slowest decay the app allows (it has no sustain stage)
+  Harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):       -18    0  -21  -19  -27  -17  -26  -44  -32  -49  -44  -41
+  App (dB):          0   -5  -10  -18  -24  -30  -32  -36  -37  -40  -41  -44
+
+Limits of the model
+-------------------
+- Every note is a periodic tone made of exact harmonics, so there is no bow or breath noise,
+  no vibrato, and no piano inharmonicity. The snare drum is mostly noise, which the app cannot
+  produce; its setting is just the closest broadband, fast-decaying tone (13 dB away).
+- Oboe and bassoon have a weak fundamental under strong 2nd-3rd harmonics. The potentials
+  cannot fully do that, which is why those two only match loosely (about 7 dB).
+- The envelope is attack + exponential decay + release with no sustain stage, so sustained
+  instruments use the longest decay (6 s), and slow bowed swells are capped at a 300 ms attack.
+- Several quite different settings can sound about equally close; these are the best found,
+  not the only good ones.
+
+Recordings: University of Iowa Electronic Music Studios, Musical Instrument Samples
+(https://theremin.music.uiowa.edu/MIS.html); harp and snare drum from the VSCO-2 Community
+Edition library (https://github.com/sgossner/VSCO-2-CE).
