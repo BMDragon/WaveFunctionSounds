@@ -26,9 +26,6 @@ theta = E1 / (kB * temperature)
 levels = np.arange(1, (samplesPerPeriod + 1) // 2)
 weights = np.exp(-theta * (levels**2 - 1) / 2)
 
-# One period is the well followed by its sign-flipped copy. psi and -psi are the
-# same state (global phase), and the flip removes the kink odd-n states would
-# otherwise have at the seam, so level n completes n full cycles per period.
 x = np.linspace(0, 2, samplesPerPeriod, False)
 superposition = np.zeros(len(x))
 for n, w in zip(levels, weights):
