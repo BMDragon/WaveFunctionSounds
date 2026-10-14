@@ -42,9 +42,8 @@ for i in np.arange(step, u0, step):
         if antiSymTranscendental(i) >= 0 and antiSymTranscendental(u0) <= 0:
             solutions.add(root(antiSymTranscendental, u0-step/500)['x'][0])
 
-vn = np.array([])
-for j in solutions:
-    vn = np.append(vn, j)
+# sort so index n matches energy level n (parity in region1/region2 depends on it)
+vn = np.sort(np.array(list(solutions)))
 
 eng = np.multiply(vn, vn) * 2 / (mass * length * length)
 if not harmonics:
