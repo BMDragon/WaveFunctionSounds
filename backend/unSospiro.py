@@ -13,7 +13,7 @@ import harmonicOscillator
 defaultMidiPath = './midi/unSospiro.mid'
 
 sampleRate = 44100
-nSeconds = 60
+nSeconds = 65
 attackTime = 0.005      # s, ramp at the start of each note so it doesn't click
 decayTime = 1.5         # s, exponential decay of a held note, like a struck string
 releaseTime = 0.1       # s, fade once the key and sustain pedal are both up
