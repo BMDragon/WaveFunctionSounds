@@ -6,8 +6,9 @@ from scipy.io.wavfile import write
 
 import infiniteSquareWell
 import finiteSquareWell
+import harmonicOscillator
 
-# Plays the opening of Liszt's Un sospiro with every note's timbre built from a well's
+# Plays the opening of Liszt's Un sospiro with every note's timbre built from a potential's
 # eigenstates at that note's pitch (temperature in kelvin = pitch in Hz, so higher notes
 # are brighter). Usage: python backend/unSospiro.py [path/to/midi]
 midiPath = sys.argv[1] if len(sys.argv) > 1 else './midi/unSospiro.mid'
@@ -19,6 +20,7 @@ decayTime = 1.5         # s, exponential decay of a held note, like a struck str
 releaseTime = 0.1       # s, fade once the key and sustain pedal are both up
 fadeOutTime = 1.0       # s, fade at the end of the excerpt
 silence = 1e-5          # envelope level below which a note is no longer computed
+tableSize = 16384       # samples in each note's one-period table
 
 def readNotes(path, nSeconds):
     # (start, end, midi note, velocity) for the notes beginning within nSeconds of the
@@ -57,18 +59,19 @@ def render(notes, harmonicContent):
     for start, end, note, velocity in notes:
         freq = 440 * 2**((note - 69) / 12)
         m, c = harmonicContent(freq, sampleRate)
-        keep = np.abs(c) > 1e-4 * np.abs(c).max()      # skip inaudible harmonics
-        m, c = m[keep], c[keep]
 
         # stop once the decay or the release has taken the note below `silence`
         held = end - start
         duration = -math.log(silence) * min(decayTime, releaseTime + held / -math.log(silence))
         i0 = int(start * sampleRate)
         t = np.arange(min(len(out) - i0, int(duration * sampleRate))) / sampleRate
-        wave = np.zeros(len(t))
-        for mi, ci in zip(m, c):
-            phase = 2 * np.pi * mi * freq * t
-            wave += ci.real * np.cos(phase) - ci.imag * np.sin(phase)
+
+        # one period as a fine table, Re(sum c_m exp(2 pi i m phase)), read out at the
+        # note's exact pitch
+        spectrum = np.zeros(tableSize // 2 + 1, complex)
+        spectrum[m] = c
+        table = np.fft.irfft(spectrum, tableSize) * tableSize / 2
+        wave = np.interp((freq * t) % 1 * tableSize, np.arange(tableSize + 1), np.append(table, table[0]))
 
         envelope = np.minimum(t / attackTime, 1) * np.exp(-t / decayTime)
         envelope[t > held] *= np.exp(-(t[t > held] - held) / releaseTime)
@@ -79,6 +82,7 @@ def render(notes, harmonicContent):
     return out
 
 notes = readNotes(midiPath, nSeconds)
-for name, module in (('infinite', infiniteSquareWell), ('finite', finiteSquareWell)):
+for name, module in (('infiniteSqWell', infiniteSquareWell), ('finiteSqWell', finiteSquareWell),
+                     ('harmonicOscillator', harmonicOscillator)):
     audio = render(notes, module.harmonicContent)
-    write(f'./audio/unSospiro_{name}SqWell.wav', sampleRate, infiniteSquareWell.scale(audio))
+    write(f'./audio/unSospiro_{name}.wav', sampleRate, infiniteSquareWell.scale(audio))
