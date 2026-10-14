@@ -1,7 +1,7 @@
 import numpy as np
 import math
 from scipy.io.wavfile import write
-from scipy.optimize import root
+from scipy.optimize import brentq
 
 def scale(waveform):
     return np.int16(waveform / np.max(np.abs(waveform)) * 32767)
@@ -13,7 +13,6 @@ electronMass = 9.1093837e-31
 
 class FiniteSquareWell:
     coefficientSamples = 8192
-    maxImages = 400         # copies on each side; only barely-bound states in very shallow wells reach it
 
     def __init__(self, mass=electronMass, length=5e-9, potentialDiff=1.6 * eV, harmonics=True):
         self.mass = mass                    # kg
@@ -22,33 +21,20 @@ class FiniteSquareWell:
 
         u0 = length / (2*hbar) * math.sqrt(2 * mass * potentialDiff)
         numBound = math.ceil(2 * u0 / math.pi)
-        solutions = set({})
 
-        # root() passes v as a 1-element array; .item() makes it a float so math.sqrt
-        # still raises ValueError past u0, which the scan loop below relies on
+        # Exactly one state lies in each interval (j pi/2, (j+1) pi/2) below u0: even states
+        # solve sqrt(u0^2 - v^2) = v tan v (j even), odd states sqrt(u0^2 - v^2) = -v cot v
+        # (j odd). Multiplied through by cos v or sin v the equations have no poles, so each
+        # root is bracketed by its interval, even in deep wells where it sits just below a pole.
         def symmetricTranscendental(v):
-            v = np.asarray(v).item()
-            return math.sqrt(u0*u0 - v*v) - v*math.tan(v)
+            return math.sqrt(max(u0*u0 - v*v, 0)) * math.cos(v) - v * math.sin(v)
 
         def antiSymTranscendental(v):
-            v = np.asarray(v).item()
-            return math.sqrt(u0*u0 - v*v) + v*math.tan(v)**-1
+            return math.sqrt(max(u0*u0 - v*v, 0)) * math.sin(v) + v * math.cos(v)
 
-        step = u0/(20*numBound)
-        for i in np.arange(step, u0, step):
-            try:
-                if symmetricTranscendental(i) >= 0 and symmetricTranscendental(i+step) <= 0:
-                    solutions.add(root(symmetricTranscendental, (i+i+step)/2)['x'][0])
-                if antiSymTranscendental(i) >= 0 and antiSymTranscendental(i+step) <= 0:
-                    solutions.add(root(antiSymTranscendental, (i+i+step)/2)['x'][0])
-            except:
-                if symmetricTranscendental(i) >= 0 and symmetricTranscendental(u0) <= 0:
-                    solutions.add(root(symmetricTranscendental, u0-step/500)['x'][0])
-                if antiSymTranscendental(i) >= 0 and antiSymTranscendental(u0) <= 0:
-                    solutions.add(root(antiSymTranscendental, u0-step/500)['x'][0])
-
-        # sort so index n matches energy level n (parity in region1/region2 depends on it)
-        vn = np.sort(np.array(list(solutions)))
+        vn = np.array([brentq(symmetricTranscendental if j % 2 == 0 else antiSymTranscendental,
+                              j * math.pi / 2, min((j + 1) * math.pi / 2, u0), xtol=1e-14)
+                       for j in range(numBound)])
         if not harmonics:
             vn = vn[:1]
 
@@ -104,9 +90,25 @@ class FiniteSquareWell:
     # the next (psi and -psi are the same state). This matches the infinite well in
     # the deep-well limit and makes every seam smooth.
     def wrappedState(self, x, n):
+        # sum over copies j of sign^j psi(x - j). The inside of the well reaches x from at
+        # most a few copies; the tails are exponentials, so their sum over all copies is a
+        # geometric series, exact however slowly a barely bound state decays.
         sign = -1 if n % 2 == 0 else 1
-        images = min(math.ceil(math.log(1e6) / self.alpha[n] + 1/2), self.maxImages)    # tails down to 1e-6
-        return sum(sign**abs(j) * self.wavefunction(x - j, n) for j in range(-images, images + 2))
+        alpha = self.alpha[n]
+        total = np.zeros_like(x)
+        for j in range(math.floor(x.min() - 1/2), math.ceil(x.max() + 1/2) + 1):
+            y = x - j
+            inside = np.abs(y) <= 1/2
+            total[inside] += sign**abs(j) * self.wavefunction(y[inside], n)
+        # right tails come from the copies j with x - j > 1/2, left tails from x - j < -1/2;
+        # each starts at the copy nearest x and falls by a factor sign exp(-alpha) per copy
+        norm = self.wavefunction(np.array([1/2]), n)[0], self.wavefunction(np.array([-1/2]), n)[0]
+        ratio = sign * math.exp(-alpha)
+        nearestRight = np.ceil(x - 1/2) - 1                 # largest j with x - j > 1/2
+        nearestLeft = np.floor(x + 1/2) + 1                 # smallest j with x - j < -1/2
+        total += norm[0] * sign**np.abs(nearestRight) * np.exp(-alpha * (x - nearestRight - 1/2)) / (1 - ratio)
+        total += norm[1] * sign**np.abs(nearestLeft) * np.exp(alpha * (x - nearestLeft + 1/2)) / (1 - ratio)
+        return total
 
     def harmonicContent(self, freq, sampleRate=44100, temperature=None, weighting='boltzmann'):
         # Harmonic numbers m and complex amplitudes c_m of one period, so the waveform is

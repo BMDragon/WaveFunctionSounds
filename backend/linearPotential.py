@@ -21,10 +21,6 @@ class LinearPotential(NumericalPotential):
         reach = energy / self.slope + 12 * tailLength(self.kinetic, self.slope) + 0.5
         return -reach, reach
 
-    def initialEnergy(self):
-        # the k-th zero of Ai is about (3 pi (4k - 1) / 8)^(2/3), in units of (kinetic slope^2)^(1/3)
-        return (self.kinetic * self.slope**2)**(1/3) * (3 * math.pi * self.maxStates / 4)**(2/3) * 1.1
-
 default = LinearPotential()
 harmonicContent = default.harmonicContent
 

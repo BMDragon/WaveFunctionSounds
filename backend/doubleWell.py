@@ -23,11 +23,6 @@ class DoubleWell(NumericalPotential):
         reach = edge + 12 * tailLength(self.kinetic, slope) + 0.5
         return -reach, reach
 
-    def initialEnergy(self):
-        # harmonic estimate around each minimum: hbar omega = 4 sqrt(kinetic V0) / b
-        hbarOmega = 4 * math.sqrt(self.kinetic * self.V0) / self.b
-        return self.V0 + self.maxStates * hbarOmega / 2
-
     def statesBelowBarrier(self):
         return int((self.eng < self.V0).sum())
 

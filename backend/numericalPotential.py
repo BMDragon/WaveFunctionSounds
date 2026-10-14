@@ -2,6 +2,7 @@ import math
 import numpy as np
 from scipy.io.wavfile import write
 from scipy.linalg import eigh_tridiagonal
+from scipy.optimize import brentq
 
 def scale(waveform):
     return np.int16(waveform / np.max(np.abs(waveform)) * 32767)
@@ -25,8 +26,8 @@ class NumericalPotential:
     # is what decides it there). Each state is normalized over its own unit.
     coefficientSamples = 8192
     maxStates = 120
-    maxPoints = 60000
-    pointsPerWavelength = 50
+    maxPoints = 30000
+    pointsPerWavelength = 25    # enough with the 4th-order energy correction below
     boundLimit = math.inf       # energies at or above this are not bound states
     minimum = 0.0
     symmetric = False           # V(-x) = V(x): solve even and odd states separately
@@ -45,10 +46,16 @@ class NumericalPotential:
             xmin, xmax = self.box(energy)
             k = math.sqrt(max(energy - self.minimum, 1e-12) / self.kinetic)
             points = int((xmax - xmin) / (2 * math.pi / k / self.pointsPerWavelength))
-            points = min(max(points, 4000), self.maxPoints)
+            points = min(max(points, 2000), self.maxPoints)
             x, V, E, psi, parity = (self.solveSymmetric if self.symmetric else self.solveGrid)(xmin, xmax, points)
             bound = E < self.boundLimit
             E, psi, parity = E[bound], psi[:, bound], parity[bound]
+            # a bound state too weakly bound for its tail to fit in the box (Morse states a
+            # few microvolts below dissociation) can't be resolved: leave it out
+            edge = np.abs(psi[[0, -1], :]).max(axis=0) / np.abs(psi).max(axis=0)
+            resolved = np.ones(len(E), bool) if not math.isfinite(self.boundLimit) else edge < 1e-4
+            self.unresolved = int((~resolved).sum())
+            E, psi, parity = E[resolved], psi[:, resolved], parity[resolved]
             if len(E) == 0:
                 raise ValueError('this potential has no bound states')
             if math.isfinite(self.boundLimit) or E[-1] <= energy:
@@ -57,6 +64,18 @@ class NumericalPotential:
         self.x, self.V, self.eng, self.parity = x, V, E, parity
         self.psi = psi / math.sqrt(x[1] - x[0])     # normalized: integral |psi|^2 dx = 1 (nm)
 
+    # The Hamiltonian uses the 3-point second derivative, a tridiagonal matrix whose lowest
+    # states are cheap to find. Its energies are low by about E (k dx)^2 / 12, which for a
+    # potential with a hundred close levels is a sizeable part of their spacing, so each
+    # energy then gets the first-order correction towards the 4th-order five-point stencil:
+    # <psi| (t/12) d4 |psi>, with d4 the fourth difference and t = kinetic / dx^2. That leaves
+    # an energy error of order (k dx)^4.
+    @staticmethod
+    def correctEnergies(E, psi, t):
+        padded = np.pad(psi, ((2, 2), (0, 0)))
+        fourth = padded[:-4] - 4*padded[1:-3] + 6*padded[2:-2] - 4*padded[3:-1] + padded[4:]
+        return E + t / 12 * np.einsum('ij,ij->j', psi, fourth) / np.einsum('ij,ij->j', psi, psi)
+
     def solveGrid(self, xmin, xmax, points):
         # (x, V, energies, unit-norm eigenvectors, parity) with no parity assumed
         x = np.linspace(xmin, xmax, points)
@@ -64,7 +83,9 @@ class NumericalPotential:
         t = self.kinetic / (x[1] - x[0])**2
         E, psi = eigh_tridiagonal(V + 2*t, -t * np.ones(points - 1), select='i',
                                   select_range=(0, min(self.maxStates, points) - 1))
-        return x, V, E, psi, np.zeros(len(E), int)
+        E = self.correctEnergies(E, psi, t)
+        order = np.argsort(E, kind='stable')
+        return x, V, E[order], psi[:, order], np.zeros(len(E), int)
 
     def solveSymmetric(self, xmin, xmax, points):
         # Even and odd states separately on the half grid x = (j + 1/2) dx: across x = 0 an
@@ -82,17 +103,63 @@ class NumericalPotential:
             diagonal[0] = Vh[0] + centre
             E, psi = eigh_tridiagonal(diagonal, -t * np.ones(half - 1), select='i', select_range=(0, count - 1))
             full = np.vstack([parity * psi[::-1], psi]) / math.sqrt(2)
+            E = self.correctEnergies(E, full, t)
             sectors.append((E, full, np.full(len(E), parity)))
         E = np.concatenate([s[0] for s in sectors])
         psi = np.hstack([s[1] for s in sectors])
         parity = np.concatenate([s[2] for s in sectors])
         order = np.argsort(E, kind='stable')[:count]
+        E, psi, parity = E[order], psi[:, order], parity[order]
+        # a tunnelling pair can be degenerate to machine precision; its symmetric state is
+        # the lower one, so the n-th state keeps n nodes
+        tie = 1e-12 * np.abs(E).max()
+        for i in range(len(E) - 1):
+            if parity[i] == -1 and parity[i + 1] == 1 and E[i + 1] - E[i] <= tie:
+                order = [i + 1, i]
+                E[i:i + 2], psi[:, i:i + 2], parity[i:i + 2] = E[order], psi[:, order], parity[order]
         x = np.concatenate([-xh[::-1], xh])
-        return x, self.potential(x), E[order], psi[:, order], parity[order]
+        return x, self.potential(x), E, psi, parity
+
+    def initialEnergy(self):
+        # The energy of the highest state kept, from WKB state counting:
+        # N(E) = 1/2 + (1/pi) * integral over V < E of sqrt((E - V) / kinetic) dx.
+        # Sizing the box for it usually means a single solve.
+        if math.isfinite(self.boundLimit):
+            return self.boundLimit
+        def count(E):
+            x = np.linspace(*self.box(E), 20001)
+            return 0.5 + np.sum(np.sqrt(np.maximum(E - self.potential(x), 0) / self.kinetic)) * (x[1] - x[0]) / math.pi
+        low, high = self.minimum, self.minimum + 1e-3
+        while count(high) < self.maxStates + 1:
+            low, high = high, self.minimum + 2 * (high - self.minimum)
+        for _ in range(40):
+            middle = (low + high) / 2
+            low, high = (middle, high) if count(middle) < self.maxStates + 1 else (low, middle)
+        return self.minimum + 1.05 * (high - self.minimum)      # a little room for WKB's error
+
+    def decayPoint(self, start, energy, direction, exponent=18):
+        # Walk outward from a turning point until the WKB exponent, the integral of
+        # sqrt((V - E) / kinetic) dx, reaches `exponent`: a bound state at that energy has
+        # fallen by about exp(-exponent) there.
+        x, total = start, 0.0
+        step = 1e-3
+        while total < exponent:
+            kappa = math.sqrt(max(float(self.potential(np.array([x]))[0]) - energy, 0) / self.kinetic)
+            dx = min(0.05 / kappa, 10 * step) if kappa > 0 else step
+            x += direction * dx
+            total += kappa * dx
+            step = dx
+        return x
 
     def turningPoints(self, n):
-        allowed = np.nonzero(self.V <= self.eng[n])[0]
-        return self.x[allowed[0]], self.x[allowed[-1]]
+        # outermost points where V(x) = E_n, solved between the grid points that bracket them
+        E = self.eng[n]
+        allowed = np.nonzero(self.V <= E)[0]
+        first, last = allowed[0], allowed[-1]
+        f = lambda x: float(self.potential(np.array([x]))[0]) - E
+        left = brentq(f, self.x[first - 1], self.x[first]) if first > 0 else self.x[0]
+        right = brentq(f, self.x[last], self.x[last + 1]) if last < len(self.x) - 1 else self.x[-1]
+        return left, right
 
     def energies(self, count):
         return self.eng[:count] * eV            # J

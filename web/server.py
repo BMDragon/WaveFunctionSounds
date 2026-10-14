@@ -172,5 +172,6 @@ class Handler(SimpleHTTPRequestHandler):
 
 if __name__ == '__main__':
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
+    harmonicOscillator.harmonicContent(220)     # every oscillator shares these coefficients: compute them up front
     print(f'Serving on http://localhost:{port}  (Ctrl+C to stop)')
     ThreadingHTTPServer(('127.0.0.1', port), Handler).serve_forever()
