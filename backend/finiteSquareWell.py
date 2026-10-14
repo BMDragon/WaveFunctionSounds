@@ -10,15 +10,11 @@ hbar = 1.054571817e-34  # reduced Planck constant (J s)
 kB = 1.380649e-23       # Boltzmann constant (J/K)
 eV = 1.602176634e-19    # electronvolt (J)
 
-freq = 220
-nSeconds = 5
-sampleRate = 44100
 harmonics = True
 
 mass = 9.1093837e-31        # electron (kg)
 length = 5e-9               # well width (m)
 potentialDiff = 1.6 * eV    # well depth (J)
-temperature = freq          # kelvin, numerically equal to the fundamental in Hz
 
 u0 = length / (2*hbar) * math.sqrt(2 * mass * potentialDiff)
 numBound = math.ceil(2 * u0 / math.pi)
@@ -55,7 +51,8 @@ if not harmonics:
 eng = 2 * (hbar * vn / length)**2 / mass    # E_n = hbar^2 k^2 / 2m with k = 2v/L
 
 # Boltzmann occupation P_n ~ exp(-E_n/kT), played with amplitude c_n = sqrt(P_n)
-weights = np.exp(-(eng - eng[0]) / (2 * kB * temperature))
+def boltzmannWeights(temperature):
+    return np.exp(-(eng - eng[0]) / (2 * kB * temperature))
 
 # From here on x is measured in units of the well width, so the well is [-1/2, 1/2]
 k = 2 * vn                              # wavenumber inside the well
@@ -84,17 +81,44 @@ def wavefunction(x, n):
 # One period is two well widths. Copies of each state are laid in neighbouring
 # units with their tails overlapping, even states flipping sign from one unit to
 # the next (psi and -psi are the same state). This matches the infinite well in
-# the deep-well limit and makes every seam smooth. Each state is built on a finer
-# grid, then only harmonics below the Nyquist frequency are kept so nothing aliases.
-samplesPerPeriod = int(sampleRate/freq)
-oversample = 16
-x = np.linspace(-1/2, 3/2, oversample * samplesPerPeriod, False)
-superposition = np.zeros(samplesPerPeriod)
-for n in range(len(vn)):
+# the deep-well limit and makes every seam smooth.
+def wrappedState(x, n):
     sign = -1 if n % 2 == 0 else 1
     images = math.ceil(math.log(1e6) / alpha[n] + 1/2)    # tails down to 1e-6
-    wrapped = sum(sign**abs(j) * wavefunction(x - j, n) for j in range(-images, images + 2))
-    spectrum = np.fft.rfft(wrapped)[:(samplesPerPeriod + 1) // 2]
-    superposition += weights[n] * np.fft.irfft(spectrum, samplesPerPeriod)
+    return sum(sign**abs(j) * wavefunction(x - j, n) for j in range(-images, images + 2))
 
-write('./audio/finiteSqWell.wav', len(superposition)*freq, scale(np.tile(superposition, freq*nSeconds)))
+# Fourier coefficients of every wrapped state over one period. They don't depend on
+# pitch, so they are computed once, on the first call to harmonicContent().
+coefficientSamples = 8192
+stateCoefficients = None
+
+def harmonicContent(freq, sampleRate=44100):
+    # Harmonic numbers m and complex amplitudes c_m of one period, so the waveform is
+    # Re(sum c_m exp(2 pi i m freq t)). The temperature in kelvin equals freq in Hz, and
+    # only harmonics below the Nyquist frequency are kept so nothing aliases.
+    global stateCoefficients
+    if stateCoefficients is None:
+        x = np.linspace(-1/2, 3/2, coefficientSamples, False)
+        stateCoefficients = np.array([2 * np.fft.rfft(wrappedState(x, n)) / coefficientSamples
+                                      for n in range(len(vn))])
+    m = np.arange(1, min(int(np.ceil(sampleRate / (2*freq))), coefficientSamples // 2))
+    return m, boltzmannWeights(freq) @ stateCoefficients[:, m]
+
+if __name__ == '__main__':
+    freq = 220
+    nSeconds = 5
+    sampleRate = 44100
+    temperature = freq          # kelvin, numerically equal to the fundamental in Hz
+
+    # Each state is built on a finer grid, then only harmonics below the Nyquist
+    # frequency are kept so nothing aliases.
+    weights = boltzmannWeights(temperature)
+    samplesPerPeriod = int(sampleRate/freq)
+    oversample = 16
+    x = np.linspace(-1/2, 3/2, oversample * samplesPerPeriod, False)
+    superposition = np.zeros(samplesPerPeriod)
+    for n in range(len(vn)):
+        spectrum = np.fft.rfft(wrappedState(x, n))[:(samplesPerPeriod + 1) // 2]
+        superposition += weights[n] * np.fft.irfft(spectrum, samplesPerPeriod)
+
+    write('./audio/finiteSqWell.wav', len(superposition)*freq, scale(np.tile(superposition, freq*nSeconds)))
