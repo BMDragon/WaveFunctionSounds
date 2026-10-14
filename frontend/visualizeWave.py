@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.io.wavfile import read
 
 rate, data = read('./audio/finiteSqWell.wav')
-freq = 80
+freq = 220
 numWaveforms = 2
 
 x = np.linspace(0, 1, rate)
