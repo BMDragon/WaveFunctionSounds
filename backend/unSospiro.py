@@ -11,7 +11,7 @@ import harmonicOscillator
 # Plays the opening of Liszt's Un sospiro with every note's timbre built from a potential's
 # eigenstates at that note's pitch (temperature in kelvin = pitch in Hz, so higher notes
 # are brighter). Usage: python backend/unSospiro.py [path/to/midi]
-midiPath = sys.argv[1] if len(sys.argv) > 1 else './midi/unSospiro.mid'
+defaultMidiPath = './midi/unSospiro.mid'
 
 sampleRate = 44100
 nSeconds = 60
@@ -54,7 +54,8 @@ def readNotes(path, nSeconds):
     return sorted((start - first, end - first, note, velocity)
                   for start, end, note, velocity in notes if start - first < nSeconds)
 
-def render(notes, harmonicContent):
+def render(notes, harmonicContent, nSeconds=nSeconds, attackTime=attackTime, decayTime=decayTime,
+           releaseTime=releaseTime):
     out = np.zeros(int(nSeconds * sampleRate))
     for start, end, note, velocity in notes:
         freq = 440 * 2**((note - 69) / 12)
@@ -77,12 +78,14 @@ def render(notes, harmonicContent):
         envelope[t > held] *= np.exp(-(t[t > held] - held) / releaseTime)
         out[i0:i0 + len(t)] += velocity / 127 * envelope * wave / np.abs(c).sum()
 
-    fade = int(fadeOutTime * sampleRate)
+    fade = int(min(fadeOutTime, nSeconds / 4) * sampleRate)
     out[-fade:] *= np.linspace(1, 0, fade)
     return out
 
-notes = readNotes(midiPath, nSeconds)
-for name, module in (('infiniteSqWell', infiniteSquareWell), ('finiteSqWell', finiteSquareWell),
-                     ('harmonicOscillator', harmonicOscillator)):
-    audio = render(notes, module.harmonicContent)
-    write(f'./audio/unSospiro_{name}.wav', sampleRate, infiniteSquareWell.scale(audio))
+if __name__ == '__main__':
+    midiPath = sys.argv[1] if len(sys.argv) > 1 else defaultMidiPath
+    notes = readNotes(midiPath, nSeconds)
+    for name, module in (('infiniteSqWell', infiniteSquareWell), ('finiteSqWell', finiteSquareWell),
+                         ('harmonicOscillator', harmonicOscillator)):
+        audio = render(notes, module.harmonicContent)
+        write(f'./audio/unSospiro_{name}.wav', sampleRate, infiniteSquareWell.scale(audio))
