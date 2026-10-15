@@ -894,27 +894,56 @@ function selectPotential(value) {
   document.querySelectorAll('#potential button').forEach(b => b.classList.toggle('active', b.dataset.value === value));
 }
 
+let ensembles = [];
+const PRESET_ALIASES = { trombone: 'tenor_trombone', snare: 'snare_drum' };     // ids used by older links
+
 async function loadPresets() {
   try {
-    presets = (await (await fetch('presets.json')).json()).presets;
+    const data = await (await fetch('presets.json')).json();
+    presets = data.presets;
+    ensembles = data.ensembles || [];
   } catch (error) {
     presets = [];
   }
+  ensembles.forEach(ensemble => {
+    const tab = document.createElement('button');
+    tab.textContent = ensemble.name;
+    tab.dataset.id = ensemble.id;
+    tab.addEventListener('click', () => showEnsemble(ensemble.id));
+    $('ensembles').appendChild(tab);
+  });
+  showEnsemble(ensembles.length ? ensembles[0].id : null);
+}
+
+function showEnsemble(id) {
+  // the preset buttons of one ensemble (all presets if there are no ensembles), Default first
+  state.ensemble = id;
+  document.querySelectorAll('#ensembles button').forEach(b => b.classList.toggle('active', b.dataset.id === id));
+  const ensemble = ensembles.find(e => e.id === id);
+  const shown = ensemble ? ['default', ...ensemble.members] : presets.map(p => p.id);
   const grid = $('presets');
-  presets.forEach(preset => {
+  grid.innerHTML = '';
+  shown.map(pid => presets.find(p => p.id === pid)).filter(Boolean).forEach(preset => {
     const button = document.createElement('button');
     button.textContent = preset.name;
     button.dataset.id = preset.id;
     button.addEventListener('click', () => applySettings(preset, preset.id));
     grid.appendChild(button);
   });
+  showPreset();
 }
 
 function applySettings(settings, presetId = null) {
   for (const [name, [, , set]] of Object.entries(SETTINGS)) {
     if (settings[name] !== undefined && settings[name] !== null && settings[name] !== '') set(settings[name]);
   }
+  presetId = PRESET_ALIASES[presetId] || presetId;
   state.preset = presets.some(p => p.id === presetId) ? presetId : null;
+  const ensemble = ensembles.find(e => e.id === state.ensemble);
+  if (state.preset && state.preset !== 'default' && ensemble && !ensemble.members.includes(state.preset)) {
+    const home = ensembles.find(e => e.members.includes(state.preset));     // show a tab that has it
+    if (home) showEnsemble(home.id);
+  }
   refreshOutputs();
   showPreset();
   writeUrl();
@@ -937,8 +966,10 @@ function showPreset() {
   });
   $('presetHint').textContent = !preset ? 'Custom sound: pick a preset, or share this one with the link below.'
     : preset.match === undefined ? 'The starting sound: an infinite square well at T = pitch.'
-    : `Matched to a recording of a real ${preset.name.toLowerCase()} (${preset.match} dB away). ` +
-      `Best on ${noteName(preset.keys[0])}` + (preset.keys[1] > preset.keys[0] ? `–${noteName(preset.keys[1])}` : '') + ' (highlighted).';
+    : `Matched to ${preset.notes > 1 ? preset.notes + ' recorded notes' : 'a recording'} of a real ` +
+      `${preset.name.toLowerCase()} (${preset.match} dB away on average). ` +
+      (preset.keys[1] > preset.keys[0] ? `Its range is ${noteName(preset.keys[0])}–${noteName(preset.keys[1])}`
+                                       : `Best on ${noteName(preset.keys[0])}`) + ' (highlighted).';
 }
 
 function writeUrl() {

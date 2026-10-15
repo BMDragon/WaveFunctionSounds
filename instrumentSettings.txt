@@ -1,246 +1,838 @@
 Wavefunction Sounds: settings that sound most like real instruments
 ====================================================================
 
-For the web app (python3 web/server.py). Each instrument was matched to a real recording:
-the strengths of its first 20 harmonics (for the snare drum, its 1/3-octave spectrum) were
-compared with what every app setting produces at the same pitch, across all seven potentials
-and every slider, and the closest settings were refined and snapped to values the sliders can
-reach. "Match" is the RMS difference in dB over those 20 harmonics (anything below -60 dB counts
-as silent): about 1-3 dB is very close, 5-7 dB is recognisably similar, above 10 dB is not
-really the same sound.
+Every instrument of a standard symphony orchestra, jazz big band and wind ensemble that has a
+free recording, matched to the web app (python3 web/server.py) and available there as a preset.
+Each was matched against up to three recorded notes across its range: the strengths of the first
+20 harmonics (for drums and cymbals, the 1/3-octave spectrum) were compared with what every app
+setting produces at the same pitches, across all seven potentials and every slider, and the
+closest settings were refined and snapped to values the sliders can reach. "T = pitch" means
+the temperature follows each note (higher notes brighter), which fits instruments whose
+brightness changes that way across their range. "Match" is the RMS difference in dB averaged over
+the notes: about 1-3 dB is very close, 5-7 dB recognisably similar, above 10 dB not really the
+same sound. Envelopes are medians over the notes (attack = 10-90% rise / 0.8).
 
-Settings with Boltzmann weights use "Fixed temperature" mode, so the harmonic recipe is the same
-on every key (temperature has no effect with Equal or 1 / level weights).
-Envelope values come from the recordings: attack is the 10-90% rise / 0.8, decay is the fitted
-exponential time constant, release is the fitted fall after the note ends; bowed and blown
-instruments sustain at full level. Every instrument here is also a one-click preset in the app.
+Orchestra
+---------
+Instrument      Potential         Mass     Size      Depth  Weights                   Temp.   Attack    Decay Sust.  Release    Match
+Piccolo         Finite well        1 me   3.0 nm  0.0501 eV  1 / level                     -   1.75 s   1.00 s  100%    20 ms   5.3 dB
+Flute           Finite well        1 me   5.0 nm   0.148 eV  Boltzmann (thermal)       347 K   744 ms   1.00 s  100%    20 ms  10.5 dB
+Oboe            Finite well        1 me   5.1 nm   0.708 eV  1 / level                     -    81 ms   1.00 s  100%    30 ms  11.8 dB
+English horn    Finite well        1 me   7.4 nm   0.174 eV  1 / level                     -    44 ms   1.00 s  100%   130 ms   9.3 dB
+B♭ clarinet     Finite well        1 me   2.0 nm    2.57 eV  1 / level                     -   525 ms   1.00 s  100%    30 ms  12.9 dB
+Bass clarinet   Double well        1 me   5.0 nm  0.0977 eV  1 / level                     -   456 ms   1.00 s  100%    40 ms   8.6 dB
+Bassoon         Finite well        1 me   8.0 nm   0.372 eV  1 / level                     -    31 ms   1.00 s  100%    50 ms  12.6 dB
+Contrabassoon   Finite well        1 me   8.0 nm  0.0977 eV  Boltzmann (thermal)     4,786 K   194 ms   1.00 s  100%    60 ms  15.3 dB
+Horn            Finite well        1 me   7.8 nm   0.676 eV  Boltzmann (thermal)       617 K   144 ms   1.00 s  100%    30 ms   9.8 dB
+Trumpet         Double well        1 me  20.0 nm   0.692 eV  Boltzmann (thermal)   T = pitch   206 ms   1.00 s  100%    50 ms   9.2 dB
+Trombone        V-shaped |x|       1 me   3.0 nm   0.692 eV  Boltzmann (thermal)     7,244 K   394 ms   1.00 s  100%   120 ms   4.2 dB
+Bass trombone   Double well        1 me  20.0 nm    5.01 eV  Boltzmann (thermal)   T = pitch   169 ms   1.00 s  100%    30 ms   3.4 dB
+Tuba            Double well        1 me  20.0 nm    5.01 eV  Boltzmann (thermal)     2,692 K   262 ms   1.00 s  100%   100 ms  14.9 dB
+Timpani         Finite well        1 me   7.6 nm    0.24 eV  Boltzmann (thermal)   T = pitch    19 ms   513 ms    0%   510 ms   4.3 dB
+Snare drum      Finite well        1 me  20.0 nm    5.01 eV  Equal                         -     6 ms    52 ms    0%    50 ms   9.5 dB
+Bass drum       Double well        1 me  20.0 nm    5.01 eV  Boltzmann (thermal)     7,244 K    22 ms   463 ms    0%   460 ms  16.7 dB
+Crash cymbals   Oscillator       0.2 me   2.0 nm          -  Equal                         -    62 ms   1.02 s    0%   1.02 s   9.6 dB
+Triangle        Double well        1 me   5.0 nm    5.01 eV  Equal                         -    28 ms   2.24 s    0%   2.00 s  11.7 dB
+Glockenspiel    Morse              1 me   1.0 nm  0.0832 eV  Boltzmann (thermal)         1 K     6 ms   1.49 s    0%   1.49 s   8.6 dB
+Xylophone       Morse              1 me   3.1 nm  0.0977 eV  Boltzmann (thermal)        29 K     6 ms    61 ms    0%    60 ms   2.9 dB
+Chimes          Morse              1 me   1.0 nm    2.63 eV  Boltzmann (thermal)     4,266 K    12 ms   3.61 s    0%   2.00 s  12.2 dB
+Harp            Finite well        1 me   2.1 nm   0.363 eV  Boltzmann (thermal)       490 K    19 ms   568 ms    0%   570 ms   6.6 dB
+Piano           Finite well        1 me   2.0 nm   0.372 eV  Boltzmann (thermal)     1,349 K    19 ms   2.42 s    0%   150 ms  13.1 dB
+Celesta         Morse              1 me   1.0 nm   0.219 eV  Boltzmann (thermal)       100 K    19 ms   1.07 s    0%   150 ms   4.9 dB
+Violin          Finite well        1 me   5.1 nm   0.692 eV  1 / level                     -   1.76 s   1.00 s  100%   210 ms   8.0 dB
+Viola           Finite well        1 me   5.3 nm    1.35 eV  1 / level                     -   1.18 s   1.00 s  100%   250 ms   7.4 dB
+Cello           Finite well        1 me   4.3 nm    1.35 eV  1 / level                     -   3.00 s   1.00 s  100%   400 ms   8.4 dB
+Double bass     Morse              1 me   7.5 nm  0.0912 eV  Boltzmann (thermal)       132 K   831 ms   1.00 s  100%   360 ms   8.5 dB
 
-Summary
--------
-Instrument  Potential        Mass     Size     Depth  Weights                  Temp.  Attack   Decay Sustain  Release    Match
-Piano       Double well       1 me   1.0 nm   1.23 eV  Boltzmann (thermal)    5,754 K   19 ms  2.42 s      0%   150 ms   2.0 dB
-Violin      Finite well       1 me  20.0 nm 0.0501 eV  Boltzmann (thermal)      100 K  1.76 s  1.00 s    100%   210 ms   6.2 dB
-Trombone    Finite well       1 me   7.7 nm   2.34 eV  Boltzmann (thermal)    3,467 K  562 ms  1.00 s    100%   140 ms   1.3 dB
-Trumpet     Double well       1 me  12.5 nm  0.355 eV  Boltzmann (thermal)      457 K  225 ms  1.00 s    100%    50 ms   2.9 dB
-Oboe        Finite well       1 me   5.0 nm  0.178 eV  Equal                        -  338 ms  1.00 s    100%    60 ms   7.2 dB
-Flute       Morse             1 me   2.1 nm   2.57 eV  Boltzmann (thermal)    2,239 K  400 ms  1.00 s    100%    60 ms   5.5 dB
-Snare drum  Lattice           1 me  20.0 nm   5.01 eV  1 / level                    -    6 ms   62 ms      0%    60 ms  12.0 dB
-Harp        Double well       1 me   2.0 nm  0.363 eV  Boltzmann (thermal)       89 K   12 ms  554 ms      0%   550 ms   4.0 dB
-Cello       Morse             1 me   8.5 nm  0.102 eV  Boltzmann (thermal)      162 K  3.00 s  1.00 s    100%   250 ms   4.4 dB
-Bassoon     Finite well       1 me   8.0 nm  0.355 eV  Boltzmann (thermal)      174 K  325 ms  1.00 s    100%    40 ms   7.1 dB
-
-Piano
------
-  Potential:           Double well
-  Mass:                1 m_e
-  Well separation:     1.0 nm
-  Barrier height:      1.23 eV
-  Level weights:       Boltzmann (thermal)
-  Temperature:         Fixed, 5,754 K
-  Attack:              19 ms
-  Decay:               2.42 s
-  Sustain:             0%
-  Release:             150 ms
-  Play:                anywhere
-  Match:               2.0 dB RMS (very close), against Iowa MIS, Piano mf A4, measured 441 Hz
-  Other potentials:    Morse 3.6, Finite well 3.9, V-shaped |x| 3.9, Oscillator 5.2, Infinite well 5.3, Lattice 15.6
-  Note:                release 0.15 s stands in for the dampers (the recording has no key release)
-  Harmonic:                1    2    3    4    5    6    7    8    9   10   11   12
-  Real (dB):               0   -8  -24  -22  -31  -37  -38  -50  -60  -60  -60  -60
-  App (dB):                0   -2  -21  -26  -29  -38  -41  -50  -60  -60  -60  -60
-
-Violin
-------
-  Potential:           Finite well
-  Mass:                1 m_e
-  Well width:          20.0 nm
-  Well depth:          0.0501 eV
-  Level weights:       Boltzmann (thermal)
-  Temperature:         Fixed, 100 K
-  Attack:              1.76 s
-  Decay:               1.00 s
-  Sustain:             100%
-  Release:             210 ms
-  Play:                G3 and up
-  Match:               6.2 dB RMS (fair), against Iowa MIS, Violin arco ff A4 (A string), measured 442 Hz
-  Other potentials:    Morse 6.9, Double well 7.3, V-shaped |x| 8.5, Infinite well 9.8, Oscillator 10.1, Lattice 25.7
-  Note:                held notes sustain at full level (decay has no effect at 100% sustain)
-  Harmonic:                1    2    3    4    5    6    7    8    9   10   11   12
-  Real (dB):               0   -8  -12  -12   -5  -10   -6  -22  -38  -18  -26  -34
-  App (dB):                0   -2   -4   -6   -9  -13  -15  -19  -24  -27  -30  -32
-
-Trombone
+Big band
 --------
-  Potential:           Finite well
-  Mass:                1 m_e
-  Well width:          7.7 nm
-  Well depth:          2.34 eV
-  Level weights:       Boltzmann (thermal)
-  Temperature:         Fixed, 3,467 K
-  Attack:              562 ms
-  Decay:               1.00 s
-  Sustain:             100%
-  Release:             140 ms
-  Play:                C3 to F4
-  Match:               1.3 dB RMS (very close), against Iowa MIS, Tenor Trombone ff A3, measured 221 Hz
-  Other potentials:    V-shaped |x| 1.4, Morse 2.0, Infinite well 2.2, Oscillator 2.5, Double well 3.0, Lattice 35.5
-  Note:                held notes sustain at full level (decay has no effect at 100% sustain)
-  Harmonic:                1    2    3    4    5    6    7    8    9   10   11   12
-  Real (dB):              -4   -1    0   -1   -1   -4   -6   -6   -8   -9  -10  -11
-  App (dB):                0   -1   -1   -2   -3   -3   -4   -6   -7   -8   -9  -11
+Instrument      Potential         Mass     Size      Depth  Weights                   Temp.   Attack    Decay Sust.  Release    Match
+Soprano sax     Finite well        1 me   5.0 nm     2.4 eV  Boltzmann (thermal)       724 K   275 ms   1.00 s  100%    70 ms  10.1 dB
+Alto sax        Morse              1 me   8.1 nm  0.0955 eV  Boltzmann (thermal)       148 K    31 ms   1.00 s  100%   130 ms  10.0 dB
+Tenor sax       Finite well        1 me   8.0 nm   0.676 eV  Boltzmann (thermal)       186 K    69 ms   1.00 s  100%   140 ms   8.1 dB
+Baritone sax    Double well        1 me   1.0 nm  0.0501 eV  1 / level                     -    31 ms   1.00 s  100%    60 ms   8.0 dB
+B♭ clarinet     Finite well        1 me   2.0 nm    2.57 eV  1 / level                     -   525 ms   1.00 s  100%    30 ms  12.9 dB
+Trumpet         Double well        1 me  20.0 nm   0.692 eV  Boltzmann (thermal)   T = pitch   206 ms   1.00 s  100%    50 ms   9.2 dB
+Trombone        V-shaped |x|       1 me   3.0 nm   0.692 eV  Boltzmann (thermal)     7,244 K   394 ms   1.00 s  100%   120 ms   4.2 dB
+Bass trombone   Double well        1 me  20.0 nm    5.01 eV  Boltzmann (thermal)   T = pitch   169 ms   1.00 s  100%    30 ms   3.4 dB
+Piano           Finite well        1 me   2.0 nm   0.372 eV  Boltzmann (thermal)     1,349 K    19 ms   2.42 s    0%   150 ms  13.1 dB
+Guitar          Finite well        1 me   5.0 nm   0.229 eV  Boltzmann (thermal)       389 K    31 ms   1.94 s    0%   1.94 s   9.6 dB
+Vibraphone      Morse              1 me   1.0 nm    0.12 eV  Boltzmann (thermal)       102 K     6 ms   2.48 s    0%   2.00 s   8.1 dB
+Double bass     Morse              1 me   7.5 nm  0.0912 eV  Boltzmann (thermal)       132 K   831 ms   1.00 s  100%   360 ms   8.5 dB
+Electric bass   Finite well        1 me   5.0 nm   0.155 eV  Boltzmann (thermal)       224 K    19 ms   2.05 s    0%   2.00 s   5.1 dB
+Kick drum       Lattice            1 me  12.1 nm    1.26 eV  Boltzmann (thermal)         1 K     9 ms   189 ms    0%   190 ms  13.5 dB
+Snare drum      Finite well        1 me  20.0 nm    5.01 eV  Equal                         -     6 ms    52 ms    0%    50 ms   9.5 dB
+Hi-hat          Infinite well    0.2 me   2.0 nm          -  Equal                         -     6 ms    50 ms    0%    50 ms  22.5 dB
+Ride cymbal     Oscillator       0.2 me  12.0 nm          -  Boltzmann (thermal)    19,953 K     6 ms   2.12 s    0%   2.00 s  11.2 dB
+Crash cymbals   Oscillator       0.2 me   2.0 nm          -  Equal                         -    62 ms   1.02 s    0%   1.02 s   9.6 dB
 
-Trumpet
--------
-  Potential:           Double well
-  Mass:                1 m_e
-  Well separation:     12.5 nm
-  Barrier height:      0.355 eV
-  Level weights:       Boltzmann (thermal)
-  Temperature:         Fixed, 457 K
-  Attack:              225 ms
-  Decay:               1.00 s
-  Sustain:             100%
-  Release:             50 ms
-  Play:                F#3 and up
-  Match:               2.9 dB RMS (close), against Iowa MIS, Bb Trumpet ff A4, no vibrato, measured 442 Hz
-  Other potentials:    Morse 3.0, Finite well 4.4, V-shaped |x| 4.9, Oscillator 6.0, Infinite well 6.1, Lattice 24.5
-  Note:                held notes sustain at full level (decay has no effect at 100% sustain)
-  Harmonic:                1    2    3    4    5    6    7    8    9   10   11   12
-  Real (dB):              -9   -3    0   -4   -8  -13  -19  -22  -29  -31  -34  -37
-  App (dB):               -4    0    0   -3   -7  -12  -18  -23  -25  -29  -36  -38
+Wind ensemble
+-------------
+Instrument      Potential         Mass     Size      Depth  Weights                   Temp.   Attack    Decay Sust.  Release    Match
+Piccolo         Finite well        1 me   3.0 nm  0.0501 eV  1 / level                     -   1.75 s   1.00 s  100%    20 ms   5.3 dB
+Flute           Finite well        1 me   5.0 nm   0.148 eV  Boltzmann (thermal)       347 K   744 ms   1.00 s  100%    20 ms  10.5 dB
+Oboe            Finite well        1 me   5.1 nm   0.708 eV  1 / level                     -    81 ms   1.00 s  100%    30 ms  11.8 dB
+English horn    Finite well        1 me   7.4 nm   0.174 eV  1 / level                     -    44 ms   1.00 s  100%   130 ms   9.3 dB
+Bassoon         Finite well        1 me   8.0 nm   0.372 eV  1 / level                     -    31 ms   1.00 s  100%    50 ms  12.6 dB
+Contrabassoon   Finite well        1 me   8.0 nm  0.0977 eV  Boltzmann (thermal)     4,786 K   194 ms   1.00 s  100%    60 ms  15.3 dB
+E♭ clarinet     Finite well        1 me   4.8 nm   0.174 eV  1 / level                     -   100 ms   1.00 s  100%    20 ms  12.5 dB
+B♭ clarinet     Finite well        1 me   2.0 nm    2.57 eV  1 / level                     -   525 ms   1.00 s  100%    30 ms  12.9 dB
+Bass clarinet   Double well        1 me   5.0 nm  0.0977 eV  1 / level                     -   456 ms   1.00 s  100%    40 ms   8.6 dB
+Soprano sax     Finite well        1 me   5.0 nm     2.4 eV  Boltzmann (thermal)       724 K   275 ms   1.00 s  100%    70 ms  10.1 dB
+Alto sax        Morse              1 me   8.1 nm  0.0955 eV  Boltzmann (thermal)       148 K    31 ms   1.00 s  100%   130 ms  10.0 dB
+Tenor sax       Finite well        1 me   8.0 nm   0.676 eV  Boltzmann (thermal)       186 K    69 ms   1.00 s  100%   140 ms   8.1 dB
+Baritone sax    Double well        1 me   1.0 nm  0.0501 eV  1 / level                     -    31 ms   1.00 s  100%    60 ms   8.0 dB
+Trumpet         Double well        1 me  20.0 nm   0.692 eV  Boltzmann (thermal)   T = pitch   206 ms   1.00 s  100%    50 ms   9.2 dB
+Horn            Finite well        1 me   7.8 nm   0.676 eV  Boltzmann (thermal)       617 K   144 ms   1.00 s  100%    30 ms   9.8 dB
+Trombone        V-shaped |x|       1 me   3.0 nm   0.692 eV  Boltzmann (thermal)     7,244 K   394 ms   1.00 s  100%   120 ms   4.2 dB
+Bass trombone   Double well        1 me  20.0 nm    5.01 eV  Boltzmann (thermal)   T = pitch   169 ms   1.00 s  100%    30 ms   3.4 dB
+Tuba            Double well        1 me  20.0 nm    5.01 eV  Boltzmann (thermal)     2,692 K   262 ms   1.00 s  100%   100 ms  14.9 dB
+Double bass     Morse              1 me   7.5 nm  0.0912 eV  Boltzmann (thermal)       132 K   831 ms   1.00 s  100%   360 ms   8.5 dB
+Timpani         Finite well        1 me   7.6 nm    0.24 eV  Boltzmann (thermal)   T = pitch    19 ms   513 ms    0%   510 ms   4.3 dB
+Snare drum      Finite well        1 me  20.0 nm    5.01 eV  Equal                         -     6 ms    52 ms    0%    50 ms   9.5 dB
+Bass drum       Double well        1 me  20.0 nm    5.01 eV  Boltzmann (thermal)     7,244 K    22 ms   463 ms    0%   460 ms  16.7 dB
+Crash cymbals   Oscillator       0.2 me   2.0 nm          -  Equal                         -    62 ms   1.02 s    0%   1.02 s   9.6 dB
+Glockenspiel    Morse              1 me   1.0 nm  0.0832 eV  Boltzmann (thermal)         1 K     6 ms   1.49 s    0%   1.49 s   8.6 dB
+Xylophone       Morse              1 me   3.1 nm  0.0977 eV  Boltzmann (thermal)        29 K     6 ms    61 ms    0%    60 ms   2.9 dB
+Marimba         Morse              1 me   1.0 nm  0.0871 eV  Boltzmann (thermal)        59 K     6 ms   212 ms    0%   210 ms   7.3 dB
+Vibraphone      Morse              1 me   1.0 nm    0.12 eV  Boltzmann (thermal)       102 K     6 ms   2.48 s    0%   2.00 s   8.1 dB
+Chimes          Morse              1 me   1.0 nm    2.63 eV  Boltzmann (thermal)     4,266 K    12 ms   3.61 s    0%   2.00 s  12.2 dB
+Harp            Finite well        1 me   2.1 nm   0.363 eV  Boltzmann (thermal)       490 K    19 ms   568 ms    0%   570 ms   6.6 dB
+Piano           Finite well        1 me   2.0 nm   0.372 eV  Boltzmann (thermal)     1,349 K    19 ms   2.42 s    0%   150 ms  13.1 dB
 
-Oboe
-----
-  Potential:           Finite well
-  Mass:                1 m_e
-  Well width:          5.0 nm
-  Well depth:          0.178 eV
-  Level weights:       Equal
-  Attack:              338 ms
-  Decay:               1.00 s
-  Sustain:             100%
-  Release:             60 ms
-  Play:                Bb3 and up
-  Match:               7.2 dB RMS (loose), against Iowa MIS, Oboe ff A4, measured 440 Hz
-  Other potentials:    Double well 7.6, Morse 7.9, V-shaped |x| 8.5, Infinite well 9.4, Oscillator 9.4, Lattice 23.0
-  Note:                held notes sustain at full level (decay has no effect at 100% sustain)
-  Harmonic:                1    2    3    4    5    6    7    8    9   10   11   12
-  Real (dB):             -15   -9    0  -12  -31  -22  -22  -21  -27  -22  -34  -32
-  App (dB):               -1  -12    0   -3  -17  -18  -26  -26  -33  -32  -38  -37
+Details
+=======
 
-Flute
------
-  Potential:           Morse
-  Mass:                1 m_e
-  Range:               2.1 nm
-  Dissociation energy: 2.57 eV
-  Level weights:       Boltzmann (thermal)
-  Temperature:         Fixed, 2,239 K
-  Attack:              400 ms
-  Decay:               1.00 s
-  Sustain:             100%
-  Release:             60 ms
-  Play:                C4 and up
-  Match:               5.5 dB RMS (fair), against Iowa MIS, Flute ff A4, no vibrato, measured 444 Hz
-  Other potentials:    Finite well 5.6, Double well 6.0, V-shaped |x| 8.3, Oscillator 8.3, Infinite well 9.1, Lattice 20.0
-  Note:                held notes sustain at full level (decay has no effect at 100% sustain)
-  Harmonic:                1    2    3    4    5    6    7    8    9   10   11   12
-  Real (dB):              -4    0   -4  -19  -32  -16  -37  -52  -37  -41  -51  -47
-  App (dB):                0   -4   -9  -14  -21  -27  -35  -45  -48  -43  -44  -46
+Alto sax
+--------
+  Ensembles:            Big band, Wind ensemble
+  Potential:            Morse
+  Mass:                 1 m_e
+  Range:                8.1 nm
+  Dissociation energy:  0.0955 eV
+  Level weights:        Boltzmann (thermal)
+  Temperature:          Fixed, 148 K
+  Attack / decay:       31 ms / 1.00 s
+  Sustain / release:    100% / 130 ms
+  Range:                C#3-Ab5; matched at Eb3, C4, C5
+  Match:                10.0 dB RMS (poor), against Iowa MIS
+  Other potentials:     Finite well 10.0, Double well 10.9, Infinite well 12.8, V-shaped |x| 13.1, Oscillator 14.5, Lattice 26.9
+  Recording note:       Iowa single-note files only at ff.
+  At C4, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):                0   -6  -25   -7  -27  -19  -24  -22  -23  -26  -30  -31
+  App (dB):                 0   -3   -6   -9  -13  -17  -26  -35  -29  -26  -31  -39
 
-Snare drum
-----------
-  Potential:           Lattice
-  Mass:                1 m_e
-  Lattice spacing:     20.0 nm
-  Barrier height:      5.01 eV
-  Barrier width:       60% of the spacing
-  Bloch phase:         0.50 pi   (inharmonic partials)
-  Level weights:       1 / level
-  Attack:              6 ms
-  Decay:               62 ms
-  Sustain:             0%
-  Release:             60 ms
-  Play:                C3 (the pitch it was matched at)
-  Match:               12.0 dB RMS (poor), against VSCO-2 CE, Snare2 hit, snares on
-  Other potentials:    Finite well 12.8, Morse 13.0, Double well 13.1, Oscillator 13.1, V-shaped |x| 13.1, Infinite well 13.4
+Baritone sax
+------------
+  Ensembles:            Big band, Wind ensemble
+  Potential:            Double well
+  Mass:                 1 m_e
+  Well separation:      1.0 nm
+  Barrier height:       0.0501 eV
+  Level weights:        1 / level
+  Attack / decay:       31 ms / 1.00 s
+  Sustain / release:    100% / 60 ms
+  Range:                C2-Ab4; matched at E2, C3, C4
+  Match:                8.0 dB RMS (loose), against MTG Solo Saxophones
+  Other potentials:     Infinite well 8.1, Morse 8.1, Finite well 8.2, Oscillator 9.2, V-shaped |x| 9.3, Lattice 30.8
+  Recording note:       Last-resort source. Notes taken from the sfz map (bar_m_rr1.txt: key=40/48/60); the sfz applies small tune corrections (-4 to +10 cents) so recordings are sligh
+  At C3, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):               -6  -16    0  -12   -7  -10  -24  -16  -15  -18  -19  -17
+  App (dB):                 0   -7  -12  -11  -14  -13  -15  -15  -16  -17  -17  -18
 
-Harp
-----
-  Potential:           Double well
-  Mass:                1 m_e
-  Well separation:     2.0 nm
-  Barrier height:      0.363 eV
-  Level weights:       Boltzmann (thermal)
-  Temperature:         Fixed, 89 K
-  Attack:              12 ms
-  Decay:               554 ms
-  Sustain:             0%
-  Release:             550 ms
-  Play:                anywhere
-  Match:               4.0 dB RMS (close), against VSCO-2 CE, KS Harp A4 mf, measured 437 Hz
-  Other potentials:    Morse 5.4, Finite well 5.4, V-shaped |x| 5.6, Oscillator 6.6, Infinite well 6.6, Lattice 12.1
-  Note:                release equals the decay so letting go of a key does not cut the ringing string
-  Harmonic:                1    2    3    4    5    6    7    8    9   10   11   12
-  Real (dB):               0  -21   -6  -32  -35  -38  -36  -57  -60  -60  -60  -60
-  App (dB):                0  -16   -6  -28  -22  -46  -42  -60  -60  -60  -60  -60
+Bass clarinet
+-------------
+  Ensembles:            Orchestra, Wind ensemble
+  Potential:            Double well
+  Mass:                 1 m_e
+  Well separation:      5.0 nm
+  Barrier height:       0.0977 eV
+  Level weights:        1 / level
+  Attack / decay:       456 ms / 1.00 s
+  Sustain / release:    100% / 40 ms
+  Range:                D2-F5; matched at D2, C3, C4
+  Match:                8.6 dB RMS (loose), against Iowa MIS
+  Other potentials:     Infinite well 9.6, Finite well 9.6, Morse 10.2, Oscillator 10.8, V-shaped |x| 12.2, Lattice 27.9
+  Recording note:       Iowa single-note files only at ff.
+  At C3, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):                0  -30   -2  -34   -4  -21   -8  -22  -17  -22  -10  -16
+  App (dB):                 0   -5  -12  -20  -14  -18  -14  -15  -16  -16  -17  -18
 
-Cello
------
-  Potential:           Morse
-  Mass:                1 m_e
-  Range:               8.5 nm
-  Dissociation energy: 0.102 eV
-  Level weights:       Boltzmann (thermal)
-  Temperature:         Fixed, 162 K
-  Attack:              3.00 s
-  Decay:               1.00 s
-  Sustain:             100%
-  Release:             250 ms
-  Play:                C3 to A4
-  Match:               4.4 dB RMS (close), against Iowa MIS, Cello arco ff A3 (D string), measured 221 Hz
-  Other potentials:    Finite well 4.9, Double well 5.5, V-shaped |x| 7.9, Oscillator 9.2, Infinite well 9.4, Lattice 24.0
-  Note:                the real note takes 3.17 s to swell in; 3 s is the slider maximum
-  Note:                held notes sustain at full level (decay has no effect at 100% sustain)
-  Harmonic:                1    2    3    4    5    6    7    8    9   10   11   12
-  Real (dB):               0   -2   -9  -15   -9  -16  -15  -36  -22  -25  -23  -29
-  App (dB):                0   -2   -5   -8  -11  -15  -20  -35  -28  -27  -26  -35
+Bass drum
+---------
+  Ensembles:            Orchestra, Wind ensemble
+  Potential:            Double well
+  Mass:                 1 m_e
+  Well separation:      20.0 nm
+  Barrier height:       5.01 eV
+  Level weights:        Boltzmann (thermal)
+  Temperature:          Fixed, 7,244 K
+  Attack / decay:       22 ms / 463 ms
+  Sustain / release:    0% / 460 ms
+  Play:                 C2 (the pitch it was matched at)
+  Match:                16.7 dB RMS (poor), against VSCO-2 CE
+  Other potentials:     Lattice 16.8, Infinite well 17.7, Morse 18.3, Finite well 18.3, V-shaped |x| 19.5, Oscillator 19.7
+  Recording note:       Orchestral concert bass drum (not a kit kick).
+
+Bass trombone
+-------------
+  Ensembles:            Orchestra, Big band, Wind ensemble
+  Potential:            Double well
+  Mass:                 1 m_e
+  Well separation:      20.0 nm
+  Barrier height:       5.01 eV
+  Level weights:        Boltzmann (thermal)
+  Temperature:          T in K = pitch in Hz
+  Attack / decay:       169 ms / 1.00 s
+  Sustain / release:    100% / 30 ms
+  Range:                Bb1-G4; matched at Bb1, C2, C3
+  Match:                3.4 dB RMS (close), against Iowa MIS
+  Other potentials:     Oscillator 3.6, V-shaped |x| 3.6, Finite well 3.9, Morse 4.0, Infinite well 4.2, Lattice 39.0
+  Recording note:       Iowa single-note files only at ff; Iowa bass trombone single notes stop at Eb3.
+  At C2, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):              -12   -9   -6   -8   -5   -3   -5   -5   -5   -2    0    0
+  App (dB):               -14   -9   -5   -3   -2   -1    0    0    0    0   -1   -1
 
 Bassoon
 -------
-  Potential:           Finite well
-  Mass:                1 m_e
-  Well width:          8.0 nm
-  Well depth:          0.355 eV
-  Level weights:       Boltzmann (thermal)
-  Temperature:         Fixed, 174 K
-  Attack:              325 ms
-  Decay:               1.00 s
-  Sustain:             100%
-  Release:             40 ms
-  Play:                C3 to E4
-  Match:               7.1 dB RMS (loose), against Iowa MIS, Bassoon ff A3, measured 222 Hz
-  Other potentials:    Morse 7.5, Double well 8.1, Oscillator 10.8, V-shaped |x| 11.1, Infinite well 11.8, Lattice 19.2
-  Note:                held notes sustain at full level (decay has no effect at 100% sustain)
-  Harmonic:                1    2    3    4    5    6    7    8    9   10   11   12
-  Real (dB):             -18    0  -21  -19  -27  -17  -26  -44  -32  -49  -44  -41
-  App (dB):                0   -4  -10  -18  -24  -29  -32  -36  -37  -40  -41  -44
+  Ensembles:            Orchestra, Wind ensemble
+  Potential:            Finite well
+  Mass:                 1 m_e
+  Well width:           8.0 nm
+  Well depth:           0.372 eV
+  Level weights:        1 / level
+  Attack / decay:       31 ms / 1.00 s
+  Sustain / release:    100% / 50 ms
+  Range:                Bb1-Eb5; matched at E2, C3, C4
+  Match:                12.6 dB RMS (poor), against Iowa MIS
+  Other potentials:     Morse 13.1, Double well 13.3, V-shaped |x| 14.9, Infinite well 16.1, Oscillator 16.1, Lattice 24.9
+  Recording note:       Iowa single-note files only at ff.
+  At C3, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):              -19  -15   -4    0  -38  -13   -7  -28  -24  -19  -22  -26
+  App (dB):                 0   -7  -10  -14  -15  -18  -16  -18  -27  -28  -32  -33
+
+B♭ clarinet
+-----------
+  Ensembles:            Orchestra, Big band, Wind ensemble
+  Potential:            Finite well
+  Mass:                 1 m_e
+  Well width:           2.0 nm
+  Well depth:           2.57 eV
+  Level weights:        1 / level
+  Attack / decay:       525 ms / 1.00 s
+  Sustain / release:    100% / 30 ms
+  Range:                D3-F6; matched at E3, C4, C5
+  Match:                12.9 dB RMS (poor), against Iowa MIS
+  Other potentials:     Morse 13.7, Double well 14.3, V-shaped |x| 16.3, Oscillator 16.5, Infinite well 17.3, Lattice 21.7
+  Recording note:       Iowa single-note files only at ff.
+  At C4, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):                0  -32   -2  -17   -9  -17  -19  -28  -29  -28  -38  -35
+  App (dB):                 0   -9  -11  -16  -14  -18  -26  -29  -33  -35  -38  -40
+
+Celesta
+-------
+  Ensembles:            Orchestra
+  Potential:            Morse
+  Mass:                 1 m_e
+  Range:                1.0 nm
+  Dissociation energy:  0.219 eV
+  Level weights:        Boltzmann (thermal)
+  Temperature:          Fixed, 100 K
+  Attack / decay:       19 ms / 1.07 s
+  Sustain / release:    0% / 150 ms
+  Range:                C4-C8; matched at C4, C5, C6
+  Match:                4.9 dB RMS (fair), against Sonatina Symphonic Orchestra
+  Other potentials:     Lattice 5.0, V-shaped |x| 5.3, Finite well 5.3, Infinite well 5.9, Oscillator 5.9, Double well 7.4
+  Recording note:       Not in Iowa/VSCO/Philharmonia. Labels follow the SSO sfz (celeste-c4 mapped to key c4=60). Celesta sounds an octave above written, so check whether labels are w
+  At C5, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):                0  -54  -48  -56  -60  -57  -60  -60  -60  -60  -60  -60
+  App (dB):                 0  -53  -48  -60  -60  -60  -60  -60  -60  -60  -60  -60
+
+Cello
+-----
+  Ensembles:            Orchestra
+  Potential:            Finite well
+  Mass:                 1 m_e
+  Well width:           4.3 nm
+  Well depth:           1.35 eV
+  Level weights:        1 / level
+  Attack / decay:       3.00 s / 1.00 s
+  Sustain / release:    100% / 400 ms
+  Range:                C2-E5; matched at C2, C3, C4
+  Match:                8.4 dB RMS (loose), against Iowa MIS
+  Other potentials:     Morse 8.6, Double well 9.3, V-shaped |x| 11.4, Infinite well 12.1, Oscillator 12.2, Lattice 26.2
+  Recording note:       Iowa single-note files only at ff.
+  At C3, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):                0   -5   -4  -11   -6  -18  -18  -12  -16  -18  -28  -22
+  App (dB):                 0   -7  -11  -14  -16  -17  -19  -17  -19  -27  -28  -33
+
+Chimes
+------
+  Ensembles:            Orchestra, Wind ensemble
+  Potential:            Morse
+  Mass:                 1 m_e
+  Range:                1.0 nm
+  Dissociation energy:  2.63 eV
+  Level weights:        Boltzmann (thermal)
+  Temperature:          Fixed, 4,266 K
+  Attack / decay:       12 ms / 3.61 s
+  Sustain / release:    0% / 2.00 s
+  Range:                C4-F5; matched at C4, G4, C5
+  Match:                12.2 dB RMS (poor), against VSCO-2 CE
+  Other potentials:     Finite well 13.2, Double well 14.0, V-shaped |x| 15.5, Oscillator 16.5, Infinite well 16.5, Lattice 23.9
+  Recording note:       Not in Iowa. Note names confirmed by VSCO TubularBells.sfz (C4=60, C5=72). Chimes have strong inharmonic partials; perceived strike pitch may differ from fundam
+  At G4, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):              -22   -9   -6    0  -16  -44  -41  -12  -42  -32  -20  -28
+  App (dB):                 0   -4   -9  -13  -20  -33  -30  -26  -34  -36  -35  -39
+
+Contrabassoon
+-------------
+  Ensembles:            Orchestra, Wind ensemble
+  Potential:            Finite well
+  Mass:                 1 m_e
+  Well width:           8.0 nm
+  Well depth:           0.0977 eV
+  Level weights:        Boltzmann (thermal)
+  Temperature:          Fixed, 4,786 K
+  Attack / decay:       194 ms / 1.00 s
+  Sustain / release:    100% / 60 ms
+  Range:                Bb0-F3; matched at C1, C2, C3
+  Match:                15.3 dB RMS (poor), against Philharmonia
+  Other potentials:     Morse 15.6, Double well 16.0, V-shaped |x| 16.7, Oscillator 17.6, Infinite well 17.7, Lattice 27.5
+  Recording note:       Not in Iowa or VSCO-2 CE; Philharmonia mp3 inside Woodwind.zip (~273 MB). Files are short (~1 s).
+  At C2, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):              -10   -9   -6    0    0  -11  -16  -20  -26  -21  -20  -32
+  App (dB):               -14   -3   -7    0   -5  -15  -17  -23  -25  -29  -30  -34
+
+Crash cymbals
+-------------
+  Ensembles:            Orchestra, Big band, Wind ensemble
+  Potential:            Oscillator
+  Mass:                 0.2 m_e
+  Ground-state width:   2.0 nm
+  Level weights:        Equal
+  Attack / decay:       62 ms / 1.02 s
+  Sustain / release:    0% / 1.02 s
+  Play:                 C2 (the pitch it was matched at)
+  Match:                9.6 dB RMS (poor), against Iowa MIS
+  Other potentials:     Lattice 10.7, Double well 10.9, V-shaped |x| 11.0, Finite well 11.4, Infinite well 11.4, Morse 11.5
+  Recording note:       First sample is an orchestral clash pair (orchestra/wind-ensemble 'crash cymbals'); second is a suspended (drum-kit style) crash struck with a stick, for the bi
+
+Double bass
+-----------
+  Ensembles:            Orchestra, Big band, Wind ensemble
+  Potential:            Morse
+  Mass:                 1 m_e
+  Range:                7.5 nm
+  Dissociation energy:  0.0912 eV
+  Level weights:        Boltzmann (thermal)
+  Temperature:          Fixed, 132 K
+  Attack / decay:       831 ms / 1.00 s
+  Sustain / release:    100% / 360 ms
+  Range:                E1-G4; matched at E1, C2, C3
+  Match:                8.5 dB RMS (loose), against Iowa MIS
+  Other potentials:     Finite well 8.6, Double well 9.1, V-shaped |x| 13.3, Oscillator 13.9, Infinite well 14.6, Lattice 22.2
+  Recording note:       Iowa single-note files only at ff.
+  At C2, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):                0   -4  -22  -31  -27  -35  -30  -41  -26  -46  -38  -36
+  App (dB):                 0   -3   -7  -11  -15  -22  -33  -35  -27  -29  -39  -38
+
+Electric bass
+-------------
+  Ensembles:            Big band
+  Potential:            Finite well
+  Mass:                 1 m_e
+  Well width:           5.0 nm
+  Well depth:           0.155 eV
+  Level weights:        Boltzmann (thermal)
+  Temperature:          Fixed, 224 K
+  Attack / decay:       19 ms / 2.05 s
+  Sustain / release:    0% / 2.00 s
+  Range:                B0-G4; matched at C2, C3, C4
+  Match:                5.1 dB RMS (fair), against Karoryfer Black And Blue Basses
+  Other potentials:     Morse 5.5, Double well 7.3, Oscillator 8.4, V-shaped |x| 8.5, Infinite well 9.3, Lattice 16.7
+  Recording note:       Last-resort source (CC0). 5-string bass guitar ('darkblack', lowest sample B1); file names match sfz pitch_keycenter (b1 -> 35), i.e. standard octave numbering.
+  At C3, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):                0   -9  -20  -19  -29  -26  -43  -34  -36  -41  -40  -40
+  App (dB):                 0   -8  -16  -26  -30  -37  -38  -44  -45  -50  -50  -55
+
+English horn
+------------
+  Ensembles:            Orchestra, Wind ensemble
+  Potential:            Finite well
+  Mass:                 1 m_e
+  Well width:           7.4 nm
+  Well depth:           0.174 eV
+  Level weights:        1 / level
+  Attack / decay:       44 ms / 1.00 s
+  Sustain / release:    100% / 130 ms
+  Range:                E3-C6; matched at F3, C4, C5
+  Match:                9.3 dB RMS (poor), against Philharmonia
+  Other potentials:     Morse 9.6, Double well 10.4, Oscillator 11.4, V-shaped |x| 11.4, Infinite well 12.0, Lattice 23.3
+  Recording note:       Not in Iowa or VSCO-2 CE; Philharmonia mp3 inside Woodwind.zip (~273 MB). Files are short (~1 s). Same recordings also appear as english-horn_*.mp3 in the zip.
+  At C4, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):                0   -4   -1   -8  -12  -13  -22  -10  -23  -23  -31  -43
+  App (dB):                 0   -9  -11  -15  -14  -21  -26  -30  -33  -37  -38  -41
+
+E♭ clarinet
+-----------
+  Ensembles:            Wind ensemble
+  Potential:            Finite well
+  Mass:                 1 m_e
+  Well width:           4.8 nm
+  Well depth:           0.174 eV
+  Level weights:        1 / level
+  Attack / decay:       100 ms / 1.00 s
+  Sustain / release:    100% / 20 ms
+  Range:                G3-G6; matched at C4, C5, C6
+  Match:                12.5 dB RMS (poor), against Iowa MIS
+  Other potentials:     Morse 12.9, Double well 14.3, V-shaped |x| 14.8, Oscillator 14.9, Infinite well 15.3, Lattice 18.4
+  Recording note:       Iowa single-note files only at ff.
+  At C5, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):                0  -25  -13  -15  -17  -17  -25  -30  -48  -56  -37  -53
+  App (dB):                 0  -11  -10  -16  -25  -30  -34  -38  -40  -44  -46  -48
+
+Flute
+-----
+  Ensembles:            Orchestra, Wind ensemble
+  Potential:            Finite well
+  Mass:                 1 m_e
+  Well width:           5.0 nm
+  Well depth:           0.148 eV
+  Level weights:        Boltzmann (thermal)
+  Temperature:          Fixed, 347 K
+  Attack / decay:       744 ms / 1.00 s
+  Sustain / release:    100% / 20 ms
+  Range:                C4-C7; matched at C4, C5, C6
+  Match:                10.5 dB RMS (poor), against Iowa MIS
+  Other potentials:     Morse 10.7, Double well 11.9, V-shaped |x| 12.7, Oscillator 13.0, Infinite well 13.4, Lattice 21.2
+  Recording note:       Iowa single-note (2012+) files exist only at ff.
+  At C5, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):                0   -4   -6  -24  -24  -33  -38  -36  -38  -53  -51  -46
+  App (dB):                 0   -6  -11  -21  -27  -33  -35  -40  -42  -46  -47  -51
+
+Glockenspiel
+------------
+  Ensembles:            Orchestra, Wind ensemble
+  Potential:            Morse
+  Mass:                 1 m_e
+  Range:                1.0 nm
+  Dissociation energy:  0.0832 eV
+  Level weights:        Boltzmann (thermal)
+  Temperature:          Fixed, 1 K
+  Attack / decay:       6 ms / 1.49 s
+  Sustain / release:    0% / 1.49 s
+  Range:                G5-C8; matched at C6, G6, C7
+  Match:                8.6 dB RMS (loose), against Iowa MIS
+  Other potentials:     Lattice 8.6, V-shaped |x| 8.7, Double well 9.3, Finite well 10.1, Oscillator 11.3, Infinite well 11.3
+  Recording note:       Iowa 'Bells' = orchestra bells/glockenspiel; Iowa labels run C5-E8 - unclear whether written or sounding (glockenspiel sounds 2 octaves above written); verify. 
+  At G6, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):                0  -48  -25  -60  -60  -24  -60  -60  -60  -60  -60  -60
+  App (dB):                 0  -60  -40  -60  -60  -60  -60  -60  -60  -60  -60  -60
+
+Guitar
+------
+  Ensembles:            Big band
+  Potential:            Finite well
+  Mass:                 1 m_e
+  Well width:           5.0 nm
+  Well depth:           0.229 eV
+  Level weights:        Boltzmann (thermal)
+  Temperature:          Fixed, 389 K
+  Attack / decay:       31 ms / 1.94 s
+  Sustain / release:    0% / 1.94 s
+  Range:                E2-B5; matched at C3, B3, E5
+  Match:                9.6 dB RMS (poor), against Iowa MIS, Philharmonia
+  Other potentials:     Morse 9.9, Double well 11.4, Oscillator 11.6, V-shaped |x| 11.7, Infinite well 12.3, Lattice 21.2
+  Recording note:       Iowa guitar (pre-2012 page) is almost entirely multi-note scale files; its only single-note file is B3 (used). Other two notes from Philharmonia Strings.zip (~1
+  At B3, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):                0   -7  -16  -20  -33  -24  -31  -48  -52  -48  -39  -58
+  App (dB):                 0   -5  -10  -18  -26  -31  -34  -38  -40  -44  -45  -48
+
+Harp
+----
+  Ensembles:            Orchestra, Wind ensemble
+  Potential:            Finite well
+  Mass:                 1 m_e
+  Well width:           2.1 nm
+  Well depth:           0.363 eV
+  Level weights:        Boltzmann (thermal)
+  Temperature:          Fixed, 490 K
+  Attack / decay:       19 ms / 568 ms
+  Sustain / release:    0% / 570 ms
+  Range:                C1-G7; matched at C3, C5, D6
+  Match:                6.6 dB RMS (loose), against VSCO-2 CE
+  Other potentials:     Double well 6.6, Morse 6.7, V-shaped |x| 7.3, Oscillator 7.4, Infinite well 7.6, Lattice 12.1
+  Recording note:       Not in Iowa MIS. Note names confirmed by VSCO Harp.sfz pitch_keycenter (C3=48, C5=72, D6=86).
+  At C5, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):                0  -22  -25  -33  -27  -47  -47  -59  -60  -60  -60  -60
+  App (dB):                 0  -17  -24  -39  -36  -49  -45  -57  -51  -60  -56  -60
+
+Hi-hat
+------
+  Ensembles:            Big band
+  Potential:            Infinite well
+  Mass:                 0.2 m_e
+  Well width:           2.0 nm
+  Level weights:        Equal
+  Attack / decay:       6 ms / 50 ms
+  Sustain / release:    0% / 50 ms
+  Play:                 C2 (the pitch it was matched at)
+  Match:                22.5 dB RMS (poor), against Iowa MIS
+  Other potentials:     Oscillator 22.8, Double well 22.9, Finite well 23.0, Lattice 23.2, V-shaped |x| 23.5, Morse 24.0
+
+Horn
+----
+  Ensembles:            Orchestra, Wind ensemble
+  Potential:            Finite well
+  Mass:                 1 m_e
+  Well width:           7.8 nm
+  Well depth:           0.676 eV
+  Level weights:        Boltzmann (thermal)
+  Temperature:          Fixed, 617 K
+  Attack / decay:       144 ms / 1.00 s
+  Sustain / release:    100% / 30 ms
+  Range:                Bb1-F5; matched at C3, C4, C5
+  Match:                9.8 dB RMS (poor), against Iowa MIS
+  Other potentials:     Morse 10.0, Double well 10.0, V-shaped |x| 11.7, Infinite well 13.1, Oscillator 13.5, Lattice 26.2
+  Recording note:       Iowa single-note files only at ff.
+  At C4, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):               -4    0   -5  -10  -15  -18  -18  -17  -18  -26  -24  -30
+  App (dB):                 0   -2   -4   -6   -9  -13  -17  -20  -24  -27  -29  -32
+
+Kick drum
+---------
+  Ensembles:            Big band
+  Potential:            Lattice
+  Mass:                 1 m_e
+  Lattice spacing:      12.1 nm
+  Barrier height:       1.26 eV
+  Barrier width:        8% of the spacing
+  Bloch phase:          1.00 pi
+  Level weights:        Boltzmann (thermal)
+  Temperature:          Fixed, 1 K
+  Attack / decay:       9 ms / 189 ms
+  Sustain / release:    0% / 190 ms
+  Play:                 F#2 (the pitch it was matched at)
+  Match:                13.5 dB RMS (poor), against Virtuosity Drums
+  Other potentials:     Finite well 13.6, Morse 13.9, Oscillator 14.5, V-shaped |x| 14.5, Double well 14.6, Infinite well 14.7
+  Recording note:       Last-resort source (CC0). Jazz-club house kit, so a jazz-style (smaller, resonant) kick; 'kickmic' = close kick mic, 'mid' = mid-distance mic.
+
+Marimba
+-------
+  Ensembles:            Wind ensemble
+  Potential:            Morse
+  Mass:                 1 m_e
+  Range:                1.0 nm
+  Dissociation energy:  0.0871 eV
+  Level weights:        Boltzmann (thermal)
+  Temperature:          Fixed, 59 K
+  Attack / decay:       6 ms / 212 ms
+  Sustain / release:    0% / 210 ms
+  Range:                A2-C7; matched at C3, C4, C6
+  Match:                7.3 dB RMS (loose), against Iowa MIS
+  Other potentials:     Lattice 7.6, Infinite well 7.7, Oscillator 7.7, V-shaped |x| 7.8, Finite well 8.1, Double well 9.0
+  Recording note:       Iowa single-note files only at ff.
+  At C4, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):                0  -46  -31  -38  -56  -60  -60  -60  -60  -60  -60  -60
+  App (dB):                 0  -44  -40  -50  -60  -57  -60  -60  -60  -60  -60  -60
+
+Oboe
+----
+  Ensembles:            Orchestra, Wind ensemble
+  Potential:            Finite well
+  Mass:                 1 m_e
+  Well width:           5.1 nm
+  Well depth:           0.708 eV
+  Level weights:        1 / level
+  Attack / decay:       81 ms / 1.00 s
+  Sustain / release:    100% / 30 ms
+  Range:                Bb3-G6; matched at C4, C5, C6
+  Match:                11.8 dB RMS (poor), against Iowa MIS
+  Other potentials:     Morse 12.0, Double well 12.5, V-shaped |x| 15.4, Oscillator 15.7, Infinite well 16.7, Lattice 24.0
+  Recording note:       Iowa single-note files only at ff.
+  At C5, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):              -10    0   -6  -11  -27   -6  -12  -24  -19  -32  -28  -30
+  App (dB):                 0   -7  -11  -13  -16  -15  -16  -27  -27  -33  -33  -38
+
+Piano
+-----
+  Ensembles:            Orchestra, Big band, Wind ensemble
+  Potential:            Finite well
+  Mass:                 1 m_e
+  Well width:           2.0 nm
+  Well depth:           0.372 eV
+  Level weights:        Boltzmann (thermal)
+  Temperature:          Fixed, 1,349 K
+  Attack / decay:       19 ms / 2.42 s
+  Sustain / release:    0% / 150 ms
+  Range:                A0-C8; matched at C3, A4, C6
+  Match:                13.1 dB RMS (poor), against Iowa MIS
+  Other potentials:     Double well 13.2, Morse 13.2, V-shaped |x| 14.6, Oscillator 15.0, Infinite well 15.4, Lattice 19.1
+  Recording note:       Iowa pre-2012 piano page (Steinway, single notes, aiff).
+  At A4, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):                0   -8  -24  -22  -31  -37  -38  -50  -60  -60  -60  -60
+  App (dB):                 0   -9  -25  -30  -37  -41  -46  -49  -52  -55  -57  -59
+
+Piccolo
+-------
+  Ensembles:            Orchestra, Wind ensemble
+  Potential:            Finite well
+  Mass:                 1 m_e
+  Well width:           3.0 nm
+  Well depth:           0.0501 eV
+  Level weights:        1 / level
+  Attack / decay:       1.75 s / 1.00 s
+  Sustain / release:    100% / 20 ms
+  Range:                D5-C8; matched at G5, C6, G6
+  Match:                5.3 dB RMS (fair), against VSCO-2 CE
+  Other potentials:     Morse 5.6, Double well 5.7, V-shaped |x| 6.6, Oscillator 6.7, Infinite well 7.2, Lattice 10.5
+  Recording note:       Not in Iowa MIS. Note names/MIDI follow the file names and VSCO sfz mapping (pitch_keycenter G4=67); piccolo sounds an octave above written, so actual sounding 
+  At C6, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):                0  -15  -19  -34  -47  -52  -60  -60  -60  -60  -60  -60
+  App (dB):                 0  -20  -28  -41  -41  -51  -50  -59  -56  -60  -60  -60
+
+Ride cymbal
+-----------
+  Ensembles:            Big band
+  Potential:            Oscillator
+  Mass:                 0.2 m_e
+  Ground-state width:   12.0 nm
+  Level weights:        Boltzmann (thermal)
+  Temperature:          Fixed, 19,953 K
+  Attack / decay:       6 ms / 2.12 s
+  Sustain / release:    0% / 2.00 s
+  Play:                 Eb2 (the pitch it was matched at)
+  Match:                11.2 dB RMS (poor), against Iowa MIS
+  Other potentials:     Finite well 11.5, V-shaped |x| 11.7, Lattice 11.7, Double well 11.9, Infinite well 12.2, Morse 12.4
+
+Snare drum
+----------
+  Ensembles:            Orchestra, Big band, Wind ensemble
+  Potential:            Finite well
+  Mass:                 1 m_e
+  Well width:           20.0 nm
+  Well depth:           5.01 eV
+  Level weights:        Equal
+  Attack / decay:       6 ms / 52 ms
+  Sustain / release:    0% / 50 ms
+  Play:                 C2 (the pitch it was matched at)
+  Match:                9.5 dB RMS (poor), against VSCO-2 CE
+  Other potentials:     Oscillator 10.2, Double well 10.6, Lattice 10.8, Infinite well 11.0, V-shaped |x| 11.2, Morse 11.4
+  Recording note:       Iowa has no snare drum. Samples are from the legacy 'VSCO 1 Percussion' folder in VSCO-2 CE (as-is).
+
+Soprano sax
+-----------
+  Ensembles:            Big band, Wind ensemble
+  Potential:            Finite well
+  Mass:                 1 m_e
+  Well width:           5.0 nm
+  Well depth:           2.4 eV
+  Level weights:        Boltzmann (thermal)
+  Temperature:          Fixed, 724 K
+  Attack / decay:       275 ms / 1.00 s
+  Sustain / release:    100% / 70 ms
+  Range:                Ab3-Eb6; matched at C4, C5, C6
+  Match:                10.1 dB RMS (poor), against Iowa MIS
+  Other potentials:     Morse 10.2, Double well 10.5, V-shaped |x| 14.4, Oscillator 14.6, Infinite well 15.5, Lattice 23.1
+  Recording note:       Iowa single-note files only at ff.
+  At C5, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):                0   -4   -6  -28  -23  -12  -31  -22  -19  -30  -31  -38
+  App (dB):                 0   -3   -7  -13  -18  -24  -28  -32  -33  -36  -37  -39
+
+Tenor sax
+---------
+  Ensembles:            Big band, Wind ensemble
+  Potential:            Finite well
+  Mass:                 1 m_e
+  Well width:           8.0 nm
+  Well depth:           0.676 eV
+  Level weights:        Boltzmann (thermal)
+  Temperature:          Fixed, 186 K
+  Attack / decay:       69 ms / 1.00 s
+  Sustain / release:    100% / 140 ms
+  Range:                Ab2-Eb5; matched at C3, C4, C5
+  Match:                8.1 dB RMS (loose), against VCSL
+  Other potentials:     Morse 8.8, Double well 10.2, V-shaped |x| 13.1, Oscillator 13.5, Infinite well 14.1, Lattice 21.6
+  Recording note:       Not in Iowa/VSCO-2 CE/Philharmonia (Philharmonia 'saxophone' is an alto by range). File names use the octave-shifted convention (VCSL sfz maps G#1 file to MIDI 
+  At C4, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):               -7    0  -20  -36  -34  -27  -29  -34  -32  -39  -45  -44
+  App (dB):                 0   -4  -10  -18  -24  -30  -32  -36  -36  -40  -40  -43
+
+Timpani
+-------
+  Ensembles:            Orchestra, Wind ensemble
+  Potential:            Finite well
+  Mass:                 1 m_e
+  Well width:           7.6 nm
+  Well depth:           0.24 eV
+  Level weights:        Boltzmann (thermal)
+  Temperature:          T in K = pitch in Hz
+  Attack / decay:       19 ms / 513 ms
+  Sustain / release:    0% / 510 ms
+  Range:                E2-A3; matched at F#2, C#3, F#3
+  Match:                4.3 dB RMS (close), against VSCO-2 CE
+  Other potentials:     Morse 5.8, Double well 7.5, V-shaped |x| 8.8, Oscillator 9.0, Infinite well 9.9, Lattice 16.9
+  Recording note:       Not in Iowa. Files are named by drum number, not pitch; pitches taken from VSCO Timpani.sfz pitch_keycenter (drum1=42, drum3=49, drum5=54) - verify by pitch det
+  At C#3, harmonic:         1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):                0  -13  -16  -23  -23  -35  -37  -38  -36  -40  -39  -38
+  App (dB):                 0   -6  -13  -22  -27  -32  -34  -39  -39  -44  -44  -48
+
+Triangle
+--------
+  Ensembles:            Orchestra
+  Potential:            Double well
+  Mass:                 1 m_e
+  Well separation:      5.0 nm
+  Barrier height:       5.01 eV
+  Level weights:        Equal
+  Attack / decay:       28 ms / 2.24 s
+  Sustain / release:    0% / 2.00 s
+  Play:                 Eb4 (the pitch it was matched at)
+  Match:                11.7 dB RMS (poor), against Iowa MIS
+  Other potentials:     Lattice 12.3, Finite well 12.8, Oscillator 12.8, V-shaped |x| 13.0, Morse 13.9, Infinite well 14.1
+  Recording note:       Treated as unpitched.
+
+Trombone
+--------
+  Ensembles:            Orchestra, Big band, Wind ensemble
+  Potential:            V-shaped |x|
+  Mass:                 1 m_e
+  Width:                3.0 nm
+  Height at the edges:  0.692 eV
+  Level weights:        Boltzmann (thermal)
+  Temperature:          Fixed, 7,244 K
+  Attack / decay:       394 ms / 1.00 s
+  Sustain / release:    100% / 120 ms
+  Range:                E2-C5; matched at Bb2, C3, C4
+  Match:                4.2 dB RMS (close), against Iowa MIS
+  Other potentials:     Finite well 4.3, Double well 4.5, Oscillator 4.5, Morse 4.6, Infinite well 4.6, Lattice 36.5
+  Recording note:       Iowa single-note files only at ff.
+  At C3, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):              -10   -8   -1   -4   -6    0   -4   -4   -4   -6   -7   -8
+  App (dB):                -4   -1    0    0    0   -1   -2   -3   -4   -5   -6   -7
+
+Trumpet
+-------
+  Ensembles:            Orchestra, Big band, Wind ensemble
+  Potential:            Double well
+  Mass:                 1 m_e
+  Well separation:      20.0 nm
+  Barrier height:       0.692 eV
+  Level weights:        Boltzmann (thermal)
+  Temperature:          T in K = pitch in Hz
+  Attack / decay:       206 ms / 1.00 s
+  Sustain / release:    100% / 50 ms
+  Range:                F#3-Bb5; matched at G3, C4, C5
+  Match:                9.2 dB RMS (poor), against Iowa MIS
+  Other potentials:     Finite well 10.6, V-shaped |x| 11.2, Morse 11.5, Infinite well 11.8, Oscillator 12.0, Lattice 31.0
+  Recording note:       Iowa single-note files only at ff.
+  At C4, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):              -21   -8   -4   -1    0   -3   -8  -11  -13  -15  -16  -18
+  App (dB):                -8   -3   -1    0    0   -1   -3   -5   -8  -11  -15  -18
+
+Tuba
+----
+  Ensembles:            Orchestra, Wind ensemble
+  Potential:            Double well
+  Mass:                 1 m_e
+  Well separation:      20.0 nm
+  Barrier height:       5.01 eV
+  Level weights:        Boltzmann (thermal)
+  Temperature:          Fixed, 2,692 K
+  Attack / decay:       262 ms / 1.00 s
+  Sustain / release:    100% / 100 ms
+  Range:                E1-Bb3; matched at C2, C3, C4
+  Match:                14.9 dB RMS (poor), against Iowa MIS
+  Other potentials:     Finite well 15.4, V-shaped |x| 15.5, Morse 15.6, Infinite well 16.2, Oscillator 16.3, Lattice 32.5
+  Recording note:       Iowa single-note files only at ff.
+  At C3, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):              -15   -7    0    0   -2   -7   -7  -10  -10  -11  -16  -18
+  App (dB):                -7   -2    0    0   -1   -3   -5   -8  -11  -15  -17  -20
+
+Vibraphone
+----------
+  Ensembles:            Big band, Wind ensemble
+  Potential:            Morse
+  Mass:                 1 m_e
+  Range:                1.0 nm
+  Dissociation energy:  0.12 eV
+  Level weights:        Boltzmann (thermal)
+  Temperature:          Fixed, 102 K
+  Attack / decay:       6 ms / 2.48 s
+  Sustain / release:    0% / 2.00 s
+  Range:                F3-F6; matched at C4, C5, C6
+  Match:                8.1 dB RMS (loose), against Iowa MIS
+  Other potentials:     V-shaped |x| 9.5, Oscillator 9.7, Infinite well 9.7, Double well 10.0, Finite well 10.4, Lattice 10.6
+  Recording note:       Iowa single-note files only at ff.
+  At C5, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):                0  -39  -46  -12  -54  -60  -60  -60  -58  -60  -60  -60
+  App (dB):                 0  -30  -43  -43  -60  -57  -60  -60  -60  -60  -60  -60
+
+Viola
+-----
+  Ensembles:            Orchestra
+  Potential:            Finite well
+  Mass:                 1 m_e
+  Well width:           5.3 nm
+  Well depth:           1.35 eV
+  Level weights:        1 / level
+  Attack / decay:       1.18 s / 1.00 s
+  Sustain / release:    100% / 250 ms
+  Range:                C3-E6; matched at C3, C4, C5
+  Match:                7.4 dB RMS (loose), against Iowa MIS
+  Other potentials:     Morse 7.8, Double well 8.4, V-shaped |x| 8.9, Infinite well 10.2, Oscillator 10.9, Lattice 28.4
+  Recording note:       Iowa single-note files only at ff.
+  At C4, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):                0   -3   -9  -12  -10  -16  -16  -17  -15  -18  -17  -36
+  App (dB):                 0   -6  -10  -13  -15  -17  -19  -20  -20  -18  -22  -28
+
+Violin
+------
+  Ensembles:            Orchestra
+  Potential:            Finite well
+  Mass:                 1 m_e
+  Well width:           5.1 nm
+  Well depth:           0.692 eV
+  Level weights:        1 / level
+  Attack / decay:       1.76 s / 1.00 s
+  Sustain / release:    100% / 210 ms
+  Range:                G3-E7; matched at G3, A4, C6
+  Match:                8.0 dB RMS (loose), against Iowa MIS
+  Other potentials:     Morse 8.3, Double well 8.9, V-shaped |x| 11.3, Oscillator 12.1, Infinite well 12.5, Lattice 24.4
+  Recording note:       Iowa single-note (2012) files only at ff (mf exists only as multi-note scale files). String named in file (sulG/sulA/sulE).
+  At A4, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):                0   -8  -12  -12   -5  -10   -6  -22  -38  -18  -26  -34
+  App (dB):                 0   -7  -11  -13  -16  -15  -16  -27  -27  -33  -33  -38
+
+Xylophone
+---------
+  Ensembles:            Orchestra, Wind ensemble
+  Potential:            Morse
+  Mass:                 1 m_e
+  Range:                3.1 nm
+  Dissociation energy:  0.0977 eV
+  Level weights:        Boltzmann (thermal)
+  Temperature:          Fixed, 29 K
+  Attack / decay:       6 ms / 61 ms
+  Sustain / release:    0% / 60 ms
+  Range:                F4-C8; matched at C5, C6, C7
+  Match:                2.9 dB RMS (close), against Iowa MIS
+  Other potentials:     Infinite well 3.0, Oscillator 3.0, Lattice 3.2, V-shaped |x| 4.0, Finite well 5.1, Double well 5.9
+  Recording note:       Iowa single-note files only at ff.
+  At C6, harmonic:          1    2    3    4    5    6    7    8    9   10   11   12
+  Real (dB):                0  -51  -60  -60  -60  -60  -60  -60  -60  -60  -60  -60
+  App (dB):                 0  -53  -58  -60  -60  -60  -60  -60  -60  -60  -60  -60
 
 Limits of the model
 -------------------
-- Every pitched note is a periodic tone made of exact harmonics, so there is no bow or breath
-  noise, no vibrato, and no piano inharmonicity. The snare drum is mostly noise, which the app
-  cannot produce; its closest setting (an inharmonic lattice tone) is still 12 dB away.
-- Oboe and bassoon have a weak fundamental under strong 2nd-3rd harmonics. The double well
-  weakens the fundamental, but not with the right balance of the harmonics above it, so these
-  two still only match loosely (about 7 dB), best with the finite well.
-- The lattice was only considered at Bloch phases 0 and pi for pitched instruments: the other
-  phases make inharmonic partials, which real pitched instruments do not have.
-- The envelope is a simple ADSR: linear attack, exponential decay towards the sustain level, and
-  exponential release, so swells and bow changes inside a note are not modelled.
-- Several quite different settings can sound about equally close; these are the best found,
-  not the only good ones ("Other potentials" shows how near each other potential gets).
+- Every pitched note is a periodic tone made of exact harmonics: no breath or bow noise, no
+  vibrato, no piano inharmonicity, and no inharmonic overtones for bells, chimes or timpani. Drums
+  and cymbals are mostly noise, which the app cannot make; their settings are the closest tones.
+- One setting serves the whole range; a real instrument also changes character across it.
+- The envelope is a simple ADSR, so swells and articulation inside a note are not modelled.
+- Several quite different settings can sound about equally close ("Other potentials").
 
-Recordings: University of Iowa Electronic Music Studios, Musical Instrument Samples
-(https://theremin.music.uiowa.edu/MIS.html); harp and snare drum from the VSCO-2 Community
-Edition library (https://github.com/sgossner/VSCO-2-CE).
+Recordings: University of Iowa Electronic Music Studios (Musical Instrument Samples), VSCO-2
+Community Edition, Philharmonia Orchestra sound samples, VCSL, MTG Solo Saxophones, Karoryfer
+Black And Blue Basses, Virtuosity Drums and Sonatina Symphonic Orchestra (licences in the catalog).

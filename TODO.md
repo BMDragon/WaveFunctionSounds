@@ -11,6 +11,13 @@ Worked through in this order. Customization features stay less prominent in the 
 - [x] Play from a MIDI keyboard (Web MIDI)
 - [x] Render any MIDI file, and record live playing to WAV
 
+## Presets
+- [x] Re-run the instrument analysis (several notes per instrument, all potentials)
+- [x] Presets for every instrument of a symphony orchestra, jazz big band and wind ensemble that has
+      a free recording (40)
+- [ ] Alto clarinet, contrabass clarinet, cornet, flugelhorn, euphonium: no free recording found (decision pending)
+- [ ] Optional: a temperature mode where brightness falls with pitch, as in real instruments (decision pending)
+
 ## Medium
 - [x] Draw your own potential (in a collapsed Customize section)
 - [x] Hand-set level weights by dragging bars (Customize section)
