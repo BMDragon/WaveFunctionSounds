@@ -26,6 +26,8 @@ renders the opening of Un sospiro with every potential.
 - `morsePotential.py`: a molecular bond, lopsided, with levels crowding towards dissociation.
 - `linearPotential.py`: V-shaped |x|, with Airy-function states.
 - `latticePotential.py`: a Kronig-Penney crystal; Bloch phases other than 0 and pi give inharmonic partials.
+- `hydrogen.py`: a hydrogen-like atom (nuclear charge Z, angular momentum l): the radial states
+  u = rR, from the analytic Laguerre functions, in the Coulomb potential plus the centrifugal term.
 - `box2D.py`: 2D boxes (circular and rectangular drums). As in the 1D well, each state is one partial
   at its wavenumber relative to the ground state's, so the partials are inharmonic (Bessel zeros for
   the circle, π√((a/W)² + (b/H)²) for the rectangle).

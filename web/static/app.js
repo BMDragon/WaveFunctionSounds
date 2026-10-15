@@ -28,6 +28,7 @@ function params() {
     barrierFraction: +$('barrierFraction').value,
     blochPhase: +$('blochPhase').value,
     ...($('sound').value === 'survival' ? { sound: 'survival' } : {}),
+    ...(state.potential === 'hydrogen' ? { Z: +$('charge').value, l: +$('ell').value } : {}),
     ...(state.potential === 'rectangle' ? { aspect: +$('aspect').value } : {}),
     ...(state.potential === 'custom' ? { shape: encodeShape(state.shape) } : {}),
     ...($('weighting').value === 'custom' ? { customWeights: state.weights } : {}),
@@ -160,6 +161,9 @@ const POTENTIALS = {
             hint: 'A circular drum: a particle in a 2D disc. Each state is a partial at its wavenumber, so the partials are inharmonic (Bessel zeros). The plot shows each state along a diameter.' },
   rectangle: { length: 'Width', aspect: true,
                hint: 'A rectangular drum: a particle in a 2D box. Each state is a partial at its wavenumber, π√((a/W)² + (b/H)²), mostly inharmonic. The plot shows each state across the box.' },
+  hydrogen: { atom: true,
+              hint: 'A hydrogen-like atom: the radial states u = rR in the Coulomb potential plus the centrifugal ' +
+                    'barrier for angular momentum ℓ, with levels −Z² Ry / n². The plot shows u(r).' },
   custom: { length: 'Width', depth: 'Height at the top',
             hint: 'Your drawn potential (Customize, below), with hard walls at its edges.' },
 };
@@ -187,12 +191,16 @@ function refreshOutputs() {
   $('volumeOut').textContent = `${Math.round($('volume').value * 100)}%`;
   $('secondsOut').textContent = `${$('seconds').value} s`;
   const kind = POTENTIALS[state.potential];
-  $('lengthLabel').textContent = kind.length;
+  $('lengthLabel').textContent = kind.length || '';
   $('depthLabel').textContent = kind.depth || '';
   $('depthRow').hidden = !kind.depth;
   $('barrierRow').hidden = $('blochRow').hidden = !kind.lattice;
   $('tunnellingRow').hidden = state.potential !== 'doublewell';
   $('aspectRow').hidden = !kind.aspect;
+  $('lengthRow').hidden = !kind.length;
+  $('chargeRow').hidden = $('ellRow').hidden = !kind.atom;
+  $('chargeOut').textContent = $('charge').value;
+  $('ellOut').textContent = $('ell').value;
   $('soundHint').textContent = $('sound').value === 'survival'
     ? 'The particle starts in the superposition of the states with these weights, and you hear the probability of ' +
       'still finding it in that state, |⟨ψ(0)|ψ(t)⟩|²: partials at the energy differences, with E₁ − E₀ at the key.'
@@ -949,6 +957,8 @@ const SETTINGS = {
   depth: ['V', () => +Math.pow(10, +$('depth').value).toPrecision(3), v => { $('depth').value = Math.log10(v); }],
   barrierFraction: ['bw', () => +$('barrierFraction').value, v => { $('barrierFraction').value = v; }],
   blochPhase: ['phi', () => +$('blochPhase').value, v => { $('blochPhase').value = v; }],
+  charge: ['Z', () => +$('charge').value, v => { $('charge').value = v; }],
+  ell: ['l', () => +$('ell').value, v => { $('ell').value = v; }],
   aspect: ['ar', () => +$('aspect').value, v => { $('aspect').value = v; }],
   sound: ['snd', () => $('sound').value, v => { $('sound').value = v === 'survival' ? 'survival' : 'states'; }],
   tunnelling: ['tu', () => +$('tunnelling').checked, v => { $('tunnelling').checked = !!+v; }],
@@ -1094,7 +1104,7 @@ document.querySelectorAll('#potential button').forEach(button => {
     settingsChanged();
   });
 });
-['mass', 'length', 'depth', 'temperature', 'weighting', 'barrierFraction', 'blochPhase', 'tunnelling', 'aspect', 'sound'].forEach(id => {
+['mass', 'length', 'depth', 'temperature', 'weighting', 'barrierFraction', 'blochPhase', 'tunnelling', 'aspect', 'sound', 'charge', 'ell'].forEach(id => {
   $(id).addEventListener('input', () => { refreshOutputs(); scheduleUpdate(); settingsChanged(); });
 });
 document.querySelectorAll('input[name=tmode]').forEach(r => r.addEventListener('change', () => {

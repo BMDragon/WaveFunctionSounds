@@ -27,4 +27,4 @@ Design rule: choices follow from the physics, never from how music or instrument
 ## Bigger
 - [x] 2D boxes (circle, rectangle): partials at each mode's wavenumber, as in 1D
 - [x] Time-evolution mode: play the survival probability |<psi(0)|psi(t)>|^2 (partials at energy differences)
-- [ ] Hydrogen atom: the radial Coulomb potential with an l slider, as another potential
+- [x] Hydrogen atom: the radial Coulomb potential with an l slider, as another potential

@@ -276,7 +276,8 @@ def checkEndToEnd():
     base = dict(mass=1, length=5, depth=1.6, temperature=220, focusFreq=220, plotStates=8, freqs=freqs,
                 weighting='boltzmann', temperatureMode='pitch', barrierFraction=0.2, blochPhase=0.8)
     notes = unSospiro.readNotes(os.path.join(server.repoRoot, 'midi', 'unSospiro.mid'), 2)
-    for potential in ('infinite', 'finite', 'oscillator', 'doublewell', 'morse', 'lattice', 'linear', 'circle', 'rectangle'):
+    for potential in ('infinite', 'finite', 'oscillator', 'doublewell', 'morse', 'lattice', 'linear', 'circle', 'rectangle',
+                      'hydrogen'):
         for extra in ({}, dict(mass=5, length=20, depth=5), dict(mass=0.3, length=1, depth=0.3, temperatureMode='fixed',
                                                                    temperature=20000), dict(weighting='equal', blochPhase=1.0)):
             req = base | extra | dict(potential=potential)
@@ -306,6 +307,21 @@ def checkEndToEnd():
     direct = sum((ci * np.exp(2j * np.pi * ri * 110 * t)).real for ri, ci in zip(r, c))
     if np.abs(unSospiro.partialWave(r, c, 110, t) - direct).max() > 1e-6 * np.abs(direct).max():
         problems.append('additive renderer disagrees with a direct sum of the partials')
+    # hydrogen: E = -Z^2 Ry m / n^2, normalized states that solve the radial equation
+    for Z, l in ((1, 0), (3, 4), (10, 20)):
+        atom = server.requestModel(base | dict(potential='hydrogen', Z=Z, l=l))
+        if not np.allclose(atom.eng[:3], -Z**2 * 13.605693122994 / np.arange(l + 1, l + 4)**2):
+            problems.append(f'hydrogen Z={Z} l={l}: energies {atom.eng[:3]}')
+        for i in (0, 20, 59):
+            r = np.linspace(0, 4 * atom.turningPoints(i)[1] + 20 * atom.a, 200001)
+            if abs(np.trapz(atom.u(i, r)**2, r) - 1) > 1e-6:
+                problems.append(f'hydrogen Z={Z} l={l}: state {i} is not normalized')
+        i = 2
+        r = np.linspace(0.5 * atom.a / Z, 2 * atom.turningPoints(i)[1], 4000)
+        u = atom.u(i, r)
+        residual = -atom.kinetic * np.gradient(np.gradient(u, r), r) + (atom.potential(r) - atom.eng[i]) * u
+        if np.abs(residual[5:-5]).max() > 0.02 * np.abs(atom.eng[i] * u).max():
+            problems.append(f'hydrogen Z={Z} l={l}: state {i} does not solve the radial equation')
     # time evolution: the survival probability's partials are the energy differences over E_1 - E_0
     import timeEvolution
     r, c = timeEvolution.survivalContent([1, 4, 9], [1, 1, 1], 220)
