@@ -51,28 +51,25 @@ class Hydrogen(NumericalPotential):
         root = math.sqrt(max(self.coulomb**2 + 4 * E * L, 0))
         return (-self.coulomb + root) / (2 * E) if L else 0.0, (-self.coulomb - root) / (2 * E)
 
-    def computeCoefficients(self):
-        # Fourier coefficients of every wrapped state over one period. Sampled four times as
+    def coefficientRow(self, i):
+        # Fourier coefficients of the i-th wrapped state over one period. Sampled four times as
         # finely as the other potentials, since the states wiggle near the nucleus on a scale
         # much smaller than their size (the harmonics kept then change by under 1e-5 at 2^21
         # samples).
         samples = 4 * self.coefficientSamples
         u = np.linspace(0, 1, samples, False)
-        coefficients = []
-        for i in range(len(self.eng)):
-            left, right = self.turningPoints(i)
-            width, centre = right - left, (left + right) / 2
-            reach = right + 12 * math.sqrt(self.kinetic / -self.eng[i]) + self.a     # past the tail
-            images = np.arange(math.floor((centre - reach) / width - 1/2) - 1, math.ceil(centre / width + 3/2) + 2)
-            flip = (self.n[i] - self.l - 1) % 2 == 0          # an even number of nodes
-            wrapped = np.zeros(samples)
-            for image in images:
-                r = centre + width * (2*u - 1/2) - width * image
-                inside = (r > 0) & (r < reach)
-                if inside.any():
-                    wrapped[inside] += (-1.0)**abs(image) * self.u(i, r[inside]) if flip else self.u(i, r[inside])
-            coefficients.append((2 * np.fft.rfft(wrapped * math.sqrt(width)) / samples)[:self.coefficientSamples // 2 + 1])
-        return np.array(coefficients)
+        left, right = self.turningPoints(i)
+        width, centre = right - left, (left + right) / 2
+        reach = right + 12 * math.sqrt(self.kinetic / -self.eng[i]) + self.a     # past the tail
+        images = np.arange(math.floor((centre - reach) / width - 1/2) - 1, math.ceil(centre / width + 3/2) + 2)
+        flip = (self.n[i] - self.l - 1) % 2 == 0          # an even number of nodes
+        wrapped = np.zeros(samples)
+        for image in images:
+            r = centre + width * (2*u - 1/2) - width * image
+            inside = (r > 0) & (r < reach)
+            if inside.any():
+                wrapped[inside] += (-1.0)**abs(image) * self.u(i, r[inside]) if flip else self.u(i, r[inside])
+        return (2 * np.fft.rfft(wrapped * math.sqrt(width)) / samples)[:self.coefficientSamples // 2 + 1]
 
     def plotData(self, count):
         # Radius (nm), effective potential (meV, clipped below the lowest level shown),

@@ -37,11 +37,9 @@ class DoubleWell(NumericalPotential):
         # paired, are shared equally by both wells (rate None), as is any pair whose rate is
         # above the Nyquist frequency, which can't be heard as a rate.
         # Returns [(m, c, rate)] with harmonicContent's m and c for each group.
-        if self.stateCoefficients is None:
-            self.stateCoefficients = self.computeCoefficients()
         m = np.arange(1, min(int(np.ceil(sampleRate / (2*freq))), self.coefficientSamples // 2))
         amps = self.amplitudes(temperature or freq, weighting)
-        C = self.stateCoefficients[:, m]
+        C = self.coefficientsFor(amps)[:, m]
         left = self.x < 0
         dx = self.x[1] - self.x[0]
         groups, centred, n = [], np.zeros(len(m), complex), 0

@@ -189,31 +189,43 @@ class NumericalPotential:
         support = np.nonzero(np.abs(psi) > 1e-7 * np.abs(psi).max())[0]
         return self.x[support[0]], self.x[support[-1]]
 
-    def computeCoefficients(self):
-        # Fourier coefficients of every wrapped state over one period
+    def coefficientRow(self, n):
+        # Fourier coefficients of the n-th wrapped state over one period
         u = np.linspace(0, 1, self.coefficientSamples, False)
-        coefficients = []
-        for n in range(len(self.eng)):
-            left, right = self.turningPoints(n)
-            width, centre = right - left, (left + right) / 2
-            low, high = self.extent(n)
-            images = np.arange(math.floor((centre - high) / width - 1/2) - 1, math.ceil((centre - low) / width + 3/2) + 2)
-            X = centre + width * (2*u[None, :] - 1/2) - width * images[:, None]
-            flip = self.parity[n] == 1 if self.parity[n] else n % 2 == 0     # n nodes: flip when n is even
-            sign = (-1.0)**np.abs(images) if flip else np.ones(len(images))
-            wrapped = math.sqrt(width) * (sign @ self.state(n, X))
-            coefficients.append(2 * np.fft.rfft(wrapped) / self.coefficientSamples)
-        return np.array(coefficients)
+        left, right = self.turningPoints(n)
+        width, centre = right - left, (left + right) / 2
+        low, high = self.extent(n)
+        images = np.arange(math.floor((centre - high) / width - 1/2) - 1, math.ceil((centre - low) / width + 3/2) + 2)
+        X = centre + width * (2*u[None, :] - 1/2) - width * images[:, None]
+        flip = self.parity[n] == 1 if self.parity[n] else n % 2 == 0     # n nodes: flip when n is even
+        sign = (-1.0)**np.abs(images) if flip else np.ones(len(images))
+        wrapped = math.sqrt(width) * (sign @ self.state(n, X))
+        return 2 * np.fft.rfft(wrapped) / self.coefficientSamples
+
+    def computeCoefficients(self):
+        # every state's coefficients
+        return np.array([self.coefficientRow(n) for n in range(len(self.eng))])
+
+    def coefficientsFor(self, amps):
+        # The coefficient matrix with every state that `amps` weights computed; a state is only
+        # worked out the first time a note gives it a weight above 1e-12 of the largest
+        if self.stateCoefficients is None:
+            self.stateCoefficients = np.zeros((len(self.eng), self.coefficientSamples // 2 + 1), complex)
+            self.coefficientsDone = np.zeros(len(self.eng), bool)
+        amps = np.abs(amps)
+        for n in np.nonzero((amps > 1e-12 * amps.max()) & ~self.coefficientsDone)[0]:
+            self.stateCoefficients[n] = self.coefficientRow(n)
+            self.coefficientsDone[n] = True
+        return self.stateCoefficients
 
     def harmonicContent(self, freq, sampleRate=44100, temperature=None, weighting='boltzmann'):
         # Harmonic numbers m and complex amplitudes c_m of one period, so the waveform is
         # Re(sum c_m exp(2 pi i m freq t)). The temperature in kelvin equals freq in Hz
         # unless given, and only harmonics below the Nyquist frequency are kept so nothing
         # aliases.
-        if self.stateCoefficients is None:
-            self.stateCoefficients = self.computeCoefficients()
         m = np.arange(1, min(int(np.ceil(sampleRate / (2*freq))), self.coefficientSamples // 2))
-        return m, self.amplitudes(temperature or freq, weighting) @ self.stateCoefficients[:, m]
+        amps = self.amplitudes(temperature or freq, weighting)
+        return m, amps @ self.coefficientsFor(amps)[:, m]
 
     def plotData(self, count):
         # Position (nm), potential (meV), level energies (meV) and the first `count`
