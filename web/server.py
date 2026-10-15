@@ -5,6 +5,8 @@ import json
 import os
 import sys
 import threading
+import traceback
+import warnings
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 import numpy as np
@@ -270,7 +272,10 @@ class Handler(SimpleHTTPRequestHandler):
                     return
         except Exception as error:
             body = json.dumps({'error': f'{type(error).__name__}: {error}'}).encode()
-            self.send_response(400 if isinstance(error, (KeyError, ValueError, FileNotFoundError)) else 500)
+            expected = isinstance(error, (KeyError, ValueError, FileNotFoundError))     # a bad request
+            sys.stderr.write(f'Error in {self.path}: {type(error).__name__}: {error}\n' if expected
+                             else f'Error in {self.path}:\n{traceback.format_exc()}')
+            self.send_response(400 if expected else 500)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Content-Length', str(len(body)))
             self.end_headers()
@@ -282,12 +287,17 @@ class Handler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    # print nothing for requests that work, only errors
     def log_message(self, format, *args):
-        if self.command == 'POST':
-            sys.stderr.write(f'{self.command} {self.path} {args[1] if len(args) > 1 else ""}\n')
+        pass
+
+    def log_error(self, format, *args):
+        if self.path != '/favicon.ico':                 # browsers ask for one; there is none
+            sys.stderr.write(f'Error in {self.path}: {format % args}\n')
 
 if __name__ == '__main__':
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
+    warnings.simplefilter('ignore', RuntimeWarning)     # numerical overflow in values that are then discarded
     harmonicOscillator.harmonicContent(220)     # every oscillator shares these coefficients: compute them up front
     print(f'Serving on http://localhost:{port}  (Ctrl+C to stop)')
     ThreadingHTTPServer(('127.0.0.1', port), Handler).serve_forever()
