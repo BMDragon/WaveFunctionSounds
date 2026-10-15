@@ -125,10 +125,10 @@ def choosePreset(part, channel, overrides):
 
 def renderPart(notes, presetId, nSeconds):
     preset = PRESETS[presetId]
-    req = {k: preset[k] for k in ('potential', 'mass', 'length', 'depth', 'barrierFraction', 'blochPhase',
-                                   'weighting', 'temperatureMode', 'temperature')}
+    # the preset as the web app reads it, including the hydrogen atom's Z and l and the sound
+    req = dict(preset, Z=preset.get('charge', 1), l=preset.get('ell', 0))
     model = server.requestModel(req)
-    content = lambda f, sr: model.harmonicContent(f, sr, server.temperatureFor(req, f), req['weighting'])
+    content = lambda f, sr: server.content(model, req, f, sr, req['weighting'])
     keys = preset.get('keys')
     if keys and keys[0] == keys[1]:         # unpitched: every hit sounds at the pitch it was matched at
         notes = [(s, e, keys[0], v) for s, e, n, v in notes]
