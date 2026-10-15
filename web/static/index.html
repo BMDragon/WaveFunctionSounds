@@ -14,6 +14,13 @@
 
 <main>
   <aside class="panel controls">
+    <section class="presets">
+      <h2>Presets</h2>
+      <div class="presetGrid" id="presets"></div>
+      <p class="hint" id="presetHint"></p>
+      <button id="copyLink" class="link">Copy link to this sound</button>
+    </section>
+
     <section>
       <h2>Potential</h2>
       <div class="segmented" id="potential">
@@ -62,9 +69,9 @@
       <label>Attack <output id="attackOut"></output>
         <input type="range" id="attack" min="0" max="3.48" step="0.01" value="0.7"></label>
       <label>Decay <output id="decayOut"></output>
-        <input type="range" id="decay" min="0.1" max="6" step="0.1" value="1.5"></label>
-      <label>Sustain <output id="sustainOut"></output>
-        <input type="range" id="sustain" min="0" max="1" step="0.01" value="0"></label>
+        <input type="range" id="decay" min="-1.52" max="0.78" step="0.01" value="0.18"></label>
+      <label>Sustain <output id="sustainLevelOut"></output>
+        <input type="range" id="sustainLevel" min="0" max="1" step="0.01" value="0"></label>
       <label>Release <output id="releaseOut"></output>
         <input type="range" id="release" min="0.02" max="2" step="0.01" value="0.1"></label>
       <label>Volume <output id="volumeOut"></output>

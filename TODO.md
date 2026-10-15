@@ -7,7 +7,7 @@ Worked through in this order. Customization features stay less prominent in the 
 
 ## Easy
 - [x] Full ADSR envelope: a sustain level and attacks longer than 300 ms
-- [ ] Instrument presets (prominent) and shareable links that reopen a sound
+- [x] Instrument presets (prominent) and shareable links that reopen a sound
 - [ ] Play from a MIDI keyboard (Web MIDI)
 - [ ] Render any MIDI file, and record live playing to WAV
 

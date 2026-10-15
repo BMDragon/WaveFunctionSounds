@@ -1,0 +1,242 @@
+{
+ "note": "Generated from the instrument matching (see instrumentSettings.txt).",
+ "presets": [
+  {
+   "id": "default",
+   "name": "Default",
+   "potential": "infinite",
+   "mass": 1,
+   "length": 5,
+   "depth": 1.6,
+   "barrierFraction": 0.2,
+   "blochPhase": 0.8,
+   "weighting": "boltzmann",
+   "temperatureMode": "pitch",
+   "temperature": 220,
+   "attack": 0.005,
+   "decay": 1.5,
+   "sustain": 0,
+   "release": 0.1
+  },
+  {
+   "id": "piano",
+   "name": "Piano",
+   "potential": "doublewell",
+   "mass": 1.0,
+   "length": 1.0,
+   "depth": 1.2302687708123816,
+   "barrierFraction": 0.2,
+   "blochPhase": 0.8,
+   "weighting": "boltzmann",
+   "temperatureMode": "fixed",
+   "temperature": 5754.399373371566,
+   "attack": 0.019,
+   "decay": 2.424,
+   "sustain": 0.0,
+   "release": 0.15,
+   "keys": [
+    48,
+    84
+   ],
+   "match": 2.0
+  },
+  {
+   "id": "violin",
+   "name": "Violin",
+   "potential": "finite",
+   "mass": 1.0,
+   "length": 20,
+   "depth": 0.05011872336272722,
+   "barrierFraction": 0.2,
+   "blochPhase": 0.8,
+   "weighting": "boltzmann",
+   "temperatureMode": "fixed",
+   "temperature": 100.0,
+   "attack": 1.762,
+   "decay": 1.0,
+   "sustain": 1.0,
+   "release": 0.21,
+   "keys": [
+    55,
+    84
+   ],
+   "match": 6.2
+  },
+  {
+   "id": "cello",
+   "name": "Cello",
+   "potential": "morse",
+   "mass": 1.0,
+   "length": 8.5,
+   "depth": 0.10232929922807542,
+   "barrierFraction": 0.2,
+   "blochPhase": 0.8,
+   "weighting": "boltzmann",
+   "temperatureMode": "fixed",
+   "temperature": 162.18100973589299,
+   "attack": 3.0,
+   "decay": 1.0,
+   "sustain": 1.0,
+   "release": 0.25,
+   "keys": [
+    48,
+    69
+   ],
+   "match": 4.4
+  },
+  {
+   "id": "harp",
+   "name": "Harp",
+   "potential": "doublewell",
+   "mass": 1.0,
+   "length": 2.0,
+   "depth": 0.36307805477010135,
+   "barrierFraction": 0.2,
+   "blochPhase": 0.8,
+   "weighting": "boltzmann",
+   "temperatureMode": "fixed",
+   "temperature": 89.12509381337455,
+   "attack": 0.012,
+   "decay": 0.554,
+   "sustain": 0.0,
+   "release": 0.55,
+   "keys": [
+    48,
+    84
+   ],
+   "match": 4.0
+  },
+  {
+   "id": "flute",
+   "name": "Flute",
+   "potential": "morse",
+   "mass": 1.0,
+   "length": 2.1,
+   "depth": 2.5703957827688635,
+   "barrierFraction": 0.2,
+   "blochPhase": 0.8,
+   "weighting": "boltzmann",
+   "temperatureMode": "fixed",
+   "temperature": 2238.72113856834,
+   "attack": 0.4,
+   "decay": 1.0,
+   "sustain": 1.0,
+   "release": 0.06,
+   "keys": [
+    60,
+    84
+   ],
+   "match": 5.5
+  },
+  {
+   "id": "oboe",
+   "name": "Oboe",
+   "potential": "finite",
+   "mass": 1.0,
+   "length": 5.0,
+   "depth": 0.1778279410038923,
+   "barrierFraction": 0.2,
+   "blochPhase": 0.8,
+   "weighting": "equal",
+   "temperatureMode": "pitch",
+   "temperature": 220,
+   "attack": 0.338,
+   "decay": 1.0,
+   "sustain": 1.0,
+   "release": 0.06,
+   "keys": [
+    58,
+    84
+   ],
+   "match": 7.2
+  },
+  {
+   "id": "bassoon",
+   "name": "Bassoon",
+   "potential": "finite",
+   "mass": 1.0,
+   "length": 8.0,
+   "depth": 0.35481338923357547,
+   "barrierFraction": 0.2,
+   "blochPhase": 0.8,
+   "weighting": "boltzmann",
+   "temperatureMode": "fixed",
+   "temperature": 173.78008287493762,
+   "attack": 0.325,
+   "decay": 1.0,
+   "sustain": 1.0,
+   "release": 0.04,
+   "keys": [
+    48,
+    64
+   ],
+   "match": 7.1
+  },
+  {
+   "id": "trumpet",
+   "name": "Trumpet",
+   "potential": "doublewell",
+   "mass": 1.0,
+   "length": 12.5,
+   "depth": 0.35481338923357547,
+   "barrierFraction": 0.2,
+   "blochPhase": 0.8,
+   "weighting": "boltzmann",
+   "temperatureMode": "fixed",
+   "temperature": 457.0881896148752,
+   "attack": 0.225,
+   "decay": 1.0,
+   "sustain": 1.0,
+   "release": 0.05,
+   "keys": [
+    54,
+    84
+   ],
+   "match": 2.9
+  },
+  {
+   "id": "trombone",
+   "name": "Trombone",
+   "potential": "finite",
+   "mass": 1.0,
+   "length": 7.7,
+   "depth": 2.344228815319922,
+   "barrierFraction": 0.2,
+   "blochPhase": 0.8,
+   "weighting": "boltzmann",
+   "temperatureMode": "fixed",
+   "temperature": 3467.368504525317,
+   "attack": 0.562,
+   "decay": 1.0,
+   "sustain": 1.0,
+   "release": 0.14,
+   "keys": [
+    48,
+    65
+   ],
+   "match": 1.3
+  },
+  {
+   "id": "snare",
+   "name": "Snare drum",
+   "potential": "lattice",
+   "mass": 1.0,
+   "length": 20,
+   "depth": 5.011872336272722,
+   "barrierFraction": 0.6,
+   "blochPhase": 0.5,
+   "weighting": "inverse",
+   "temperatureMode": "pitch",
+   "temperature": 220,
+   "attack": 0.006,
+   "decay": 0.062,
+   "sustain": 0.0,
+   "release": 0.06,
+   "keys": [
+    48,
+    48
+   ],
+   "match": 12.0
+  }
+ ]
+}

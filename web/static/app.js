@@ -46,6 +46,7 @@ const POTENTIALS = {
 };
 
 const attackSeconds = () => Math.pow(10, +$('attack').value) / 1000;     // the attack slider is logarithmic, 1 ms to 3 s
+const decaySeconds = () => Math.pow(10, +$('decay').value);              // so is the decay slider, 0.03 s to 6 s
 
 function fmt(v, digits = 3) {
   if (v === 0) return '0';
@@ -61,8 +62,8 @@ function refreshOutputs() {
   $('depthOut').textContent = `${fmt(p.depth)} eV`;
   $('temperatureOut').textContent = `${fmt(p.temperature)} K`;
   $('attackOut').textContent = attackSeconds() < 1 ? `${Math.round(attackSeconds() * 1000)} ms` : `${attackSeconds().toFixed(2)} s`;
-  $('sustainOut').textContent = `${Math.round($('sustain').value * 100)}%`;
-  $('decayOut').textContent = `${(+$('decay').value).toFixed(1)} s`;
+  $('sustainLevelOut').textContent = `${Math.round($('sustainLevel').value * 100)}%`;
+  $('decayOut').textContent = `${fmt(decaySeconds(), 2)} s`;
   $('releaseOut').textContent = `${(+$('release').value).toFixed(2)} s`;
   $('volumeOut').textContent = `${Math.round($('volume').value * 100)}%`;
   $('secondsOut').textContent = `${$('seconds').value} s`;
@@ -207,7 +208,7 @@ function noteOn(n) {
   const gain = ctx.createGain();
   gain.gain.setValueAtTime(0, now);
   gain.gain.linearRampToValueAtTime(0.3, now + attack);
-  gain.gain.setTargetAtTime(0.3 * +$('sustain').value, now + attack, +$('decay').value);   // decay towards the sustain level
+  gain.gain.setTargetAtTime(0.3 * +$('sustainLevel').value, now + attack, decaySeconds());   // decay towards the sustain level
   output.connect(gain).connect(master);
   voices[n] = { sources, gain, sustained: false };
   keyElement(n)?.classList.add('active');
@@ -594,7 +595,7 @@ async function renderPiece() {
   try {
     audio();
     const body = { ...params(), seconds: +$('seconds').value, attack: attackSeconds(),
-                   decay: +$('decay').value, sustain: +$('sustain').value, release: +$('release').value };
+                   decay: decaySeconds(), sustain: +$('sustainLevel').value, release: +$('release').value };
     const res = await fetch('/api/render', { method: 'POST', headers: { 'Content-Type': 'application/json' },
                                              body: JSON.stringify(body) });
     if (!res.ok) throw new Error((await res.json()).error || res.statusText);
@@ -619,6 +620,110 @@ async function renderPiece() {
   }
 }
 
+// ---------- presets and shareable links ----------
+
+// Every setting, as short keys for the URL. Sliders on a log scale store the physical value.
+const SETTINGS = {
+  potential: ['p', () => state.potential, v => selectPotential(v)],
+  mass: ['m', () => +Math.pow(10, +$('mass').value).toPrecision(3), v => { $('mass').value = Math.log10(v); }],
+  length: ['L', () => +$('length').value, v => { $('length').value = v; }],
+  depth: ['V', () => +Math.pow(10, +$('depth').value).toPrecision(3), v => { $('depth').value = Math.log10(v); }],
+  barrierFraction: ['bw', () => +$('barrierFraction').value, v => { $('barrierFraction').value = v; }],
+  blochPhase: ['phi', () => +$('blochPhase').value, v => { $('blochPhase').value = v; }],
+  weighting: ['w', () => $('weighting').value, v => { $('weighting').value = v; }],
+  temperatureMode: ['tm', () => document.querySelector('input[name=tmode]:checked').value,
+                    v => { document.querySelector(`input[name=tmode][value=${v === 'fixed' ? 'fixed' : 'pitch'}]`).checked = true; }],
+  temperature: ['T', () => +Math.pow(10, +$('temperature').value).toPrecision(4), v => { $('temperature').value = Math.log10(v); }],
+  attack: ['a', () => +attackSeconds().toPrecision(3), v => { $('attack').value = Math.log10(v * 1000); }],
+  decay: ['d', () => +decaySeconds().toPrecision(3), v => { $('decay').value = Math.log10(v); }],
+  sustain: ['s', () => +$('sustainLevel').value, v => { $('sustainLevel').value = v; }],
+  release: ['r', () => +$('release').value, v => { $('release').value = v; }],
+};
+let presets = [];
+
+function selectPotential(value) {
+  if (!POTENTIALS[value]) return;
+  state.potential = value;
+  document.querySelectorAll('#potential button').forEach(b => b.classList.toggle('active', b.dataset.value === value));
+}
+
+async function loadPresets() {
+  try {
+    presets = (await (await fetch('presets.json')).json()).presets;
+  } catch (error) {
+    presets = [];
+  }
+  const grid = $('presets');
+  presets.forEach(preset => {
+    const button = document.createElement('button');
+    button.textContent = preset.name;
+    button.dataset.id = preset.id;
+    button.addEventListener('click', () => applySettings(preset, preset.id));
+    grid.appendChild(button);
+  });
+}
+
+function applySettings(settings, presetId = null) {
+  for (const [name, [, , set]] of Object.entries(SETTINGS)) {
+    if (settings[name] !== undefined && settings[name] !== null && settings[name] !== '') set(settings[name]);
+  }
+  state.preset = presets.some(p => p.id === presetId) ? presetId : null;
+  refreshOutputs();
+  showPreset();
+  writeUrl();
+  scheduleUpdate(0);
+}
+
+function settingsChanged() {
+  // any manual change turns a preset into a custom sound
+  state.preset = null;
+  showPreset();
+  writeUrl();
+}
+
+function showPreset() {
+  const preset = presets.find(p => p.id === state.preset);
+  document.querySelectorAll('#presets button').forEach(b => b.classList.toggle('active', b.dataset.id === state.preset));
+  document.querySelectorAll('.key').forEach(k => {
+    const n = +k.dataset.note;
+    k.classList.toggle('suggested', !!(preset && preset.keys && n >= preset.keys[0] && n <= preset.keys[1]));
+  });
+  $('presetHint').textContent = !preset ? 'Custom sound: pick a preset, or share this one with the link below.'
+    : preset.match === undefined ? 'The starting sound: an infinite square well at T = pitch.'
+    : `Matched to a recording of a real ${preset.name.toLowerCase()} (${preset.match} dB away). ` +
+      `Best on ${noteName(preset.keys[0])}` + (preset.keys[1] > preset.keys[0] ? `–${noteName(preset.keys[1])}` : '') + ' (highlighted).';
+}
+
+function writeUrl() {
+  const query = new URLSearchParams();
+  if (state.preset) query.set('preset', state.preset);
+  for (const [, [key, get]] of Object.entries(SETTINGS)) query.set(key, get());
+  history.replaceState(null, '', '#' + query.toString());
+}
+
+function settingsFromUrl() {
+  if (location.hash.length < 2) return null;
+  const query = new URLSearchParams(location.hash.slice(1));
+  const settings = { preset: query.get('preset') };
+  for (const [name, [key]] of Object.entries(SETTINGS)) {
+    if (!query.has(key)) continue;
+    const raw = query.get(key);
+    settings[name] = isNaN(+raw) || raw === '' ? raw : +raw;
+  }
+  return settings;
+}
+
+$('copyLink').addEventListener('click', async () => {
+  writeUrl();
+  try {
+    await navigator.clipboard.writeText(location.href);
+    $('copyLink').textContent = 'Link copied';
+  } catch (error) {
+    window.prompt('Copy this link:', location.href);
+  }
+  setTimeout(() => { $('copyLink').textContent = 'Copy link to this sound'; }, 1500);
+});
+
 // ---------- wiring ----------
 
 document.querySelectorAll('#potential button').forEach(button => {
@@ -627,13 +732,17 @@ document.querySelectorAll('#potential button').forEach(button => {
     state.potential = button.dataset.value;
     refreshOutputs();
     scheduleUpdate(0);
+    settingsChanged();
   });
 });
 ['mass', 'length', 'depth', 'temperature', 'weighting', 'barrierFraction', 'blochPhase'].forEach(id => {
-  $(id).addEventListener('input', () => { refreshOutputs(); scheduleUpdate(); });
+  $(id).addEventListener('input', () => { refreshOutputs(); scheduleUpdate(); settingsChanged(); });
 });
-document.querySelectorAll('input[name=tmode]').forEach(r => r.addEventListener('change', () => { refreshOutputs(); scheduleUpdate(0); }));
-['attack', 'decay', 'sustain', 'release', 'seconds'].forEach(id => $(id).addEventListener('input', refreshOutputs));
+document.querySelectorAll('input[name=tmode]').forEach(r => r.addEventListener('change', () => {
+  refreshOutputs(); scheduleUpdate(0); settingsChanged();
+}));
+['attack', 'decay', 'sustainLevel', 'release'].forEach(id => $(id).addEventListener('input', () => { refreshOutputs(); settingsChanged(); }));
+$('seconds').addEventListener('input', refreshOutputs);
 $('volume').addEventListener('input', () => { refreshOutputs(); if (master) master.gain.value = +$('volume').value; });
 $('sustain').addEventListener('change', () => { if (!$('sustain').checked) releaseSustained(); });
 $('render').addEventListener('click', renderPiece);
@@ -642,4 +751,12 @@ window.addEventListener('resize', () => { clearTimeout(window.resizeTimer); wind
 buildKeyboard();
 refreshOutputs();
 drawSpectrogramAxis();
-update();
+loadPresets().then(() => {
+  const shared = settingsFromUrl();
+  if (shared) applySettings(shared, shared.preset);
+  else {
+    state.preset = 'default';
+    showPreset();
+    update();
+  }
+});
