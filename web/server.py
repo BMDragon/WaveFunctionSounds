@@ -23,6 +23,7 @@ import morsePotential
 import latticePotential
 import linearPotential
 import customPotential
+import box2D
 import unSospiro
 
 electronMass = 9.1093837e-31
@@ -33,9 +34,9 @@ levelsShown = 30            # levels in the weights chart
 lock = threading.Lock()     # the models cache coefficients lazily, so compute one request at a time
 
 @functools.lru_cache(maxsize=16)
-def model(potential, mass, length, depth, barrierFraction=0.2, blochPhase=0.8, shape=''):
+def model(potential, mass, length, depth, barrierFraction=0.2, blochPhase=0.8, shape='', aspect=1.5):
     # mass in electron masses, length in nm, depth (or barrier/height) in eV, Bloch phase in
-    # units of pi, shape the code of a drawn potential
+    # units of pi, shape the code of a drawn potential, aspect the rectangle's height / width
     m, L, V = mass * electronMass, length * 1e-9, depth * eV
     if potential == 'infinite':
         return infiniteSquareWell.InfiniteSquareWell(m, L)
@@ -49,6 +50,10 @@ def model(potential, mass, length, depth, barrierFraction=0.2, blochPhase=0.8, s
         return latticePotential.LatticePotential(m, L, V, barrierFraction, blochPhase)
     if potential == 'linear':
         return linearPotential.LinearPotential(m, L, V)
+    if potential == 'circle':
+        return box2D.CircularBox(m, L)
+    if potential == 'rectangle':
+        return box2D.RectangularBox(m, L, aspect)
     if potential == 'custom':
         return customPotential.CustomPotential(m, L, V, customPotential.decodeShape(shape))
     return harmonicOscillator.HarmonicOscillator(m, L)
@@ -60,7 +65,8 @@ def requestModel(req):
         raise ValueError('a drawn potential needs a shape code of 2-256 characters 0-9 and a-z')
     return model(req['potential'], float(req['mass']), float(req['length']), float(req.get('depth', 1.6)),
                  float(req.get('barrierFraction', 0.2)) if lattice else 0.2,
-                 float(req.get('blochPhase', 0.8)) if lattice else 0.8, shape)
+                 float(req.get('blochPhase', 0.8)) if lattice else 0.8, shape,
+                 min(max(float(req.get('aspect', 1.5)), 1), 4) if req['potential'] == 'rectangle' else 1.5)
 
 def weightingFor(req):
     # 'boltzmann', 'equal', 'inverse', or 'custom' with hand-set amplitudes in 'customWeights'
@@ -148,7 +154,7 @@ def describe(req):
         info['bandsBelowBarrier'] = int((m.eng < m.barrier / eV).sum())
         info['blochPhase'] = m.blochPhase
     truncatable = (doubleWell.DoubleWell, linearPotential.LinearPotential, latticePotential.LatticePotential,
-                   customPotential.CustomPotential)
+                   customPotential.CustomPotential, box2D.Box2D)
     if isinstance(m, truncatable) or (isinstance(m, morsePotential.MorsePotential) and len(m.eng) == m.maxStates):
         last = m.amplitudes(focusT, weighting)[-1]
         if weighting == 'boltzmann' and last > 1e-4:

@@ -32,6 +32,8 @@
         <button data-value="morse">Morse</button>
         <button data-value="lattice">Lattice</button>
         <button data-value="linear">V-shaped |x|</button>
+        <button data-value="circle">Circle (2D)</button>
+        <button data-value="rectangle">Rectangle (2D)</button>
       </div>
       <p class="hint" id="potentialHint"></p>
     </section>
@@ -48,6 +50,8 @@
         <input type="range" id="barrierFraction" min="0.05" max="0.9" step="0.01" value="0.2"></label>
       <label id="blochRow">Bloch phase <output id="blochPhaseOut"></output>
         <input type="range" id="blochPhase" min="0" max="1" step="0.01" value="0.8"></label>
+      <label id="aspectRow">Height / width <output id="aspectOut"></output>
+        <input type="range" id="aspect" min="1" max="4" step="0.01" value="1.5"></label>
       <label id="tunnellingRow" class="inline" title="The particle starts in the left well; each pair of levels below the barrier moves between the speakers at its tunnelling rate">
         <input type="checkbox" id="tunnelling"> Tunnelling: start in the left well, hear it move between the speakers</label>
     </section>

@@ -66,7 +66,8 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .ensembleTabs button { border: 0; border-bottom: 2px solid transparent; background: none; padding: 2px 0; color: var(--muted);
   cursor: pointer; font: inherit; font-size: 12px; }
 .ensembleTabs button.active { color: var(--text); border-bottom-color: var(--accent); }
-.presetGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.presetGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+.presetGrid button { min-width: 0; hyphens: manual; overflow-wrap: anywhere; }
 .presetGrid button {
   padding: 7px 3px; border: 1px solid var(--border); border-radius: 6px; background: var(--panel); color: var(--text);
   cursor: pointer; font: inherit; font-size: 12px; font-weight: 600;

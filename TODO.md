@@ -25,6 +25,6 @@ Design rule: choices follow from the physics, never from how music or instrument
       splitting's rate (splitting in K = rate in Hz, like T = pitch)
 
 ## Bigger
-- [ ] 2D boxes (circle, rectangle): partials at each mode's wavenumber, as in 1D
+- [x] 2D boxes (circle, rectangle): partials at each mode's wavenumber, as in 1D
 - [ ] Time-evolution mode: play the survival probability |<psi(0)|psi(t)>|^2 (partials at energy differences)
 - [ ] Hydrogen atom: the radial Coulomb potential with an l slider, as another potential

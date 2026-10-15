@@ -276,7 +276,7 @@ def checkEndToEnd():
     base = dict(mass=1, length=5, depth=1.6, temperature=220, focusFreq=220, plotStates=8, freqs=freqs,
                 weighting='boltzmann', temperatureMode='pitch', barrierFraction=0.2, blochPhase=0.8)
     notes = unSospiro.readNotes(os.path.join(server.repoRoot, 'midi', 'unSospiro.mid'), 2)
-    for potential in ('infinite', 'finite', 'oscillator', 'doublewell', 'morse', 'lattice', 'linear'):
+    for potential in ('infinite', 'finite', 'oscillator', 'doublewell', 'morse', 'lattice', 'linear', 'circle', 'rectangle'):
         for extra in ({}, dict(mass=5, length=20, depth=5), dict(mass=0.3, length=1, depth=0.3, temperatureMode='fixed',
                                                                    temperature=20000), dict(weighting='equal', blochPhase=1.0)):
             req = base | extra | dict(potential=potential)
@@ -290,6 +290,22 @@ def checkEndToEnd():
         audio = unSospiro.render(notes, lambda f, sr: model.harmonicContent(f, sr), nSeconds=2)
         if not np.all(np.isfinite(audio)) or np.abs(audio).max() == 0:
             problems.append(f'{potential}: render produced silence or non-finite samples')
+    # 2D boxes: partials at the exact wavenumber ratios, and the additive renderer they need
+    from scipy.special import jn_zeros
+    circle = server.requestModel(base | dict(potential='circle'))
+    r, c = circle.harmonicContent(220, 44100, None, 'equal')
+    if not np.allclose(r[:3], [1, jn_zeros(1, 1)[0] / jn_zeros(0, 1)[0], jn_zeros(2, 1)[0] / jn_zeros(0, 1)[0]]):
+        problems.append(f'circle: first partials {r[:3]} are not the Bessel-zero ratios')
+    if not np.allclose(np.abs(c[:2]), [1, 2]):
+        problems.append('circle: the cos and sin modes of m = 1 do not add')
+    square = server.requestModel(base | dict(potential='rectangle', aspect=1))
+    r, c = square.harmonicContent(220, 44100, None, 'equal')
+    if not np.allclose(r[:3], [1, math.sqrt(5 / 2), 2]):
+        problems.append(f'square: first partials {r[:3]} are not sqrt((a^2 + b^2) / 2)')
+    t = np.arange(20000) / 44100
+    direct = sum((ci * np.exp(2j * np.pi * ri * 110 * t)).real for ri, ci in zip(r, c))
+    if np.abs(unSospiro.partialWave(r, c, 110, t) - direct).max() > 1e-6 * np.abs(direct).max():
+        problems.append('additive renderer disagrees with a direct sum of the partials')
     # tunnelling in the double well: the lowest pair starts in the left well, crosses at the
     # splitting's rate (in K, played as Hz), and the stereo render has two channels
     model = server.requestModel(base | dict(potential='doublewell', depth=0.2))

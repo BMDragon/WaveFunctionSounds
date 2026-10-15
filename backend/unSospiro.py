@@ -73,11 +73,13 @@ def partialWave(m, c, freq, t):
         spectrum[m] = c
         table = np.fft.irfft(spectrum, tableSize) * tableSize / 2
         return np.interp((freq * t) % 1 * tableSize, np.arange(tableSize + 1), np.append(table, table[0]))
+    offset = m[0] - math.floor(m[0])
+    n = np.round(m - offset).astype(int)
+    if not np.allclose(m - offset, n):
+        return additiveWave(m, c, freq, t)
     # inharmonic partials at (n + offset) freq with integer n and a common offset (the
     # lattice's Bloch phase): one period of the complex sum over n as a table, turned
     # by exp(2 pi i offset freq t)
-    offset = m[0] - math.floor(m[0])
-    n = np.round(m - offset).astype(int)
     spectrum = np.zeros(tableSize, complex)
     np.add.at(spectrum, n % tableSize, c)
     table = np.fft.ifft(spectrum) * tableSize
@@ -85,6 +87,19 @@ def partialWave(m, c, freq, t):
     phase, grid = (freq * t) % 1 * tableSize, np.arange(tableSize + 1)
     period = np.interp(phase, grid, table.real) + 1j * np.interp(phase, grid, table.imag)
     return np.real(np.exp(2j * np.pi * offset * freq * t) * period)
+
+def additiveWave(m, c, freq, t, block=2048):
+    # Re(sum c exp(2 pi i m freq t)) for any partial ratios m, with t evenly spaced: in blocks,
+    # the phasors at each block's start times one block of phasors, as a matrix product
+    if len(t) == 0:
+        return np.zeros(0)
+    dt = t[1] - t[0] if len(t) > 1 else 1.0
+    w = 2 * np.pi * np.asarray(m, float) * freq
+    blocks = -(-len(t) // block)
+    starts = t[0] + np.arange(blocks) * block * dt
+    within = np.exp(1j * np.outer(w, np.arange(block) * dt))                    # partials x block
+    wave = ((np.asarray(c) * np.exp(1j * np.outer(starts, w))) @ within).real    # blocks x block
+    return wave.ravel()[:len(t)]
 
 def noteTimes(start, end, length, attackTime, decayTime, releaseTime, sustainLevel):
     # first sample, time axis and envelope of one note: attack, decay towards the sustain

@@ -27,6 +27,7 @@ function params() {
     temperature: Math.pow(10, +$('temperature').value),
     barrierFraction: +$('barrierFraction').value,
     blochPhase: +$('blochPhase').value,
+    ...(state.potential === 'rectangle' ? { aspect: +$('aspect').value } : {}),
     ...(state.potential === 'custom' ? { shape: encodeShape(state.shape) } : {}),
     ...($('weighting').value === 'custom' ? { customWeights: state.weights } : {}),
     ...(state.potential === 'doublewell' && $('tunnelling').checked ? { tunnelling: true } : {}),
@@ -154,6 +155,10 @@ const POTENTIALS = {
              hint: 'A Kronig–Penney crystal. Bloch phases other than 0 and π make the partials inharmonic.' },
   linear: { length: 'Width', depth: 'Height at the edges',
             hint: 'V = V₀|x| / (width/2): Airy-function states whose levels crowd together.' },
+  circle: { length: 'Diameter',
+            hint: 'A circular drum: a particle in a 2D disc. Each state is a partial at its wavenumber, so the partials are inharmonic (Bessel zeros). The plot shows each state along a diameter.' },
+  rectangle: { length: 'Width', aspect: true,
+               hint: 'A rectangular drum: a particle in a 2D box. Each state is a partial at its wavenumber, π√((a/W)² + (b/H)²), mostly inharmonic. The plot shows each state across the box.' },
   custom: { length: 'Width', depth: 'Height at the top',
             hint: 'Your drawn potential (Customize, below), with hard walls at its edges.' },
 };
@@ -186,6 +191,8 @@ function refreshOutputs() {
   $('depthRow').hidden = !kind.depth;
   $('barrierRow').hidden = $('blochRow').hidden = !kind.lattice;
   $('tunnellingRow').hidden = state.potential !== 'doublewell';
+  $('aspectRow').hidden = !kind.aspect;
+  $('aspectOut').textContent = (+$('aspect').value).toFixed(2);
   $('potentialHint').textContent = kind.hint;
   $('barrierFractionOut').textContent = `${Math.round(p.barrierFraction * 100)}% of the spacing`;
   $('blochPhaseOut').textContent = `${p.blochPhase.toFixed(2)} π`;
@@ -228,9 +235,29 @@ function setStatus(text) { $('status').textContent = text; }
 let ctx = null, master = null, analyser = null, playerSource = null;
 const voices = {};
 
+let additiveReady = null;      // the oscillator bank for partials at any frequencies
+
+function additiveVoice(note, freq, total) {
+  // Partials at any ratios (the 2D boxes' modes), summed by the oscillator bank in
+  // additive.js; the node joins the voice as soon as the module has loaded
+  const output = ctx.createGain();
+  const source = { node: null, stopAt: Infinity,
+                   stop(when) { this.stopAt = when; this.node?.port.postMessage(when); } };
+  additiveReady.then(() => {
+    if (ctx.currentTime >= source.stopAt) return;
+    source.node = new AudioWorkletNode(ctx, 'additive', {
+      numberOfInputs: 0, outputChannelCount: [1],
+      processorOptions: { freqs: note.m.map(r => r * freq), re: note.re.map(v => v / total), im: note.im.map(v => v / total) } });
+    source.node.port.postMessage(source.stopAt);
+    source.node.connect(output);
+  });
+  return { output, sources: [source] };
+}
+
 function audio() {
   if (!ctx) {
     ctx = new AudioContext();
+    additiveReady = ctx.audioWorklet.addModule('additive.js');
     master = ctx.createGain();
     master.gain.value = +$('volume').value;
     analyser = ctx.createAnalyser();
@@ -268,11 +295,12 @@ function buildVoice(note, freq, start, total = amplitudeSum(note)) {
     osc.start(start);
     return { output: osc, sources: [osc] };
   }
+  const offset = note.m[0] - Math.floor(note.m[0]);
+  if (!note.m.every(r => Math.abs(r - offset - Math.round(r - offset)) < 1e-9)) return additiveVoice(note, freq, total);
   // Inharmonic partials at (n + offset) freq with integer n (the lattice's Bloch phase):
   // the waveform is Re(e^{2πi offset freq t} V(t)) with V(t) = sum c_n e^{2πi n freq t}
   // periodic, i.e. cos(2π offset freq t) Re V - sin(2π offset freq t) Im V. Re V and Im V
   // play as periodic waves, ring-modulated by a cosine and a sine at offset * freq.
-  const offset = note.m[0] - Math.floor(note.m[0]);
   const ns = note.m.map(r => Math.round(r - offset));
   const size = Math.max(1, ...ns.map(Math.abs)) + 1;
   const reCos = new Float32Array(size), reSin = new Float32Array(size);
@@ -913,6 +941,7 @@ const SETTINGS = {
   depth: ['V', () => +Math.pow(10, +$('depth').value).toPrecision(3), v => { $('depth').value = Math.log10(v); }],
   barrierFraction: ['bw', () => +$('barrierFraction').value, v => { $('barrierFraction').value = v; }],
   blochPhase: ['phi', () => +$('blochPhase').value, v => { $('blochPhase').value = v; }],
+  aspect: ['ar', () => +$('aspect').value, v => { $('aspect').value = v; }],
   tunnelling: ['tu', () => +$('tunnelling').checked, v => { $('tunnelling').checked = !!+v; }],
   weighting: ['w', () => $('weighting').value, v => { $('weighting').value = v; }],
   temperatureMode: ['tm', () => document.querySelector('input[name=tmode]:checked').value,
@@ -966,7 +995,7 @@ function showEnsemble(id) {
   grid.innerHTML = '';
   shown.map(pid => presets.find(p => p.id === pid)).filter(Boolean).forEach(preset => {
     const button = document.createElement('button');
-    button.textContent = preset.name;
+    button.textContent = preset.name.replace('Contrabassoon', 'Contra\u00adbassoon').replace('Glockenspiel', 'Glocken\u00adspiel');   // soft hyphens for narrow buttons
     button.dataset.id = preset.id;
     button.addEventListener('click', () => applySettings(preset, preset.id));
     grid.appendChild(button);
@@ -1055,7 +1084,7 @@ document.querySelectorAll('#potential button').forEach(button => {
     settingsChanged();
   });
 });
-['mass', 'length', 'depth', 'temperature', 'weighting', 'barrierFraction', 'blochPhase', 'tunnelling'].forEach(id => {
+['mass', 'length', 'depth', 'temperature', 'weighting', 'barrierFraction', 'blochPhase', 'tunnelling', 'aspect'].forEach(id => {
   $(id).addEventListener('input', () => { refreshOutputs(); scheduleUpdate(); settingsChanged(); });
 });
 document.querySelectorAll('input[name=tmode]').forEach(r => r.addEventListener('change', () => {
