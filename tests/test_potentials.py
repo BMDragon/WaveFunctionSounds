@@ -15,7 +15,7 @@ from scipy.optimize import brentq
 from scipy.special import ai_zeros
 
 # Robustness tests for every potential across the web app's slider ranges.
-# Usage: python3 tests/test_potentials.py [--quick]
+# Usage: python3 tests/test_potentials.py [--quick]   (TEST_WORKERS=n to limit the worker processes)
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'backend'))
 import infiniteSquareWell, finiteSquareWell, harmonicOscillator
 import doubleWell, morsePotential, latticePotential, linearPotential
@@ -298,7 +298,8 @@ if __name__ == '__main__':
         print('FAIL end-to-end: ' + problem)
     allCases = list(cases())
     started = time.time()
-    with multiprocessing.Pool(min(len(allCases), os.cpu_count() or 1)) as pool:
+    workers = int(os.environ.get('TEST_WORKERS', 0)) or os.cpu_count() or 1
+    with multiprocessing.Pool(min(len(allCases), workers)) as pool:
         results = pool.map(run, allCases, chunksize=1)
     failures = 0
     byPotential = {}

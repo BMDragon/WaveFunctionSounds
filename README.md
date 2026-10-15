@@ -22,5 +22,9 @@ renders the opening of Un sospiro with every potential.
 
 The double well, Morse and V-shaped potentials share a finite-difference solver in `numericalPotential.py`.
 
+## Tests
+`python3 tests/test_potentials.py` checks every potential across the web app's slider ranges
+(`--quick` for a smaller sweep). GitHub runs the quick sweep on every push.
+
 `midi/unSospiro.mid` is Frederic Lamond's Welte piano roll of Liszt's Un sospiro, scanned by Terry
 Smythe and shared non-commercially via https://www.kunstderfuge.com/liszt.htm.

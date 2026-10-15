@@ -1,0 +1,22 @@
+# To do
+
+Worked through in this order. Customization features stay less prominent in the app than the presets.
+
+## Housekeeping
+- [x] Run `tests/test_potentials.py --quick` on GitHub on every push and pull request
+
+## Easy
+- [ ] Full ADSR envelope: a sustain level and attacks longer than 300 ms
+- [ ] Instrument presets (prominent) and shareable links that reopen a sound
+- [ ] Play from a MIDI keyboard (Web MIDI)
+- [ ] Render any MIDI file, and record live playing to WAV
+
+## Medium
+- [ ] Draw your own potential (in a collapsed Customize section)
+- [ ] Hand-set level weights by dragging the occupation bars (Customize section)
+- [ ] Make tunnelling audible in the double well (tremolo / stereo)
+
+## Bigger
+- [ ] 2D potentials: a quantum drum with inharmonic modes
+- [ ] Time-evolution mode: partials from the energies instead of stacked shapes
+- [ ] Hydrogen atom: the Rydberg series as a sound source
