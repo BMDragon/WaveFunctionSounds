@@ -167,7 +167,12 @@ class NumericalPotential:
     def amplitudes(self, temperature, weighting='boltzmann'):
         # Amplitude of every state. 'boltzmann': occupation P_n ~ exp(-E_n/kT) played with
         # amplitude c_n = sqrt(P_n), relative to the ground state; 'equal': all 1;
-        # 'inverse': 1/(n+1).
+        # 'inverse': 1/(n+1); or a list of amplitudes set by hand.
+        if not isinstance(weighting, str):           # hand-set amplitudes, lowest level first
+            amps = np.zeros(len(self.eng))
+            given = np.asarray(weighting, float)[:len(self.eng)]
+            amps[:len(given)] = given
+            return amps
         if weighting == 'equal':
             return np.ones(len(self.eng))
         if weighting == 'inverse':

@@ -55,7 +55,13 @@ class FiniteSquareWell:
         return np.exp(-(self.eng - self.eng[0]) / (2 * kB * temperature))
 
     def amplitudes(self, temperature, weighting='boltzmann'):
-        # Amplitude of every bound state: Boltzmann as above, 'equal': all 1, 'inverse': 1/(n+1)
+        # Amplitude of every bound state: Boltzmann as above, 'equal': all 1, 'inverse': 1/(n+1),
+        # or a list of amplitudes set by hand
+        if not isinstance(weighting, str):           # hand-set amplitudes, lowest level first
+            amps = np.zeros(len(self.vn))
+            given = np.asarray(weighting, float)[:len(self.vn)]
+            amps[:len(given)] = given
+            return amps
         if weighting == 'equal':
             return np.ones(len(self.vn))
         if weighting == 'inverse':

@@ -62,6 +62,17 @@ def requestModel(req):
                  float(req.get('barrierFraction', 0.2)) if lattice else 0.2,
                  float(req.get('blochPhase', 0.8)) if lattice else 0.8, shape)
 
+def weightingFor(req):
+    # 'boltzmann', 'equal', 'inverse', or 'custom' with hand-set amplitudes in 'customWeights'
+    weighting = req.get('weighting', 'boltzmann')
+    if weighting != 'custom':
+        return weighting
+    weights = req.get('customWeights')
+    if not isinstance(weights, list) or not 1 <= len(weights) <= 64 or \
+            not all(isinstance(w, (int, float)) and 0 <= w <= 1 for w in weights) or not any(weights):
+        raise ValueError('hand-set weights need 1-64 amplitudes between 0 and 1, not all zero')
+    return tuple(float(w) for w in weights)
+
 def temperatureFor(req, freq):
     return float(req['temperature']) if req.get('temperatureMode') == 'fixed' else freq
 
@@ -80,12 +91,12 @@ def noteContent(m, req, f, weighting):
 def notes(req):
     # just the notes for the requested pitches, for keys outside the on-screen keyboard
     m = requestModel(req)
-    weighting = req.get('weighting', 'boltzmann')
+    weighting = weightingFor(req)
     return {'notes': [noteContent(m, req, float(f), weighting) for f in req.get('freqs', [])]}
 
 def describe(req):
     m = requestModel(req)
-    weighting = req.get('weighting', 'boltzmann')
+    weighting = weightingFor(req)
     focus = float(req['focusFreq'])
     focusT = temperatureFor(req, focus)
 
@@ -147,7 +158,7 @@ def renderPiece(req):
         if not os.path.exists(source):
             raise FileNotFoundError('midi/unSospiro.mid not found')
     m = requestModel(req)
-    weighting = req.get('weighting', 'boltzmann')
+    weighting = weightingFor(req)
     seconds = min(max(float(req.get('seconds', 15)), 1), 120)
     try:
         notes = unSospiro.readNotes(source, seconds)

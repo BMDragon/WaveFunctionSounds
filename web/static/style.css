@@ -79,7 +79,7 @@ button.link.recording { color: #c0392b; font-weight: 600; }
 #customize { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 10px; }
 #customize summary { cursor: pointer; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
 #customize h3 { font-size: 13px; margin: 12px 0 4px; }
-#drawCanvas { border: 1px solid var(--border); border-radius: 6px; cursor: crosshair; touch-action: none; }
+#drawCanvas, #weightsCanvas { border: 1px solid var(--border); border-radius: 6px; cursor: crosshair; touch-action: none; }
 .info b { color: var(--text); font-weight: 600; }
 .info .warning { color: #c0392b; margin-top: 6px; }
 .content { display: flex; flex-direction: column; gap: 16px; min-width: 0; }

@@ -21,7 +21,12 @@ class InfiniteSquareWell:
     def amplitudes(self, levels, temperature, weighting='boltzmann'):
         # Amplitude of each level. 'boltzmann': occupation P_n ~ exp(-E_n/kT) played with
         # amplitude c_n = sqrt(P_n), relative to the ground state; 'equal': all 1;
-        # 'inverse': 1/n.
+        # 'inverse': 1/n; or a list of amplitudes set by hand.
+        if not isinstance(weighting, str):           # hand-set amplitudes, lowest level first
+            amps = np.zeros(len(levels))
+            given = np.asarray(weighting, float)[:len(levels)]
+            amps[:len(given)] = given
+            return amps
         if weighting == 'equal':
             return np.ones(len(levels))
         if weighting == 'inverse':

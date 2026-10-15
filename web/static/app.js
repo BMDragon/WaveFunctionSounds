@@ -28,8 +28,58 @@ function params() {
     barrierFraction: +$('barrierFraction').value,
     blochPhase: +$('blochPhase').value,
     ...(state.potential === 'custom' ? { shape: encodeShape(state.shape) } : {}),
+    ...($('weighting').value === 'custom' ? { customWeights: state.weights } : {}),
   };
 }
+
+// ---------- hand-set weights ----------
+
+const WEIGHT_LEVELS = 16;
+state.weights = range(0, WEIGHT_LEVELS).map(i => +Math.pow(0.7, i).toFixed(2));
+
+function drawWeightBars() {
+  const { g, w, h } = setupCanvas($('weightsCanvas'));
+  const css = colors();
+  g.clearRect(0, 0, w, h);
+  const bw = w / WEIGHT_LEVELS;
+  state.weights.forEach((v, i) => {
+    g.fillStyle = i < LEVEL_COLORS.length ? LEVEL_COLORS[i] : css.accent;
+    g.fillRect(i * bw + 2, (1 - v) * (h - 14), bw - 4, v * (h - 14));
+    g.fillStyle = css.muted;
+    g.font = '9px system-ui, sans-serif';
+    g.textAlign = 'center';
+    g.fillText(String(levelIndex(i)), i * bw + bw / 2, h - 3);
+  });
+}
+
+function useWeights() {
+  $('weighting').value = 'custom';
+  refreshOutputs();
+  scheduleUpdate();
+  settingsChanged();
+}
+
+(() => {
+  const canvas = $('weightsCanvas');
+  const paint = e => {
+    const r = canvas.getBoundingClientRect();
+    const i = Math.floor((e.clientX - r.left) / r.width * WEIGHT_LEVELS);
+    if (i < 0 || i >= WEIGHT_LEVELS) return;
+    state.weights[i] = +Math.min(Math.max(1 - (e.clientY - r.top) / (r.height - 14), 0), 1).toFixed(3);
+    drawWeightBars();
+  };
+  canvas.addEventListener('pointerdown', e => { canvas.setPointerCapture(e.pointerId); paint(e); });
+  canvas.addEventListener('pointermove', e => { if (e.buttons) paint(e); });
+  canvas.addEventListener('pointerup', useWeights);
+  $('useWeights').addEventListener('click', useWeights);
+  $('copyWeights').addEventListener('click', () => {
+    const amps = state.data ? state.data.levels.amplitudes.slice(0, WEIGHT_LEVELS) : [];
+    const top = Math.max(...amps, 1e-12);
+    state.weights = range(0, WEIGHT_LEVELS).map(i => +((amps[i] || 0) / top).toFixed(3));
+    drawWeightBars();
+  });
+  $('customize').addEventListener('toggle', drawWeightBars);
+})();
 
 // ---------- drawing a potential ----------
 
@@ -138,6 +188,7 @@ function refreshOutputs() {
   $('barrierFractionOut').textContent = `${Math.round(p.barrierFraction * 100)}% of the spacing`;
   $('blochPhaseOut').textContent = `${p.blochPhase.toFixed(2)} π`;
   $('temperatureRows').hidden = p.weighting !== 'boltzmann';
+  document.querySelector('#weighting option[value=custom]').hidden = p.weighting !== 'custom';
   $('temperatureRow').hidden = p.temperatureMode !== 'fixed';
 }
 
@@ -832,6 +883,8 @@ const SETTINGS = {
   release: ['r', () => +$('release').value, v => { $('release').value = v; }],
   shape: ['v', () => (state.potential === 'custom' ? encodeShape(state.shape) : ''),
           v => { if (v) { state.shape = decodeShape(String(v)); drawShape(); } }],
+  customWeights: ['cw', () => ($('weighting').value === 'custom' ? encodeShape(state.weights) : ''),
+                  v => { if (v) { state.weights = decodeShape(String(v)); drawWeightBars(); } }],
 };
 let presets = [];
 
@@ -902,7 +955,7 @@ function settingsFromUrl() {
   for (const [name, [key]] of Object.entries(SETTINGS)) {
     if (!query.has(key)) continue;
     const raw = query.get(key);
-    settings[name] = name === 'shape' || isNaN(+raw) || raw === '' ? raw : +raw;     // shape codes stay text
+    settings[name] = name === 'shape' || name === 'customWeights' || isNaN(+raw) || raw === '' ? raw : +raw;     // codes stay text
   }
   return settings;
 }

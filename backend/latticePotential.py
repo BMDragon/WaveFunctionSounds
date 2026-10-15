@@ -173,7 +173,12 @@ class LatticePotential:
 
     def amplitudes(self, temperature, weighting='boltzmann'):
         # Amplitude of every band: Boltzmann sqrt(P_n) relative to the lowest band,
-        # 'equal': all 1, 'inverse': 1/(n+1)
+        # 'equal': all 1, 'inverse': 1/(n+1), or a list of amplitudes set by hand
+        if not isinstance(weighting, str):           # hand-set amplitudes, lowest level first
+            amps = np.zeros(len(self.eng))
+            given = np.asarray(weighting, float)[:len(self.eng)]
+            amps[:len(given)] = given
+            return amps
         if weighting == 'equal':
             return np.ones(len(self.eng))
         if weighting == 'inverse':

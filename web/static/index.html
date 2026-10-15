@@ -55,6 +55,7 @@
         <option value="boltzmann">Boltzmann (thermal)</option>
         <option value="equal">Equal</option>
         <option value="inverse">1 / level</option>
+        <option value="custom" hidden>Hand-set (see Customize)</option>
       </select>
       <div id="temperatureRows">
         <label class="inline"><input type="radio" name="tmode" value="pitch" checked> T in K = pitch in Hz</label>
@@ -90,6 +91,13 @@
       <div class="row">
         <button id="useDrawing" class="link">Play this potential</button>
         <button id="flatDrawing" class="link">Flatten</button>
+      </div>
+      <h3>Set the weights by hand</h3>
+      <p class="hint">Drag the bars to set each level's amplitude, lowest level on the left.</p>
+      <canvas id="weightsCanvas" height="110"></canvas>
+      <div class="row">
+        <button id="useWeights" class="link">Use these weights</button>
+        <button id="copyWeights" class="link">Start from the current weights</button>
       </div>
     </details>
   </aside>

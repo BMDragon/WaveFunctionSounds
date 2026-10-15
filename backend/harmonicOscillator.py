@@ -64,7 +64,13 @@ class HarmonicOscillator:
         return np.exp(-np.arange(numStates) * self.hbarOmega / (2 * kB * temperature))
 
     def amplitudes(self, temperature, weighting='boltzmann'):
-        # Amplitude of every kept level: Boltzmann as above, 'equal': all 1, 'inverse': 1/(n+1)
+        # Amplitude of every kept level: Boltzmann as above, 'equal': all 1, 'inverse': 1/(n+1),
+        # or a list of amplitudes set by hand
+        if not isinstance(weighting, str):           # hand-set amplitudes, lowest level first
+            amps = np.zeros(numStates)
+            given = np.asarray(weighting, float)[:numStates]
+            amps[:len(given)] = given
+            return amps
         if weighting == 'equal':
             return np.ones(numStates)
         if weighting == 'inverse':
