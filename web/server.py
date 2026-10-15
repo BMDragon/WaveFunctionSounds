@@ -1,3 +1,6 @@
+import signal
+signal.signal(signal.SIGINT, signal.SIG_DFL)    # Ctrl+C just stops the server, without a traceback
+
 import base64
 import functools
 import io
