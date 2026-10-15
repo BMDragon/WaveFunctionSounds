@@ -49,5 +49,6 @@ https://www.midiworld.com/brahms.htm.
 `python3 tests/test_potentials.py` checks every potential across the web app's slider ranges
 (`--quick` for a smaller sweep). GitHub runs the quick sweep on every push.
 
-`midi/unSospiro.mid` is Frederic Lamond's Welte piano roll of Liszt's Un sospiro, scanned by Terry
-Smythe and shared non-commercially via https://www.kunstderfuge.com/liszt.htm.
+`midi/unSospiro_rollScan.mid` is Frederic Lamond's Welte piano roll of Liszt's Un sospiro, scanned by
+Terry Smythe and shared non-commercially via https://www.kunstderfuge.com/liszt.htm. `midi/unSospiro.mid`
+is the same performance with the scan's note-to-note jitter evened out (`midi/evenTiming.py`).
