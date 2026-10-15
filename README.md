@@ -39,6 +39,12 @@ renders the opening of Un sospiro with every potential.
 The double well, Morse, V-shaped and drawn potentials share a finite-difference solver in
 `numericalPotential.py`; `timeEvolution.py` gives the survival-probability sound.
 
+## Samples
+`samples/` holds pieces rendered with every part on its instrument preset, by
+`samples/renderEnsemble.py piece.mid out.wav`: Brahms's Academic Festival Overture (orchestral MIDI
+sequenced by David Siu) and Hungarian Dance No. 2 (a piano MIDI, played on the piano preset), both from
+https://www.midiworld.com/brahms.htm.
+
 ## Tests
 `python3 tests/test_potentials.py` checks every potential across the web app's slider ranges
 (`--quick` for a smaller sweep). GitHub runs the quick sweep on every push.
