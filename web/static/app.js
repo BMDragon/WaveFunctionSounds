@@ -27,8 +27,68 @@ function params() {
     temperature: Math.pow(10, +$('temperature').value),
     barrierFraction: +$('barrierFraction').value,
     blochPhase: +$('blochPhase').value,
+    ...(state.potential === 'custom' ? { shape: encodeShape(state.shape) } : {}),
   };
 }
+
+// ---------- drawing a potential ----------
+
+const SHAPE_POINTS = 64;
+state.shape = range(0, SHAPE_POINTS).map(i => i < 32 ? 0.6 * (1 - i / 31) : 0.3 * (i - 32) / 31);
+const encodeShape = shape => shape.map(v => Math.round(Math.min(Math.max(v, 0), 1) * 35).toString(36)).join('');
+const decodeShape = text => [...text].map(c => parseInt(c, 36) / 35);
+
+function drawShape() {
+  const { g, w, h } = setupCanvas($('drawCanvas'));
+  const css = colors();
+  g.clearRect(0, 0, w, h);
+  g.strokeStyle = css.grid;
+  for (let i = 1; i < 4; i++) { g.beginPath(); g.moveTo(0, h * i / 4); g.lineTo(w, h * i / 4); g.stroke(); }
+  g.fillStyle = css.accent + '33';
+  g.strokeStyle = css.text;
+  g.lineWidth = 2;
+  g.beginPath();
+  g.moveTo(0, h);
+  state.shape.forEach((v, i) => g.lineTo(i / (SHAPE_POINTS - 1) * w, (1 - v) * (h - 4) + 2));
+  g.lineTo(w, h);
+  g.fill();
+  g.beginPath();
+  state.shape.forEach((v, i) => { const px = i / (SHAPE_POINTS - 1) * w, py = (1 - v) * (h - 4) + 2; if (i) g.lineTo(px, py); else g.moveTo(px, py); });
+  g.stroke();
+}
+
+function useDrawing() {
+  selectPotential('custom');
+  refreshOutputs();
+  scheduleUpdate();
+  settingsChanged();
+}
+
+(() => {
+  const canvas = $('drawCanvas');
+  let last = null;
+  const point = e => {
+    const r = canvas.getBoundingClientRect();
+    return [Math.round((e.clientX - r.left) / r.width * (SHAPE_POINTS - 1)), 1 - (e.clientY - r.top) / r.height];
+  };
+  const paint = e => {
+    const [i, v] = point(e);
+    const [i0, v0] = last || [i, v];
+    const steps = Math.max(1, Math.abs(i - i0));
+    for (let s = 0; s <= steps; s++) {        // fill in the points between two pointer events
+      const j = Math.round(i0 + (i - i0) * s / steps);
+      if (j >= 0 && j < SHAPE_POINTS) state.shape[j] = Math.min(Math.max(v0 + (v - v0) * s / steps, 0), 1);
+    }
+    last = [i, v];
+    drawShape();
+  };
+  canvas.addEventListener('pointerdown', e => { canvas.setPointerCapture(e.pointerId); last = null; paint(e); });
+  canvas.addEventListener('pointermove', e => { if (e.buttons) paint(e); });
+  canvas.addEventListener('pointerup', () => { last = null; useDrawing(); });
+  $('useDrawing').addEventListener('click', useDrawing);
+  $('flatDrawing').addEventListener('click', () => { state.shape = state.shape.map(() => 0); drawShape(); useDrawing(); });
+  $('customize').addEventListener('toggle', drawShape);
+})();
 
 // slider labels and a one-line description for each potential; no `depth` hides that slider
 const POTENTIALS = {
@@ -43,6 +103,8 @@ const POTENTIALS = {
              hint: 'A Kronig–Penney crystal. Bloch phases other than 0 and π make the partials inharmonic.' },
   linear: { length: 'Width', depth: 'Height at the edges',
             hint: 'V = V₀|x| / (width/2): Airy-function states whose levels crowd together.' },
+  custom: { length: 'Width', depth: 'Height at the top',
+            hint: 'Your drawn potential (Customize, below), with hard walls at its edges.' },
 };
 
 const attackSeconds = () => Math.pow(10, +$('attack').value) / 1000;     // the attack slider is logarithmic, 1 ms to 3 s
@@ -768,6 +830,8 @@ const SETTINGS = {
   decay: ['d', () => +decaySeconds().toPrecision(3), v => { $('decay').value = Math.log10(v); }],
   sustain: ['s', () => +$('sustainLevel').value, v => { $('sustainLevel').value = v; }],
   release: ['r', () => +$('release').value, v => { $('release').value = v; }],
+  shape: ['v', () => (state.potential === 'custom' ? encodeShape(state.shape) : ''),
+          v => { if (v) { state.shape = decodeShape(String(v)); drawShape(); } }],
 };
 let presets = [];
 
@@ -838,7 +902,7 @@ function settingsFromUrl() {
   for (const [name, [key]] of Object.entries(SETTINGS)) {
     if (!query.has(key)) continue;
     const raw = query.get(key);
-    settings[name] = isNaN(+raw) || raw === '' ? raw : +raw;
+    settings[name] = name === 'shape' || isNaN(+raw) || raw === '' ? raw : +raw;     // shape codes stay text
   }
   return settings;
 }

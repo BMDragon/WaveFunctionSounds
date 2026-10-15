@@ -12,7 +12,7 @@ Worked through in this order. Customization features stay less prominent in the 
 - [x] Render any MIDI file, and record live playing to WAV
 
 ## Medium
-- [ ] Draw your own potential (in a collapsed Customize section)
+- [x] Draw your own potential (in a collapsed Customize section)
 - [ ] Hand-set level weights by dragging the occupation bars (Customize section)
 - [ ] Make tunnelling audible in the double well (tremolo / stereo)
 
