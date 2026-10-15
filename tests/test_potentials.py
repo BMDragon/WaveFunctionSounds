@@ -293,6 +293,7 @@ def checkEndToEnd():
             problems.append(f'{potential}: render produced silence or non-finite samples')
     # 2D boxes: partials at the exact wavenumber ratios, and the additive renderer they need
     from scipy.special import jn_zeros
+    from scipy.integrate import trapezoid
     circle = server.requestModel(base | dict(potential='circle'))
     r, c = circle.harmonicContent(220, 44100, None, 'equal')
     if not np.allclose(r[:3], [1, jn_zeros(1, 1)[0] / jn_zeros(0, 1)[0], jn_zeros(2, 1)[0] / jn_zeros(0, 1)[0]]):
@@ -314,7 +315,7 @@ def checkEndToEnd():
             problems.append(f'hydrogen Z={Z} l={l}: energies {atom.eng[:3]}')
         for i in (0, 20, 59):
             r = np.linspace(0, 4 * atom.turningPoints(i)[1] + 20 * atom.a, 200001)
-            if abs(np.trapz(atom.u(i, r)**2, r) - 1) > 1e-6:
+            if abs(trapezoid(atom.u(i, r)**2, r) - 1) > 1e-6:
                 problems.append(f'hydrogen Z={Z} l={l}: state {i} is not normalized')
         i = 2
         r = np.linspace(0.5 * atom.a / Z, 2 * atom.turningPoints(i)[1], 4000)

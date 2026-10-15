@@ -31,7 +31,7 @@ class Hydrogen(NumericalPotential):
 
     def potential(self, r):
         r = np.asarray(r, float)
-        with np.errstate(divide='ignore'):
+        with np.errstate(divide='ignore', invalid='ignore'):
             return np.where(r > 0, -self.coulomb / r + self.kinetic * self.l * (self.l + 1) / r**2, np.inf)
 
     def u(self, i, r):
