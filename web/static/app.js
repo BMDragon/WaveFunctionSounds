@@ -198,17 +198,38 @@ function buildVoice(note, freq, start) {
   return { output: sum, sources };
 }
 
-function noteOn(n) {
-  const note = state.notes[n];
-  if (!note || !note.m.length) return;
+// notes outside the on-screen keyboard (a MIDI keyboard has 88 keys) are fetched when first played
+const extraNotes = new Map();
+let extraNotesKey = '';
+const heldKeys = new Set();
+
+function noteData(n) {
+  const key = JSON.stringify(params());
+  if (key !== extraNotesKey) { extraNotes.clear(); extraNotesKey = key; }
+  if (!extraNotes.has(n)) {
+    extraNotes.set(n, fetch('/api/notes', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ ...params(), freqs: [midiFreq(n)] }) })
+      .then(res => res.json()).then(json => json.notes[0]).catch(() => { extraNotes.delete(n); return null; }));
+  }
+  return extraNotes.get(n);
+}
+
+function noteOn(n, velocity = 127) {
+  heldKeys.add(n);
+  if (state.notes[n]) startVoice(n, state.notes[n], velocity);
+  else noteData(n).then(note => { if (note && heldKeys.has(n)) startVoice(n, note, velocity); });
+}
+
+function startVoice(n, note, velocity) {
+  if (!note.m.length) return;
   audio();
   if (voices[n]) releaseVoice(n, 0.01);
-  const now = ctx.currentTime, attack = attackSeconds();
+  const now = ctx.currentTime, attack = attackSeconds(), peak = 0.3 * velocity / 127;
   const { output, sources } = buildVoice(note, midiFreq(n), now);
   const gain = ctx.createGain();
   gain.gain.setValueAtTime(0, now);
-  gain.gain.linearRampToValueAtTime(0.3, now + attack);
-  gain.gain.setTargetAtTime(0.3 * +$('sustainLevel').value, now + attack, decaySeconds());   // decay towards the sustain level
+  gain.gain.linearRampToValueAtTime(peak, now + attack);
+  gain.gain.setTargetAtTime(peak * +$('sustainLevel').value, now + attack, decaySeconds());   // decay towards the sustain level
   output.connect(gain).connect(master);
   voices[n] = { sources, gain, sustained: false };
   keyElement(n)?.classList.add('active');
@@ -219,6 +240,7 @@ function noteOn(n) {
 }
 
 function noteOff(n) {
+  heldKeys.delete(n);
   keyElement(n)?.classList.remove('active');
   const voice = voices[n];
   if (!voice) return;
@@ -275,8 +297,7 @@ document.addEventListener('keydown', e => {
   if (e.code === 'Space') {
     e.preventDefault();
     if (e.repeat) return;
-    $('sustain').checked = !$('sustain').checked;
-    if (!$('sustain').checked) releaseSustained();
+    setPedal(!$('sustain').checked);
     return;
   }
   const n = KEYMAP[e.key.toLowerCase()];
@@ -620,6 +641,42 @@ async function renderPiece() {
   }
 }
 
+// ---------- MIDI keyboard ----------
+
+function setPedal(down) {
+  $('sustain').checked = down;
+  if (!down) releaseSustained();
+}
+
+function handleMidi(event) {
+  // note on (0x9n, velocity > 0), note off (0x8n, or 0x9n with velocity 0), sustain pedal (CC 64)
+  const [status, a, b] = event.data;
+  const kind = status & 0xf0;
+  if (kind === 0x90 && b > 0) noteOn(a, b);
+  else if (kind === 0x80 || (kind === 0x90 && b === 0)) noteOff(a);
+  else if (kind === 0xb0 && a === 64) setPedal(b >= 64);
+}
+
+async function connectMidi() {
+  if (!navigator.requestMIDIAccess) {
+    $('midiStatus').textContent = 'This browser has no Web MIDI; try Chrome or Edge.';
+    return;
+  }
+  try {
+    const access = await navigator.requestMIDIAccess();
+    const attach = () => {
+      const names = [];
+      access.inputs.forEach(input => { input.onmidimessage = handleMidi; names.push(input.name); });
+      $('midiStatus').textContent = names.length ? `Playing from ${names.join(', ')}` : 'No MIDI keyboard found: plug one in.';
+    };
+    access.onstatechange = attach;
+    attach();
+    $('midiConnect').hidden = true;
+  } catch (error) {
+    $('midiStatus').textContent = 'MIDI access was not allowed.';
+  }
+}
+
 // ---------- presets and shareable links ----------
 
 // Every setting, as short keys for the URL. Sliders on a log scale store the physical value.
@@ -745,6 +802,7 @@ document.querySelectorAll('input[name=tmode]').forEach(r => r.addEventListener('
 $('seconds').addEventListener('input', refreshOutputs);
 $('volume').addEventListener('input', () => { refreshOutputs(); if (master) master.gain.value = +$('volume').value; });
 $('sustain').addEventListener('change', () => { if (!$('sustain').checked) releaseSustained(); });
+$('midiConnect').addEventListener('click', connectMidi);
 $('render').addEventListener('click', renderPiece);
 window.addEventListener('resize', () => { clearTimeout(window.resizeTimer); window.resizeTimer = setTimeout(drawAll, 100); });
 

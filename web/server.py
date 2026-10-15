@@ -63,6 +63,18 @@ def levelAmplitudes(m, temperature, weighting, count):
         return m.amplitudes(np.arange(1, count + 1), temperature, weighting)
     return m.amplitudes(temperature, weighting)[:count]
 
+def noteContent(m, req, f, weighting):
+    # the partials of one note, dropping the negligible ones
+    harm, c = m.harmonicContent(f, sampleRate, temperatureFor(req, f), weighting)
+    keep = np.abs(c) > 1e-6 * np.abs(c).max()
+    return {'m': harm[keep].tolist(), 're': c[keep].real.tolist(), 'im': c[keep].imag.tolist()}
+
+def notes(req):
+    # just the notes for the requested pitches, for keys outside the on-screen keyboard
+    m = requestModel(req)
+    weighting = req.get('weighting', 'boltzmann')
+    return {'notes': [noteContent(m, req, float(f), weighting) for f in req.get('freqs', [])]}
+
 def describe(req):
     m = requestModel(req)
     weighting = req.get('weighting', 'boltzmann')
@@ -74,10 +86,7 @@ def describe(req):
         else min(levelsShown, len(m.vn) if isinstance(m, finiteSquareWell.FiniteSquareWell) else len(m.eng))
     amps = levelAmplitudes(m, focusT, weighting, count)
 
-    def note(f):
-        harm, c = m.harmonicContent(f, sampleRate, temperatureFor(req, f), weighting)
-        keep = np.abs(c) > 1e-6 * np.abs(c).max()
-        return {'m': harm[keep].tolist(), 're': c[keep].real.tolist(), 'im': c[keep].imag.tolist()}
+    note = lambda f: noteContent(m, req, f, weighting)
 
     energies = m.energies(count)
     allAmps = levelAmplitudes(m, focusT, weighting, 10**4)
@@ -148,6 +157,8 @@ class Handler(SimpleHTTPRequestHandler):
             with lock:
                 if self.path == '/api/model':
                     body, kind = json.dumps(describe(req)).encode(), 'application/json'
+                elif self.path == '/api/notes':
+                    body, kind = json.dumps(notes(req)).encode(), 'application/json'
                 elif self.path == '/api/render':
                     body, kind = renderPiece(req), 'audio/wav'
                 else:
