@@ -132,7 +132,8 @@ def renderPiece(req):
     audio = unSospiro.render(
         notes, lambda f, sr: m.harmonicContent(f, sr, temperatureFor(req, f), weighting),
         nSeconds=seconds, attackTime=float(req.get('attack', 0.005)),
-        decayTime=float(req.get('decay', 1.5)), releaseTime=float(req.get('release', 0.1)))
+        decayTime=float(req.get('decay', 1.5)), releaseTime=float(req.get('release', 0.1)),
+        sustainLevel=min(max(float(req.get('sustain', 0)), 0), 1))
     buffer = io.BytesIO()
     write(buffer, sampleRate, infiniteSquareWell.scale(audio))
     return buffer.getvalue()

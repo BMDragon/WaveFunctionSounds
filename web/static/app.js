@@ -45,6 +45,8 @@ const POTENTIALS = {
             hint: 'V = V₀|x| / (width/2): Airy-function states whose levels crowd together.' },
 };
 
+const attackSeconds = () => Math.pow(10, +$('attack').value) / 1000;     // the attack slider is logarithmic, 1 ms to 3 s
+
 function fmt(v, digits = 3) {
   if (v === 0) return '0';
   const a = Math.abs(v);
@@ -58,7 +60,8 @@ function refreshOutputs() {
   $('lengthOut').textContent = `${fmt(p.length)} nm`;
   $('depthOut').textContent = `${fmt(p.depth)} eV`;
   $('temperatureOut').textContent = `${fmt(p.temperature)} K`;
-  $('attackOut').textContent = `${$('attack').value} ms`;
+  $('attackOut').textContent = attackSeconds() < 1 ? `${Math.round(attackSeconds() * 1000)} ms` : `${attackSeconds().toFixed(2)} s`;
+  $('sustainOut').textContent = `${Math.round($('sustain').value * 100)}%`;
   $('decayOut').textContent = `${(+$('decay').value).toFixed(1)} s`;
   $('releaseOut').textContent = `${(+$('release').value).toFixed(2)} s`;
   $('volumeOut').textContent = `${Math.round($('volume').value * 100)}%`;
@@ -199,12 +202,12 @@ function noteOn(n) {
   if (!note || !note.m.length) return;
   audio();
   if (voices[n]) releaseVoice(n, 0.01);
-  const now = ctx.currentTime, attack = +$('attack').value / 1000;
+  const now = ctx.currentTime, attack = attackSeconds();
   const { output, sources } = buildVoice(note, midiFreq(n), now);
   const gain = ctx.createGain();
   gain.gain.setValueAtTime(0, now);
   gain.gain.linearRampToValueAtTime(0.3, now + attack);
-  gain.gain.setTargetAtTime(0, now + attack, +$('decay').value);   // exp(-t / decay)
+  gain.gain.setTargetAtTime(0.3 * +$('sustain').value, now + attack, +$('decay').value);   // decay towards the sustain level
   output.connect(gain).connect(master);
   voices[n] = { sources, gain, sustained: false };
   keyElement(n)?.classList.add('active');
@@ -590,8 +593,8 @@ async function renderPiece() {
   }, 500);
   try {
     audio();
-    const body = { ...params(), seconds: +$('seconds').value, attack: +$('attack').value / 1000,
-                   decay: +$('decay').value, release: +$('release').value };
+    const body = { ...params(), seconds: +$('seconds').value, attack: attackSeconds(),
+                   decay: +$('decay').value, sustain: +$('sustain').value, release: +$('release').value };
     const res = await fetch('/api/render', { method: 'POST', headers: { 'Content-Type': 'application/json' },
                                              body: JSON.stringify(body) });
     if (!res.ok) throw new Error((await res.json()).error || res.statusText);
@@ -630,7 +633,7 @@ document.querySelectorAll('#potential button').forEach(button => {
   $(id).addEventListener('input', () => { refreshOutputs(); scheduleUpdate(); });
 });
 document.querySelectorAll('input[name=tmode]').forEach(r => r.addEventListener('change', () => { refreshOutputs(); scheduleUpdate(0); }));
-['attack', 'decay', 'release', 'seconds'].forEach(id => $(id).addEventListener('input', refreshOutputs));
+['attack', 'decay', 'sustain', 'release', 'seconds'].forEach(id => $(id).addEventListener('input', refreshOutputs));
 $('volume').addEventListener('input', () => { refreshOutputs(); if (master) master.gain.value = +$('volume').value; });
 $('sustain').addEventListener('change', () => { if (!$('sustain').checked) releaseSustained(); });
 $('render').addEventListener('click', renderPiece);

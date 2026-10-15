@@ -6,7 +6,7 @@ Worked through in this order. Customization features stay less prominent in the 
 - [x] Run `tests/test_potentials.py --quick` on GitHub on every push and pull request
 
 ## Easy
-- [ ] Full ADSR envelope: a sustain level and attacks longer than 300 ms
+- [x] Full ADSR envelope: a sustain level and attacks longer than 300 ms
 - [ ] Instrument presets (prominent) and shareable links that reopen a sound
 - [ ] Play from a MIDI keyboard (Web MIDI)
 - [ ] Render any MIDI file, and record live playing to WAV

@@ -20,6 +20,7 @@ sampleRate = 44100
 nSeconds = 65
 attackTime = 0.005      # s, ramp at the start of each note so it doesn't click
 decayTime = 1.5         # s, exponential decay of a held note, like a struck string
+sustainLevel = 0.0      # level the decay settles at while the note is held (0: decays away, like a piano)
 releaseTime = 0.1       # s, fade once the key and sustain pedal are both up
 fadeOutTime = 1.0       # s, fade at the end of the excerpt
 silence = 1e-5          # envelope level below which a note is no longer computed
@@ -59,7 +60,7 @@ def readNotes(path, nSeconds):
                   for start, end, note, velocity in notes if start - first < nSeconds)
 
 def render(notes, harmonicContent, nSeconds=nSeconds, attackTime=attackTime, decayTime=decayTime,
-           releaseTime=releaseTime):
+           releaseTime=releaseTime, sustainLevel=sustainLevel):
     out = np.zeros(int(nSeconds * sampleRate))
     for start, end, note, velocity in notes:
         freq = 440 * 2**((note - 69) / 12)
@@ -67,7 +68,10 @@ def render(notes, harmonicContent, nSeconds=nSeconds, attackTime=attackTime, dec
 
         # stop once the decay or the release has taken the note below `silence`
         held = end - start
-        duration = -math.log(silence) * min(decayTime, releaseTime + held / -math.log(silence))
+        if sustainLevel > 0:
+            duration = held + -math.log(silence) * releaseTime
+        else:
+            duration = -math.log(silence) * min(decayTime, releaseTime + held / -math.log(silence))
         i0 = int(start * sampleRate)
         t = np.arange(min(len(out) - i0, int(duration * sampleRate))) / sampleRate
 
@@ -92,7 +96,8 @@ def render(notes, harmonicContent, nSeconds=nSeconds, attackTime=attackTime, dec
             period = np.interp(phase, grid, table.real) + 1j * np.interp(phase, grid, table.imag)
             wave = np.real(np.exp(2j * np.pi * offset * freq * t) * period)
 
-        envelope = np.minimum(t / attackTime, 1) * np.exp(-t / decayTime)
+        # attack, then decay towards the sustain level, then release
+        envelope = np.minimum(t / attackTime, 1) * (sustainLevel + (1 - sustainLevel) * np.exp(-t / decayTime))
         envelope[t > held] *= np.exp(-(t[t > held] - held) / releaseTime)
         out[i0:i0 + len(t)] += velocity / 127 * envelope * wave / np.abs(c).sum()
 
