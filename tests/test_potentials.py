@@ -290,6 +290,26 @@ def checkEndToEnd():
         audio = unSospiro.render(notes, lambda f, sr: model.harmonicContent(f, sr), nSeconds=2)
         if not np.all(np.isfinite(audio)) or np.abs(audio).max() == 0:
             problems.append(f'{potential}: render produced silence or non-finite samples')
+    # tunnelling in the double well: the lowest pair starts in the left well, crosses at the
+    # splitting's rate (in K, played as Hz), and the stereo render has two channels
+    model = server.requestModel(base | dict(potential='doublewell', depth=0.2))
+    left = model.x < 0
+    pair = model.psi[:, 0] + np.sign(np.sum(model.psi[left, 0] * model.psi[left, 1])) * model.psi[:, 1]
+    if np.sum(pair[left]**2) / np.sum(pair**2) < 0.999:
+        problems.append('doublewell: the lowest pair is not localized in the left well')
+    groups = model.tunnellingGroups(220)
+    splitting = (model.eng[1] - model.eng[0]) * server.eV / server.kB
+    if not groups or groups[0][2] is None or abs(groups[0][2] - splitting) > 1e-9 * splitting:
+        problems.append('doublewell: the lowest tunnelling group does not cross at the splitting')
+    try:
+        req = base | dict(potential='doublewell', depth=0.2, tunnelling=True, freqs=freqs[:3])
+        if any('groups' not in n for n in json.loads(json.dumps(server.describe(req), allow_nan=False))['notes']):
+            problems.append('doublewell: describe with tunnelling has no groups')
+    except Exception as error:
+        problems.append(f'doublewell tunnelling: describe failed: {type(error).__name__}: {error}')
+    stereo = unSospiro.renderStereo(notes, model.tunnellingGroups, nSeconds=2)
+    if stereo.shape[1] != 2 or not np.all(np.isfinite(stereo)) or np.abs(stereo).max() == 0:
+        problems.append('doublewell: the stereo tunnelling render failed')
     return problems
 
 if __name__ == '__main__':

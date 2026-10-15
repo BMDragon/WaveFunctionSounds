@@ -20,6 +20,9 @@ renders the opening of Un sospiro with every potential.
 
 - `infiniteSquareWell.py`, `finiteSquareWell.py`, `harmonicOscillator.py`: solved analytically.
 - `doubleWell.py`: two wells and a barrier; below the barrier the levels pair up by tunnelling.
+  With *Tunnelling* on (web app), the particle starts in the left well: each pair is heard on the
+  left with the probability of finding it there, (1 + cos 2π·rate·t)/2, and on the right otherwise,
+  where the rate is the pair's splitting in K read as Hz (as T in K = pitch in Hz).
 - `morsePotential.py`: a molecular bond, lopsided, with levels crowding towards dissociation.
 - `linearPotential.py`: V-shaped |x|, with Airy-function states.
 - `latticePotential.py`: a Kronig-Penney crystal; Bloch phases other than 0 and pi give inharmonic partials.

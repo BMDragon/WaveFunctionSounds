@@ -82,11 +82,24 @@ def levelAmplitudes(m, temperature, weighting, count):
         return m.amplitudes(np.arange(1, count + 1), temperature, weighting)
     return m.amplitudes(temperature, weighting)[:count]
 
+def tunnelling(m, req):
+    return bool(req.get('tunnelling')) and isinstance(m, doubleWell.DoubleWell)
+
 def noteContent(m, req, f, weighting):
-    # the partials of one note, dropping the negligible ones
+    # the partials of one note, dropping the negligible ones; with tunnelling, also the
+    # groups of partials that move between the wells (see DoubleWell.tunnellingGroups)
     harm, c = m.harmonicContent(f, sampleRate, temperatureFor(req, f), weighting)
     keep = np.abs(c) > 1e-6 * np.abs(c).max()
-    return {'m': harm[keep].tolist(), 're': c[keep].real.tolist(), 'im': c[keep].imag.tolist()}
+    note = {'m': harm[keep].tolist(), 're': c[keep].real.tolist(), 'im': c[keep].imag.tolist()}
+    if tunnelling(m, req):
+        groups = m.tunnellingGroups(f, sampleRate, temperatureFor(req, f), weighting)
+        biggest = max(np.abs(gc).max() for _, gc, _ in groups)
+        note['groups'] = []
+        for gm, gc, rate in groups:
+            keep = np.abs(gc) > 1e-6 * biggest
+            note['groups'].append({'m': gm[keep].tolist(), 're': gc[keep].real.tolist(),
+                                   'im': gc[keep].imag.tolist(), 'rate': rate})
+    return note
 
 def notes(req):
     # just the notes for the requested pitches, for keys outside the on-screen keyboard
@@ -126,6 +139,7 @@ def describe(req):
         pairs = [(m.eng[2*k + 1] - m.eng[2*k]) * 1e3 for k in range(m.statesBelowBarrier() // 2)]
         if pairs:
             info['lowestSplitting_meV'] = pairs[0]
+            info['lowestSplitting_K'] = pairs[0] * 1e-3 * eV / kB     # = the tunnelling rate in Hz
     if isinstance(m, morsePotential.MorsePotential):
         info['boundStates'] = len(m.eng)
         info['depth_K'] = m.D * eV / kB
@@ -168,9 +182,14 @@ def renderPiece(req):
         raise
     except Exception as error:
         raise ValueError(f'could not read that MIDI file ({type(error).__name__})')
-    audio = unSospiro.render(
-        notes, lambda f, sr: m.harmonicContent(f, sr, temperatureFor(req, f), weighting),
-        nSeconds=seconds, attackTime=float(req.get('attack', 0.005)),
+    if tunnelling(m, req):
+        renderer = unSospiro.renderStereo
+        content = lambda f, sr: m.tunnellingGroups(f, sr, temperatureFor(req, f), weighting)
+    else:
+        renderer = unSospiro.render
+        content = lambda f, sr: m.harmonicContent(f, sr, temperatureFor(req, f), weighting)
+    audio = renderer(
+        notes, content, nSeconds=seconds, attackTime=float(req.get('attack', 0.005)),
         decayTime=float(req.get('decay', 1.5)), releaseTime=float(req.get('release', 0.1)),
         sustainLevel=min(max(float(req.get('sustain', 0)), 0), 1))
     buffer = io.BytesIO()

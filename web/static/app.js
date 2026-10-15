@@ -29,6 +29,7 @@ function params() {
     blochPhase: +$('blochPhase').value,
     ...(state.potential === 'custom' ? { shape: encodeShape(state.shape) } : {}),
     ...($('weighting').value === 'custom' ? { customWeights: state.weights } : {}),
+    ...(state.potential === 'doublewell' && $('tunnelling').checked ? { tunnelling: true } : {}),
   };
 }
 
@@ -184,6 +185,7 @@ function refreshOutputs() {
   $('depthLabel').textContent = kind.depth || '';
   $('depthRow').hidden = !kind.depth;
   $('barrierRow').hidden = $('blochRow').hidden = !kind.lattice;
+  $('tunnellingRow').hidden = state.potential !== 'doublewell';
   $('potentialHint').textContent = kind.hint;
   $('barrierFractionOut').textContent = `${Math.round(p.barrierFraction * 100)}% of the spacing`;
   $('blochPhaseOut').textContent = `${p.blochPhase.toFixed(2)} π`;
@@ -243,24 +245,25 @@ function audio() {
   return ctx;
 }
 
-function periodicWave(note) {
+const amplitudeSum = note => note.m.reduce((sum, m, i) => sum + Math.hypot(note.re[i], note.im[i]), 0);
+
+function periodicWave(note, total = amplitudeSum(note)) {
   // PeriodicWave sums real[m] cos + imag[m] sin; our waveform is Re(sum c_m e^{i...}),
-  // i.e. Re(c) cos - Im(c) sin. Scaled so every note peaks at most at 1.
+  // i.e. Re(c) cos - Im(c) sin. Scaled by the sum of the amplitudes, so every note peaks at
+  // most at 1.
   const size = Math.max(...note.m) + 1;
   const real = new Float32Array(size), imag = new Float32Array(size);
-  let total = 0;
-  note.m.forEach((m, i) => { total += Math.hypot(note.re[i], note.im[i]); });
   note.m.forEach((m, i) => { real[m] = note.re[i] / total; imag[m] = -note.im[i] / total; });
   return ctx.createPeriodicWave(real, imag, { disableNormalization: true });
 }
 
 const isHarmonic = note => note.m.every(r => r >= 1 && Math.abs(r - Math.round(r)) < 1e-9);
 
-function buildVoice(note, freq, start) {
+function buildVoice(note, freq, start, total = amplitudeSum(note)) {
   // An audio node playing the note, and the sources to stop when it is released
   if (isHarmonic(note)) {
     const osc = ctx.createOscillator();
-    osc.setPeriodicWave(periodicWave(note));
+    osc.setPeriodicWave(periodicWave(note, total));
     osc.frequency.value = freq;
     osc.start(start);
     return { output: osc, sources: [osc] };
@@ -274,8 +277,7 @@ function buildVoice(note, freq, start) {
   const size = Math.max(1, ...ns.map(Math.abs)) + 1;
   const reCos = new Float32Array(size), reSin = new Float32Array(size);
   const imCos = new Float32Array(size), imSin = new Float32Array(size);
-  let total = 0, dcRe = 0, dcIm = 0;
-  note.m.forEach((r, i) => { total += Math.hypot(note.re[i], note.im[i]); });
+  let dcRe = 0, dcIm = 0;
   ns.forEach((n, i) => {
     const re = note.re[i] / total, im = note.im[i] / total, k = Math.abs(n), s = Math.sign(n);
     if (n === 0) { dcRe += re; dcIm += im; return; }
@@ -333,12 +335,47 @@ function noteOn(n, velocity = 127) {
   else noteData(n).then(note => { if (note && heldKeys.has(n)) startVoice(n, note, velocity); });
 }
 
+function tunnellingVoice(note, freq, start) {
+  // Each group of partials (a pair of states below the barrier, started in the left well)
+  // sounds on the left with the probability of finding the particle in the left well,
+  // P_L = (1 + cos 2π rate t) / 2, and on the right with 1 - P_L; groups without a rate
+  // (states above the barrier) sound equally on both sides.
+  const groups = note.groups.filter(group => group.m.length);
+  const total = groups.reduce((sum, group) => sum + amplitudeSum(group), 0);
+  const merger = ctx.createChannelMerger(2);
+  const sources = [];
+  const cosine = ctx.createPeriodicWave(new Float32Array([0, 1]), new Float32Array([0, 0]), { disableNormalization: true });
+  for (const group of groups) {
+    const voice = buildVoice(group, freq, start, total);
+    sources.push(...voice.sources);
+    let lfo = null;
+    if (group.rate !== null) {
+      lfo = ctx.createOscillator();
+      lfo.setPeriodicWave(cosine);
+      lfo.frequency.value = group.rate;
+      sources.push(lfo);
+      lfo.start(start);
+    }
+    [1, -1].forEach((sign, channel) => {
+      const side = ctx.createGain();
+      side.gain.value = 0.5;
+      if (lfo) {
+        const depth = ctx.createGain();
+        depth.gain.value = 0.5 * sign;
+        lfo.connect(depth).connect(side.gain);
+      }
+      voice.output.connect(side).connect(merger, 0, channel);
+    });
+  }
+  return { output: merger, sources };
+}
+
 function startVoice(n, note, velocity) {
   if (!note.m.length) return;
   audio();
   if (voices[n]) releaseVoice(n, 0.01);
   const now = ctx.currentTime, attack = attackSeconds(), peak = 0.3 * velocity / 127;
-  const { output, sources } = buildVoice(note, midiFreq(n), now);
+  const { output, sources } = note.groups ? tunnellingVoice(note, midiFreq(n), now) : buildVoice(note, midiFreq(n), now);
   const gain = ctx.createGain();
   gain.gain.setValueAtTime(0, now);
   gain.gain.linearRampToValueAtTime(peak, now + attack);
@@ -640,7 +677,8 @@ function drawInfo() {
   rows.push(`Ground state: <b>${fmt(info.groundEnergy_meV)} meV</b> (${fmt(info.groundEnergy_K)} K)`);
   if (info.boundStates !== undefined) rows.push(`Bound states: <b>${info.boundStates}</b>, depth ${fmt(info.depth_K)} K`);
   if (info.statesBelowBarrier !== undefined) rows.push(`States below the barrier: <b>${info.statesBelowBarrier}</b>` +
-    (info.lowestSplitting_meV !== undefined ? `; lowest pair split by ${fmt(info.lowestSplitting_meV)} meV` : ''));
+    (info.lowestSplitting_meV !== undefined ? `; lowest pair split by ${fmt(info.lowestSplitting_meV)} meV ` +
+      `(${fmt(info.lowestSplitting_K)} K, so with tunnelling it crosses back and forth at ${fmt(info.lowestSplitting_K)} Hz)` : ''));
   if (info.bands !== undefined) rows.push(`Bands: <b>${info.bands}</b> (${info.bandsBelowBarrier} below the barrier), ` +
     `Bloch phase ${fmt(info.blochPhase)} π`);
   rows.push(`Levels above 1% at ${noteName(state.focus)}: <b>${info.levelsAudible}</b>`);
@@ -799,7 +837,7 @@ async function toggleRecording() {
     $('recording').hidden = true;
     return;
   }
-  const length = recordedChunks.reduce((n, chunk) => n + chunk.length, 0);
+  const length = recordedChunks.reduce((n, chunk) => n + chunk[0].length, 0);
   const wav = encodeWav(recordedChunks, length, ctx.sampleRate);
   const link = $('recording');
   link.href = URL.createObjectURL(wav);
@@ -809,19 +847,21 @@ async function toggleRecording() {
 }
 
 function encodeWav(chunks, length, rate) {
-  // 16-bit mono PCM
-  const buffer = new ArrayBuffer(44 + 2 * length);
+  // 16-bit stereo PCM; each chunk is [left, right]
+  const bytes = 4 * length;
+  const buffer = new ArrayBuffer(44 + bytes);
   const view = new DataView(buffer);
   const text = (offset, s) => [...s].forEach((c, i) => view.setUint8(offset + i, c.charCodeAt(0)));
-  text(0, 'RIFF'); view.setUint32(4, 36 + 2 * length, true); text(8, 'WAVE');
-  text(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
-  view.setUint32(24, rate, true); view.setUint32(28, 2 * rate, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
-  text(36, 'data'); view.setUint32(40, 2 * length, true);
+  text(0, 'RIFF'); view.setUint32(4, 36 + bytes, true); text(8, 'WAVE');
+  text(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 2, true);
+  view.setUint32(24, rate, true); view.setUint32(28, 4 * rate, true); view.setUint16(32, 4, true); view.setUint16(34, 16, true);
+  text(36, 'data'); view.setUint32(40, bytes, true);
   let offset = 44;
-  for (const chunk of chunks) {
-    for (const sample of chunk) {
-      view.setInt16(offset, Math.max(-1, Math.min(1, sample)) * 32767, true);
-      offset += 2;
+  for (const [left, right] of chunks) {
+    for (let i = 0; i < left.length; i++) {
+      view.setInt16(offset, Math.max(-1, Math.min(1, left[i])) * 32767, true);
+      view.setInt16(offset + 2, Math.max(-1, Math.min(1, right[i])) * 32767, true);
+      offset += 4;
     }
   }
   return new Blob([buffer], { type: 'audio/wav' });
@@ -873,6 +913,7 @@ const SETTINGS = {
   depth: ['V', () => +Math.pow(10, +$('depth').value).toPrecision(3), v => { $('depth').value = Math.log10(v); }],
   barrierFraction: ['bw', () => +$('barrierFraction').value, v => { $('barrierFraction').value = v; }],
   blochPhase: ['phi', () => +$('blochPhase').value, v => { $('blochPhase').value = v; }],
+  tunnelling: ['tu', () => +$('tunnelling').checked, v => { $('tunnelling').checked = !!+v; }],
   weighting: ['w', () => $('weighting').value, v => { $('weighting').value = v; }],
   temperatureMode: ['tm', () => document.querySelector('input[name=tmode]:checked').value,
                     v => { document.querySelector(`input[name=tmode][value=${v === 'fixed' ? 'fixed' : 'pitch'}]`).checked = true; }],
@@ -934,6 +975,7 @@ function showEnsemble(id) {
 }
 
 function applySettings(settings, presetId = null) {
+  if (settings.tunnelling === undefined) settings = { ...settings, tunnelling: 0 };   // presets leave it off
   for (const [name, [, , set]] of Object.entries(SETTINGS)) {
     if (settings[name] !== undefined && settings[name] !== null && settings[name] !== '') set(settings[name]);
   }
@@ -1013,7 +1055,7 @@ document.querySelectorAll('#potential button').forEach(button => {
     settingsChanged();
   });
 });
-['mass', 'length', 'depth', 'temperature', 'weighting', 'barrierFraction', 'blochPhase'].forEach(id => {
+['mass', 'length', 'depth', 'temperature', 'weighting', 'barrierFraction', 'blochPhase', 'tunnelling'].forEach(id => {
   $(id).addEventListener('input', () => { refreshOutputs(); scheduleUpdate(); settingsChanged(); });
 });
 document.querySelectorAll('input[name=tmode]').forEach(r => r.addEventListener('change', () => {

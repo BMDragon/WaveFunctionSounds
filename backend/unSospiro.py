@@ -64,50 +64,73 @@ def readNotes(path, nSeconds):
     return sorted((start - first, end - first, note, velocity)
                   for start, end, note, velocity in notes if start - first < nSeconds)
 
+def partialWave(m, c, freq, t):
+    # Re(sum c exp(2 pi i r freq t)) for partials at multiples r of freq
+    if np.allclose(m, np.round(m)):
+        # one period as a fine table, Re(sum c_m exp(2 pi i m phase)), read out at the
+        # note's exact pitch
+        spectrum = np.zeros(tableSize // 2 + 1, complex)
+        spectrum[m] = c
+        table = np.fft.irfft(spectrum, tableSize) * tableSize / 2
+        return np.interp((freq * t) % 1 * tableSize, np.arange(tableSize + 1), np.append(table, table[0]))
+    # inharmonic partials at (n + offset) freq with integer n and a common offset (the
+    # lattice's Bloch phase): one period of the complex sum over n as a table, turned
+    # by exp(2 pi i offset freq t)
+    offset = m[0] - math.floor(m[0])
+    n = np.round(m - offset).astype(int)
+    spectrum = np.zeros(tableSize, complex)
+    np.add.at(spectrum, n % tableSize, c)
+    table = np.fft.ifft(spectrum) * tableSize
+    table = np.append(table, table[0])
+    phase, grid = (freq * t) % 1 * tableSize, np.arange(tableSize + 1)
+    period = np.interp(phase, grid, table.real) + 1j * np.interp(phase, grid, table.imag)
+    return np.real(np.exp(2j * np.pi * offset * freq * t) * period)
+
+def noteTimes(start, end, length, attackTime, decayTime, releaseTime, sustainLevel):
+    # first sample, time axis and envelope of one note: attack, decay towards the sustain
+    # level, release; computed until the envelope falls below `silence`
+    held = end - start
+    if sustainLevel > 0:
+        duration = held + -math.log(silence) * releaseTime
+    else:
+        duration = -math.log(silence) * min(decayTime, releaseTime + held / -math.log(silence))
+    i0 = int(start * sampleRate)
+    t = np.arange(min(length - i0, int(duration * sampleRate))) / sampleRate
+    envelope = np.minimum(t / attackTime, 1) * (sustainLevel + (1 - sustainLevel) * np.exp(-t / decayTime))
+    envelope[t > held] *= np.exp(-(t[t > held] - held) / releaseTime)
+    return i0, t, envelope
+
 def render(notes, harmonicContent, nSeconds=nSeconds, attackTime=attackTime, decayTime=decayTime,
            releaseTime=releaseTime, sustainLevel=sustainLevel):
     out = np.zeros(int(nSeconds * sampleRate))
     for start, end, note, velocity in notes:
         freq = 440 * 2**((note - 69) / 12)
         m, c = harmonicContent(freq, sampleRate)
-
-        # stop once the decay or the release has taken the note below `silence`
-        held = end - start
-        if sustainLevel > 0:
-            duration = held + -math.log(silence) * releaseTime
-        else:
-            duration = -math.log(silence) * min(decayTime, releaseTime + held / -math.log(silence))
-        i0 = int(start * sampleRate)
-        t = np.arange(min(len(out) - i0, int(duration * sampleRate))) / sampleRate
-
-        if np.allclose(m, np.round(m)):
-            # one period as a fine table, Re(sum c_m exp(2 pi i m phase)), read out at the
-            # note's exact pitch
-            spectrum = np.zeros(tableSize // 2 + 1, complex)
-            spectrum[m] = c
-            table = np.fft.irfft(spectrum, tableSize) * tableSize / 2
-            wave = np.interp((freq * t) % 1 * tableSize, np.arange(tableSize + 1), np.append(table, table[0]))
-        else:
-            # inharmonic partials at (n + offset) freq with integer n and a common offset (the
-            # lattice's Bloch phase): one period of the complex sum over n as a table, turned
-            # by exp(2 pi i offset freq t)
-            offset = m[0] - math.floor(m[0])
-            n = np.round(m - offset).astype(int)
-            spectrum = np.zeros(tableSize, complex)
-            np.add.at(spectrum, n % tableSize, c)
-            table = np.fft.ifft(spectrum) * tableSize
-            table = np.append(table, table[0])
-            phase, grid = (freq * t) % 1 * tableSize, np.arange(tableSize + 1)
-            period = np.interp(phase, grid, table.real) + 1j * np.interp(phase, grid, table.imag)
-            wave = np.real(np.exp(2j * np.pi * offset * freq * t) * period)
-
-        # attack, then decay towards the sustain level, then release
-        envelope = np.minimum(t / attackTime, 1) * (sustainLevel + (1 - sustainLevel) * np.exp(-t / decayTime))
-        envelope[t > held] *= np.exp(-(t[t > held] - held) / releaseTime)
-        out[i0:i0 + len(t)] += velocity / 127 * envelope * wave / np.abs(c).sum()
+        i0, t, envelope = noteTimes(start, end, len(out), attackTime, decayTime, releaseTime, sustainLevel)
+        out[i0:i0 + len(t)] += velocity / 127 * envelope * partialWave(m, c, freq, t) / np.abs(c).sum()
 
     fade = int(min(fadeOutTime, nSeconds / 4) * sampleRate)
     out[-fade:] *= np.linspace(1, 0, fade)
+    return out
+
+def renderStereo(notes, groupContent, nSeconds=nSeconds, attackTime=attackTime, decayTime=decayTime,
+                 releaseTime=releaseTime, sustainLevel=sustainLevel):
+    # Stereo, from groups of partials (m, c, rate): each group sounds in the left channel with
+    # the probability P_L(t) = (1 + cos(2 pi rate t)) / 2 and in the right with 1 - P_L, from the
+    # start of the note; rate None means equally on both sides (the double well's tunnelling).
+    out = np.zeros((int(nSeconds * sampleRate), 2))
+    for start, end, note, velocity in notes:
+        freq = 440 * 2**((note - 69) / 12)
+        groups = groupContent(freq, sampleRate)
+        total = sum(np.abs(c).sum() for m, c, rate in groups)
+        i0, t, envelope = noteTimes(start, end, len(out), attackTime, decayTime, releaseTime, sustainLevel)
+        for m, c, rate in groups:
+            wave = velocity / 127 * envelope * partialWave(m, c, freq, t) / total
+            left = 0.5 if rate is None else (1 + np.cos(2 * np.pi * rate * t)) / 2
+            out[i0:i0 + len(t), 0] += left * wave
+            out[i0:i0 + len(t), 1] += (1 - left) * wave
+    fade = int(min(fadeOutTime, nSeconds / 4) * sampleRate)
+    out[-fade:] *= np.linspace(1, 0, fade)[:, None]
     return out
 
 if __name__ == '__main__':

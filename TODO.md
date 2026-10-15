@@ -1,6 +1,7 @@
 # To do
 
 Worked through in this order. Customization features stay less prominent in the app than the presets.
+Design rule: choices follow from the physics, never from how music or instruments work.
 
 ## Housekeeping
 - [x] Run `tests/test_potentials.py --quick` on GitHub on every push and pull request
@@ -15,15 +16,15 @@ Worked through in this order. Customization features stay less prominent in the 
 - [x] Re-run the instrument analysis (several notes per instrument, all potentials)
 - [x] Presets for every instrument of a symphony orchestra, jazz big band and wind ensemble that has
       a free recording (40)
-- [ ] Alto clarinet, contrabass clarinet, cornet, flugelhorn, euphonium: no free recording found (decision pending)
-- [ ] Optional: a temperature mode where brightness falls with pitch, as in real instruments (decision pending)
+- Alto clarinet, contrabass clarinet, cornet, flugelhorn, euphonium: left out, no free recording to match against
 
 ## Medium
 - [x] Draw your own potential (in a collapsed Customize section)
 - [x] Hand-set level weights by dragging bars (Customize section)
-- [ ] Make tunnelling audible in the double well (tremolo / stereo)
+- [x] Make tunnelling audible in the double well: well probabilities drive the stereo channels, at the
+      splitting's rate (splitting in K = rate in Hz, like T = pitch)
 
 ## Bigger
-- [ ] 2D potentials: a quantum drum with inharmonic modes
-- [ ] Time-evolution mode: partials from the energies instead of stacked shapes
-- [ ] Hydrogen atom: the Rydberg series as a sound source
+- [ ] 2D boxes (circle, rectangle): partials at each mode's wavenumber, as in 1D
+- [ ] Time-evolution mode: play the survival probability |<psi(0)|psi(t)>|^2 (partials at energy differences)
+- [ ] Hydrogen atom: the radial Coulomb potential with an l slider, as another potential
