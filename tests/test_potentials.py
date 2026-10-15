@@ -105,6 +105,32 @@ def checkNumerical(model, problems):
     if edge.max() > 1e-4:
         problems.append(f'a state reaches the box edge (relative amplitude {edge.max():.1e}): box too small')
 
+def checkExactStates(model, problems):
+    # states from formulas (Morse, V-shaped): normalized, orthogonal, n nodes, negligible at
+    # the edge of their extent, and solving the Schrodinger equation
+    count = len(model.eng)
+    picks = sorted({0, 1, 2, count // 2, count - 2, count - 1} & set(range(count)))
+    lo, hi = min(model.extent(n)[0] for n in picks), max(model.extent(n)[1] for n in picks)
+    x = np.linspace(lo, hi, 200001)
+    dx = x[1] - x[0]
+    psi = np.array([model.state(n, x) for n in picks])
+    overlap = psi @ psi.T * dx
+    if np.abs(np.diag(overlap) - 1).max() > 1e-6:
+        problems.append(f'normalization off by {np.abs(np.diag(overlap) - 1).max():.1e}')
+    if np.abs(overlap - np.diag(np.diag(overlap))).max() > 1e-6:
+        problems.append(f'orthogonality off by {np.abs(overlap - np.diag(np.diag(overlap))).max():.1e}')
+    for row, n in zip(psi, picks):
+        if nodes(row) != n:
+            problems.append(f'state {n} has {nodes(row)} nodes'); break
+        left, right = model.extent(n)
+        if np.abs(model.state(n, np.array([left + 1e-9, right]))).max() > 1e-6 * np.abs(row).max():
+            problems.append(f'state {n} not negligible at the edge of its extent'); break
+        allowed = (x > model.turningPoints(n)[0]) & (x < model.turningPoints(n)[1]) & (np.abs(x) > 50 * dx)
+        lap = np.gradient(np.gradient(row, dx), dx)
+        residual = (-model.kinetic * lap + (model.potential(x) - model.eng[n]) * row)[allowed][5:-5]
+        if np.abs(residual).max() > 1e-3 * np.abs(model.eng[n] * row).max():
+            problems.append(f'state {n} does not solve the Schrodinger equation'); break
+
 def checkExact(potential, model, problems):
     if potential == 'morse':
         lam = model.r * math.sqrt(model.D / model.kinetic)
@@ -247,9 +273,11 @@ def run(case):
             problems.append('energies not finite and ascending')
         checkSound(model, problems)
         checkPlot(model, problems)
-        if isinstance(model, npot.NumericalPotential):
+        if isinstance(model, npot.NumericalPotential) and hasattr(model, 'psi'):     # solved on a grid
             checkNumerical(model, problems)
             checkConvergence(potential, model, case, problems)
+        elif isinstance(model, npot.NumericalPotential):                             # exact states
+            checkExactStates(model, problems)
         checkExact(potential, model, problems)
     except Exception:
         problems.append('check crashed: ' + traceback.format_exc().splitlines()[-1])

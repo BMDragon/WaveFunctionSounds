@@ -179,21 +179,29 @@ class NumericalPotential:
             return 1 / np.arange(1, len(self.eng) + 1)
         return np.exp(-(self.eng - self.eng[0]) * eV / (2 * kB * temperature))
 
+    def state(self, n, x):
+        # the n-th state at positions x (nm^-1/2); zero off the grid
+        return np.interp(x, self.x, self.psi[:, n], left=0, right=0)
+
+    def extent(self, n):
+        # where the n-th state is not negligible (above 1e-7 of its largest value)
+        psi = self.psi[:, n]
+        support = np.nonzero(np.abs(psi) > 1e-7 * np.abs(psi).max())[0]
+        return self.x[support[0]], self.x[support[-1]]
+
     def computeCoefficients(self):
         # Fourier coefficients of every wrapped state over one period
         u = np.linspace(0, 1, self.coefficientSamples, False)
         coefficients = []
         for n in range(len(self.eng)):
-            psi = self.psi[:, n]
             left, right = self.turningPoints(n)
             width, centre = right - left, (left + right) / 2
-            support = np.nonzero(np.abs(psi) > 1e-7 * np.abs(psi).max())[0]
-            low, high = self.x[support[0]], self.x[support[-1]]
+            low, high = self.extent(n)
             images = np.arange(math.floor((centre - high) / width - 1/2) - 1, math.ceil((centre - low) / width + 3/2) + 2)
             X = centre + width * (2*u[None, :] - 1/2) - width * images[:, None]
             flip = self.parity[n] == 1 if self.parity[n] else n % 2 == 0     # n nodes: flip when n is even
             sign = (-1.0)**np.abs(images) if flip else np.ones(len(images))
-            wrapped = math.sqrt(width) * (sign @ np.interp(X, self.x, psi, left=0, right=0))
+            wrapped = math.sqrt(width) * (sign @ self.state(n, X))
             coefficients.append(2 * np.fft.rfft(wrapped) / self.coefficientSamples)
         return np.array(coefficients)
 
@@ -215,7 +223,7 @@ class NumericalPotential:
         margin = 0.3 * (right - left)
         x = np.linspace(left - margin, right + margin, 601)
         return {'x': x, 'V': self.potential(x) * 1e3, 'energies': self.eng[:count] * 1e3,
-                'psi': [np.interp(x, self.x, self.psi[:, n], left=0, right=0) for n in range(count)]}
+                'psi': [self.state(n, x) for n in range(count)]}
 
 def tailLength(kinetic, slope):
     # decay length of a state beyond a turning point where the potential rises with `slope` (eV/nm)

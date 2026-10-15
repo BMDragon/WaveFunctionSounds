@@ -28,16 +28,17 @@ renders the opening of Un sospiro with every potential.
 
 - `infiniteSquareWell.py`, `finiteSquareWell.py`, `harmonicOscillator.py`: solved analytically.
 - `doubleWell.py`: two wells and a barrier; below the barrier the levels pair up by tunnelling.
-- `morsePotential.py`: a molecular bond, lopsided, with levels crowding towards dissociation.
-- `linearPotential.py`: V-shaped |x|, with Airy-function states.
+- `morsePotential.py`: a molecular bond, lopsided, with levels crowding towards dissociation; solved
+  exactly (Laguerre-function states).
+- `linearPotential.py`: V-shaped |x|, solved exactly with Airy-function states.
 - `latticePotential.py`: a Kronig-Penney crystal; Bloch phases other than 0 and π give inharmonic partials.
 - `box2D.py`: circular and rectangular drums; each state sounds at its wavenumber, so the partials
   are inharmonic (Bessel zeros for the circle).
 - `hydrogen.py`: a hydrogen-like atom with nuclear charge Z and angular momentum l.
 - `customPotential.py`: a drawn potential between hard walls.
 
-The double well, Morse, V-shaped and drawn potentials share a finite-difference solver in
-`numericalPotential.py`; `timeEvolution.py` gives the survival-probability sound.
+The double well and drawn potentials are solved numerically on a grid (`numericalPotential.py`), and
+the other potentials exactly; `timeEvolution.py` gives the survival-probability sound.
 
 ## Samples
 `samples/` holds pieces rendered with every part on its instrument preset, by
