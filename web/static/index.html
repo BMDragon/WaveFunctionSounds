@@ -88,6 +88,8 @@
         <h2>Keyboard</h2>
         <button id="midiConnect" class="link">Connect MIDI keyboard</button>
         <span id="midiStatus" class="hint"></span>
+        <button id="record" class="link">● Record</button>
+        <a id="recording" class="hint" hidden></a>
         <span class="hint">Click, or type Z–M (C3), Q–U (C4), I–P (C5). The last note played is shown below.</span>
         <span id="status" class="status"></span>
       </div>
@@ -112,9 +114,17 @@
         <canvas id="spectrum" height="200"></canvas>
       </section>
       <section class="panel">
-        <h2>Un sospiro <span class="sub">rendered with these settings</span></h2>
+        <h2>Render a piece <span class="sub">with these settings</span></h2>
+        <div class="row">
+          <select id="piece">
+            <option value="builtin">Un sospiro (Liszt)</option>
+            <option value="upload">Your MIDI file…</option>
+          </select>
+          <input type="file" id="midiFile" accept=".mid,.midi,audio/midi" hidden>
+          <span id="pieceName" class="hint"></span>
+        </div>
         <label>Length <output id="secondsOut"></output>
-          <input type="range" id="seconds" min="5" max="65" step="5" value="15"></label>
+          <input type="range" id="seconds" min="5" max="120" step="5" value="15"></label>
         <div class="row">
           <button id="render" class="primary">Render</button>
           <span id="renderStatus" class="status"></span>

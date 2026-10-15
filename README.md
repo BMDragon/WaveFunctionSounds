@@ -10,6 +10,10 @@ python3 web/server.py        # then open http://localhost:8000
 
 Install the dependencies with `pip install -r requirements.txt`.
 
+In the app: pick an instrument preset (or share any sound with its link), play the on-screen keyboard,
+your computer keyboard or a MIDI keyboard, record what you play to WAV, and render Un sospiro or any
+MIDI file of your own with the current settings.
+
 ## Potentials
 Each script in `backend/` writes a 220 Hz sample to `audio/` when run, and `backend/unSospiro.py`
 renders the opening of Un sospiro with every potential.

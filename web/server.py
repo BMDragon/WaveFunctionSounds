@@ -1,3 +1,4 @@
+import base64
 import functools
 import io
 import json
@@ -128,16 +129,26 @@ def describe(req):
             'info': info, 'warnings': warnings}
 
 def renderPiece(req):
-    path = os.path.join(repoRoot, 'midi', 'unSospiro.mid')
-    if not os.path.exists(path):
-        raise FileNotFoundError('midi/unSospiro.mid not found')
+    # the built-in Un sospiro, or a MIDI file sent as base64 in 'midi'
+    if req.get('midi'):
+        source = base64.b64decode(req['midi'])
+        if len(source) > 5_000_000:
+            raise ValueError('that MIDI file is too large (5 MB at most)')
+    else:
+        source = os.path.join(repoRoot, 'midi', 'unSospiro.mid')
+        if not os.path.exists(source):
+            raise FileNotFoundError('midi/unSospiro.mid not found')
     m = requestModel(req)
     weighting = req.get('weighting', 'boltzmann')
     seconds = min(max(float(req.get('seconds', 15)), 1), 120)
     try:
-        notes = unSospiro.readNotes(path, seconds)
+        notes = unSospiro.readNotes(source, seconds)
     except ImportError:
         raise FileNotFoundError('rendering needs the mido package: pip install mido')
+    except ValueError:
+        raise
+    except Exception as error:
+        raise ValueError(f'could not read that MIDI file ({type(error).__name__})')
     audio = unSospiro.render(
         notes, lambda f, sr: m.harmonicContent(f, sr, temperatureFor(req, f), weighting),
         nSeconds=seconds, attackTime=float(req.get('attack', 0.005)),

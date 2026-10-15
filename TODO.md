@@ -9,7 +9,7 @@ Worked through in this order. Customization features stay less prominent in the 
 - [x] Full ADSR envelope: a sustain level and attacks longer than 300 ms
 - [x] Instrument presets (prominent) and shareable links that reopen a sound
 - [x] Play from a MIDI keyboard (Web MIDI)
-- [ ] Render any MIDI file, and record live playing to WAV
+- [x] Render any MIDI file, and record live playing to WAV
 
 ## Medium
 - [ ] Draw your own potential (in a collapsed Customize section)

@@ -70,6 +70,8 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .presetGrid button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 #presetHint { margin: 8px 0 4px; min-height: 2.6em; }
 button.link { border: 0; background: none; padding: 0; color: var(--accent); cursor: pointer; font: inherit; font-size: 12px; }
+button.link.recording { color: #c0392b; font-weight: 600; }
+#piece { width: auto; }
 .key.white.suggested { background: color-mix(in srgb, var(--key-white) 82%, var(--accent)); }
 .key.black.suggested { background: color-mix(in srgb, var(--key-black) 75%, var(--accent)); }
 .key.active { background: var(--key-active) !important; }

@@ -617,6 +617,7 @@ async function renderPiece() {
     audio();
     const body = { ...params(), seconds: +$('seconds').value, attack: attackSeconds(),
                    decay: decaySeconds(), sustain: +$('sustainLevel').value, release: +$('release').value };
+    if ($('piece').value === 'upload' && uploadedPiece) body.midi = uploadedPiece.data;
     const res = await fetch('/api/render', { method: 'POST', headers: { 'Content-Type': 'application/json' },
                                              body: JSON.stringify(body) });
     if (!res.ok) throw new Error((await res.json()).error || res.statusText);
@@ -628,17 +629,89 @@ async function renderPiece() {
     }
     player.src = url;
     $('download').href = url;
-    $('download').download = `unSospiro_${state.potential}.wav`;
+    const pieceName = $('piece').value === 'upload' && uploadedPiece ? uploadedPiece.name.replace(/\.midi?$/i, '') : 'unSospiro';
+    $('download').download = `${pieceName}_${state.potential}.wav`;
     $('download').hidden = false;
     $('renderStatus').textContent = `Rendered in ${((performance.now() - started) / 1000).toFixed(1)} s`;
     drawSpectrogramAxis();
-    player.play();
+    player.play().catch(() => {});      // pausing before playback starts is fine
   } catch (error) {
     $('renderStatus').textContent = `Error: ${error.message}`;
   } finally {
     clearInterval(tick);
     button.disabled = false;
   }
+}
+
+// ---------- your own MIDI file ----------
+
+let uploadedPiece = null;       // { name, data: base64 }
+
+$('piece').addEventListener('change', () => {
+  if ($('piece').value === 'upload') $('midiFile').click();
+});
+$('midiFile').addEventListener('change', async () => {
+  const file = $('midiFile').files[0];
+  if (!file) {
+    if (!uploadedPiece) $('piece').value = 'builtin';
+    return;
+  }
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  uploadedPiece = { name: file.name, data: btoa(binary) };
+  $('pieceName').textContent = file.name;
+  $('midiFile').value = '';
+});
+
+// ---------- recording what you play ----------
+
+let recorder = null, recordedChunks = [], recording = false;
+
+async function toggleRecording() {
+  audio();
+  if (!recorder) {
+    await ctx.audioWorklet.addModule('recorder.js');
+    recorder = new AudioWorkletNode(ctx, 'recorder');
+    recorder.port.onmessage = event => { if (recording) recordedChunks.push(event.data); };
+    analyser.connect(recorder);
+    recorder.connect(ctx.destination);      // it outputs silence, but keeps the recorder running
+  }
+  recording = !recording;
+  recorder.port.postMessage(recording);
+  $('record').textContent = recording ? '■ Stop recording' : '● Record';
+  $('record').classList.toggle('recording', recording);
+  if (recording) {
+    recordedChunks = [];
+    $('recording').hidden = true;
+    return;
+  }
+  const length = recordedChunks.reduce((n, chunk) => n + chunk.length, 0);
+  const wav = encodeWav(recordedChunks, length, ctx.sampleRate);
+  const link = $('recording');
+  link.href = URL.createObjectURL(wav);
+  link.download = `recording_${state.potential}.wav`;
+  link.textContent = `Download recording (${(length / ctx.sampleRate).toFixed(1)} s)`;
+  link.hidden = false;
+}
+
+function encodeWav(chunks, length, rate) {
+  // 16-bit mono PCM
+  const buffer = new ArrayBuffer(44 + 2 * length);
+  const view = new DataView(buffer);
+  const text = (offset, s) => [...s].forEach((c, i) => view.setUint8(offset + i, c.charCodeAt(0)));
+  text(0, 'RIFF'); view.setUint32(4, 36 + 2 * length, true); text(8, 'WAVE');
+  text(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+  view.setUint32(24, rate, true); view.setUint32(28, 2 * rate, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+  text(36, 'data'); view.setUint32(40, 2 * length, true);
+  let offset = 44;
+  for (const chunk of chunks) {
+    for (const sample of chunk) {
+      view.setInt16(offset, Math.max(-1, Math.min(1, sample)) * 32767, true);
+      offset += 2;
+    }
+  }
+  return new Blob([buffer], { type: 'audio/wav' });
 }
 
 // ---------- MIDI keyboard ----------
@@ -803,6 +876,7 @@ $('seconds').addEventListener('input', refreshOutputs);
 $('volume').addEventListener('input', () => { refreshOutputs(); if (master) master.gain.value = +$('volume').value; });
 $('sustain').addEventListener('change', () => { if (!$('sustain').checked) releaseSustained(); });
 $('midiConnect').addEventListener('click', connectMidi);
+$('record').addEventListener('click', toggleRecording);
 $('render').addEventListener('click', renderPiece);
 window.addEventListener('resize', () => { clearTimeout(window.resizeTimer); window.resizeTimer = setTimeout(drawAll, 100); });
 

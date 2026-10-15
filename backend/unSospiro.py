@@ -29,14 +29,17 @@ tableSize = 16384       # samples in each note's one-period table
 def readNotes(path, nSeconds):
     # (start, end, midi note, velocity) for the notes beginning within nSeconds of the
     # first note, with times measured from the first note. A note released while the
-    # sustain pedal is down keeps sounding until the pedal comes up.
+    # sustain pedal is down keeps sounding until the pedal comes up. `path` can also be
+    # the bytes of a MIDI file.
+    import io
     import mido     # only needed here, so the web app runs without it until a render is asked for
+    midi = mido.MidiFile(file=io.BytesIO(path)) if isinstance(path, (bytes, bytearray)) else mido.MidiFile(path)
     t = 0.0
     pedalDown = False
     held = {}           # note -> [(start, velocity)] of keys still down
     sustained = []      # (start, note, velocity) of notes held only by the pedal
     notes = []
-    for msg in mido.MidiFile(path):
+    for msg in midi:
         t += msg.time
         if msg.type == 'note_on' and msg.velocity > 0:
             held.setdefault(msg.note, []).append((t, msg.velocity))
@@ -55,6 +58,8 @@ def readNotes(path, nSeconds):
     notes += [(start, t, note, velocity) for start, note, velocity in sustained]
     notes += [(start, t, note, velocity) for note, keys in held.items() for start, velocity in keys]
 
+    if not notes:
+        raise ValueError('the MIDI file has no notes')
     first = min(start for start, _, _, _ in notes)
     return sorted((start - first, end - first, note, velocity)
                   for start, end, note, velocity in notes if start - first < nSeconds)
