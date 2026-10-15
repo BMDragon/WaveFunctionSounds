@@ -30,6 +30,11 @@ renders the opening of Un sospiro with every potential.
   at its wavenumber relative to the ground state's, so the partials are inharmonic (Bessel zeros for
   the circle, π√((a/W)² + (b/H)²) for the rectangle).
 
+In the web app, *Sound* can instead play the time evolution: the particle starts in the
+superposition with the chosen weights, and what is heard is its survival probability
+|⟨ψ(0)|ψ(t)⟩|², whose partials are at the energy differences, with E₁ − E₀ at the key
+(`backend/timeEvolution.py`).
+
 The double well, Morse and V-shaped potentials share a finite-difference solver in `numericalPotential.py`.
 
 ## Tests

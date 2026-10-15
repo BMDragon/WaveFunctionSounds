@@ -306,6 +306,29 @@ def checkEndToEnd():
     direct = sum((ci * np.exp(2j * np.pi * ri * 110 * t)).real for ri, ci in zip(r, c))
     if np.abs(unSospiro.partialWave(r, c, 110, t) - direct).max() > 1e-6 * np.abs(direct).max():
         problems.append('additive renderer disagrees with a direct sum of the partials')
+    # time evolution: the survival probability's partials are the energy differences over E_1 - E_0
+    import timeEvolution
+    r, c = timeEvolution.survivalContent([1, 4, 9], [1, 1, 1], 220)
+    if not (np.allclose(r, [1, 5 / 3, 8 / 3]) and np.allclose(c, 2 / 9)):
+        problems.append(f'survival probability of three equal levels: partials {r} {c}')
+    if len(timeEvolution.survivalContent([1, 4], [1, 0], 220)[0]):
+        problems.append('survival probability of a single state is not silent')
+    for potential in ('infinite', 'oscillator', 'doublewell', 'lattice', 'circle'):
+        for weighting in ('boltzmann', 'equal'):
+            req = base | dict(potential=potential, sound='survival', weighting=weighting, freqs=freqs[::12])
+            try:
+                d = json.loads(json.dumps(server.describe(req), allow_nan=False))
+                if any(len(n['m']) > server.liveSurvivalPartials for n in d['notes']):
+                    problems.append(f'{potential} survival {weighting}: more partials than are played live')
+            except Exception as error:
+                problems.append(f'{potential} survival {weighting}: describe failed: {type(error).__name__}: {error}')
+    oscillator = server.requestModel(base | dict(potential='oscillator'))
+    r, c = server.content(oscillator, base | dict(sound='survival'), 220, 44100, 'boltzmann')
+    if not np.allclose(r, np.round(r)):
+        problems.append('oscillator survival probability is not harmonic')
+    audio = unSospiro.render(notes, lambda f, sr: server.content(oscillator, base | dict(sound='survival'), f, sr, 'equal'), nSeconds=2)
+    if not np.all(np.isfinite(audio)) or np.abs(audio).max() == 0:
+        problems.append('survival probability render failed')
     # tunnelling in the double well: the lowest pair starts in the left well, crosses at the
     # splitting's rate (in K, played as Hz), and the stereo render has two channels
     model = server.requestModel(base | dict(potential='doublewell', depth=0.2))

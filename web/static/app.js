@@ -27,6 +27,7 @@ function params() {
     temperature: Math.pow(10, +$('temperature').value),
     barrierFraction: +$('barrierFraction').value,
     blochPhase: +$('blochPhase').value,
+    ...($('sound').value === 'survival' ? { sound: 'survival' } : {}),
     ...(state.potential === 'rectangle' ? { aspect: +$('aspect').value } : {}),
     ...(state.potential === 'custom' ? { shape: encodeShape(state.shape) } : {}),
     ...($('weighting').value === 'custom' ? { customWeights: state.weights } : {}),
@@ -192,6 +193,11 @@ function refreshOutputs() {
   $('barrierRow').hidden = $('blochRow').hidden = !kind.lattice;
   $('tunnellingRow').hidden = state.potential !== 'doublewell';
   $('aspectRow').hidden = !kind.aspect;
+  $('soundHint').textContent = $('sound').value === 'survival'
+    ? 'The particle starts in the superposition of the states with these weights, and you hear the probability of ' +
+      'still finding it in that state, |⟨ψ(0)|ψ(t)⟩|²: partials at the energy differences, with E₁ − E₀ at the key.'
+    : 'Each state is a partial; the wavefunction, laid end to end, is one period of the sound.';
+  $('tunnellingRow').hidden ||= $('sound').value === 'survival';
   $('aspectOut').textContent = (+$('aspect').value).toFixed(2);
   $('potentialHint').textContent = kind.hint;
   $('barrierFractionOut').textContent = `${Math.round(p.barrierFraction * 100)}% of the spacing`;
@@ -710,6 +716,8 @@ function drawInfo() {
   if (info.bands !== undefined) rows.push(`Bands: <b>${info.bands}</b> (${info.bandsBelowBarrier} below the barrier), ` +
     `Bloch phase ${fmt(info.blochPhase)} π`);
   rows.push(`Levels above 1% at ${noteName(state.focus)}: <b>${info.levelsAudible}</b>`);
+  if (info.excitation_meV !== undefined) rows.push(`First excitation E₁ − E₀: <b>${fmt(info.excitation_meV)} meV</b>, ` +
+    `played at the key; ${info.survivalPartials} energy differences heard at ${noteName(state.focus)}`);
   $('info').innerHTML = rows.map(r => `<div>${r}</div>`).join('') +
     warnings.map(w => `<div class="warning">${w}</div>`).join('');
 }
@@ -942,6 +950,7 @@ const SETTINGS = {
   barrierFraction: ['bw', () => +$('barrierFraction').value, v => { $('barrierFraction').value = v; }],
   blochPhase: ['phi', () => +$('blochPhase').value, v => { $('blochPhase').value = v; }],
   aspect: ['ar', () => +$('aspect').value, v => { $('aspect').value = v; }],
+  sound: ['snd', () => $('sound').value, v => { $('sound').value = v === 'survival' ? 'survival' : 'states'; }],
   tunnelling: ['tu', () => +$('tunnelling').checked, v => { $('tunnelling').checked = !!+v; }],
   weighting: ['w', () => $('weighting').value, v => { $('weighting').value = v; }],
   temperatureMode: ['tm', () => document.querySelector('input[name=tmode]:checked').value,
@@ -1005,6 +1014,7 @@ function showEnsemble(id) {
 
 function applySettings(settings, presetId = null) {
   if (settings.tunnelling === undefined) settings = { ...settings, tunnelling: 0 };   // presets leave it off
+  if (settings.sound === undefined) settings = { ...settings, sound: 'states' };      // and play the states
   for (const [name, [, , set]] of Object.entries(SETTINGS)) {
     if (settings[name] !== undefined && settings[name] !== null && settings[name] !== '') set(settings[name]);
   }
@@ -1084,7 +1094,7 @@ document.querySelectorAll('#potential button').forEach(button => {
     settingsChanged();
   });
 });
-['mass', 'length', 'depth', 'temperature', 'weighting', 'barrierFraction', 'blochPhase', 'tunnelling', 'aspect'].forEach(id => {
+['mass', 'length', 'depth', 'temperature', 'weighting', 'barrierFraction', 'blochPhase', 'tunnelling', 'aspect', 'sound'].forEach(id => {
   $(id).addEventListener('input', () => { refreshOutputs(); scheduleUpdate(); settingsChanged(); });
 });
 document.querySelectorAll('input[name=tmode]').forEach(r => r.addEventListener('change', () => {

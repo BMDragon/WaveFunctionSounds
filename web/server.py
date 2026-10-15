@@ -24,6 +24,7 @@ import latticePotential
 import linearPotential
 import customPotential
 import box2D
+import timeEvolution
 import unSospiro
 
 electronMass = 9.1093837e-31
@@ -88,14 +89,43 @@ def levelAmplitudes(m, temperature, weighting, count):
         return m.amplitudes(np.arange(1, count + 1), temperature, weighting)
     return m.amplitudes(temperature, weighting)[:count]
 
+liveSurvivalPartials = 400  # the strongest partials of a survival-probability note played live
+
 def tunnelling(m, req):
-    return bool(req.get('tunnelling')) and isinstance(m, doubleWell.DoubleWell)
+    return bool(req.get('tunnelling')) and isinstance(m, doubleWell.DoubleWell) and not survival(req)
+
+def survival(req):
+    return req.get('sound') == 'survival'
+
+def stateCount(m):
+    # how many states a model keeps
+    if isinstance(m, infiniteSquareWell.InfiniteSquareWell):
+        return box2D.Box2D.maxStates
+    if isinstance(m, harmonicOscillator.HarmonicOscillator):
+        return harmonicOscillator.numStates
+    if isinstance(m, finiteSquareWell.FiniteSquareWell):
+        return len(m.vn)
+    return len(m.eng)
+
+def content(m, req, f, sr, weighting):
+    # the partials of a note: the wavefunctions' (harmonicContent) or, for sound = 'survival',
+    # the survival probability's (see timeEvolution)
+    T = temperatureFor(req, f)
+    if survival(req):
+        count = stateCount(m)
+        return timeEvolution.survivalContent(m.energies(count), levelAmplitudes(m, T, weighting, count), f, sr)
+    return m.harmonicContent(f, sr, T, weighting)
 
 def noteContent(m, req, f, weighting):
     # the partials of one note, dropping the negligible ones; with tunnelling, also the
     # groups of partials that move between the wells (see DoubleWell.tunnellingGroups)
-    harm, c = m.harmonicContent(f, sampleRate, temperatureFor(req, f), weighting)
+    harm, c = content(m, req, f, sampleRate, weighting)
+    if not len(c):
+        return {'m': [], 're': [], 'im': []}
     keep = np.abs(c) > 1e-6 * np.abs(c).max()
+    if survival(req) and keep.sum() > liveSurvivalPartials:
+        keep = np.zeros(len(c), bool)
+        keep[np.argsort(-np.abs(c), kind='stable')[:liveSurvivalPartials]] = True     # the lowest, among equals
     note = {'m': harm[keep].tolist(), 're': c[keep].real.tolist(), 'im': c[keep].imag.tolist()}
     if tunnelling(m, req):
         groups = m.tunnellingGroups(f, sampleRate, temperatureFor(req, f), weighting)
@@ -153,6 +183,19 @@ def describe(req):
         info['bands'] = len(m.eng)
         info['bandsBelowBarrier'] = int((m.eng < m.barrier / eV).sum())
         info['blochPhase'] = m.blochPhase
+    if survival(req):
+        harm, c = content(m, req, focus, sampleRate, weighting)
+        heard = int((np.abs(c) > 1e-6 * np.abs(c).max()).sum()) if len(c) else 0
+        gaps = m.energies(stateCount(m)) - m.energies(1)[0]
+        nonzero = gaps[gaps > 1e-12 * gaps.max()] if gaps.max() > 0 else gaps[:0]
+        if len(nonzero):
+            info['excitation_meV'] = nonzero[0] / (eV * 1e-3)
+        info['survivalPartials'] = heard
+        if heard > liveSurvivalPartials:
+            warnings.append(f'{heard} energy differences are heard at {round(focus)} Hz; the keyboard plays the '
+                            f'{liveSurvivalPartials} strongest, and Render plays them all.')
+        if not len(c):
+            warnings.append('Only one level is weighted, so the survival probability stays at 1: no sound.')
     truncatable = (doubleWell.DoubleWell, linearPotential.LinearPotential, latticePotential.LatticePotential,
                    customPotential.CustomPotential, box2D.Box2D)
     if isinstance(m, truncatable) or (isinstance(m, morsePotential.MorsePotential) and len(m.eng) == m.maxStates):
@@ -190,12 +233,12 @@ def renderPiece(req):
         raise ValueError(f'could not read that MIDI file ({type(error).__name__})')
     if tunnelling(m, req):
         renderer = unSospiro.renderStereo
-        content = lambda f, sr: m.tunnellingGroups(f, sr, temperatureFor(req, f), weighting)
+        partials = lambda f, sr: m.tunnellingGroups(f, sr, temperatureFor(req, f), weighting)
     else:
         renderer = unSospiro.render
-        content = lambda f, sr: m.harmonicContent(f, sr, temperatureFor(req, f), weighting)
+        partials = lambda f, sr: content(m, req, f, sr, weighting)
     audio = renderer(
-        notes, content, nSeconds=seconds, attackTime=float(req.get('attack', 0.005)),
+        notes, partials, nSeconds=seconds, attackTime=float(req.get('attack', 0.005)),
         decayTime=float(req.get('decay', 1.5)), releaseTime=float(req.get('release', 0.1)),
         sustainLevel=min(max(float(req.get('sustain', 0)), 0), 1))
     buffer = io.BytesIO()

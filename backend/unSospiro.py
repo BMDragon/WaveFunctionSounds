@@ -70,7 +70,7 @@ def partialWave(m, c, freq, t):
         # one period as a fine table, Re(sum c_m exp(2 pi i m phase)), read out at the
         # note's exact pitch
         spectrum = np.zeros(tableSize // 2 + 1, complex)
-        spectrum[m] = c
+        spectrum[np.round(m).astype(int)] = c
         table = np.fft.irfft(spectrum, tableSize) * tableSize / 2
         return np.interp((freq * t) % 1 * tableSize, np.arange(tableSize + 1), np.append(table, table[0]))
     offset = m[0] - math.floor(m[0])
@@ -121,6 +121,8 @@ def render(notes, harmonicContent, nSeconds=nSeconds, attackTime=attackTime, dec
     for start, end, note, velocity in notes:
         freq = 440 * 2**((note - 69) / 12)
         m, c = harmonicContent(freq, sampleRate)
+        if not np.abs(c).sum():
+            continue
         i0, t, envelope = noteTimes(start, end, len(out), attackTime, decayTime, releaseTime, sustainLevel)
         out[i0:i0 + len(t)] += velocity / 127 * envelope * partialWave(m, c, freq, t) / np.abs(c).sum()
 
