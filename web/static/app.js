@@ -994,30 +994,20 @@ async function loadPresets() {
   } catch (error) {
     presets = [];
   }
-  ensembles.forEach(ensemble => {
-    const tab = document.createElement('button');
-    tab.textContent = ensemble.name;
-    tab.dataset.id = ensemble.id;
-    tab.addEventListener('click', () => showEnsemble(ensemble.id));
-    $('ensembles').appendChild(tab);
+  // one menu: Default, then each ensemble's instruments (an instrument in several ensembles is
+  // listed in each), and "Custom sound" while the settings match no preset
+  const menu = $('presets');
+  const option = (id, name, parent = menu) => parent.appendChild(Object.assign(document.createElement('option'), { value: id, textContent: name }));
+  option('', 'Custom sound').hidden = true;
+  if (presets.some(p => p.id === 'default')) option('default', 'Default');
+  const groups = ensembles.length ? ensembles : [{ name: 'Instruments', members: presets.map(p => p.id).filter(id => id !== 'default') }];
+  groups.forEach(ensemble => {
+    const group = menu.appendChild(Object.assign(document.createElement('optgroup'), { label: ensemble.name }));
+    ensemble.members.map(id => presets.find(p => p.id === id)).filter(Boolean).forEach(p => option(p.id, p.name, group));
   });
-  showEnsemble(ensembles.length ? ensembles[0].id : null);
-}
-
-function showEnsemble(id) {
-  // the preset buttons of one ensemble (all presets if there are no ensembles), Default first
-  state.ensemble = id;
-  document.querySelectorAll('#ensembles button').forEach(b => b.classList.toggle('active', b.dataset.id === id));
-  const ensemble = ensembles.find(e => e.id === id);
-  const shown = ensemble ? ['default', ...ensemble.members] : presets.map(p => p.id);
-  const grid = $('presets');
-  grid.innerHTML = '';
-  shown.map(pid => presets.find(p => p.id === pid)).filter(Boolean).forEach(preset => {
-    const button = document.createElement('button');
-    button.textContent = preset.name.replace('Contrabassoon', 'Contra\u00adbassoon').replace('Glockenspiel', 'Glocken\u00adspiel');   // soft hyphens for narrow buttons
-    button.dataset.id = preset.id;
-    button.addEventListener('click', () => applySettings(preset, preset.id));
-    grid.appendChild(button);
+  menu.addEventListener('change', () => {
+    const preset = presets.find(p => p.id === menu.value);
+    if (preset) applySettings(preset, preset.id);
   });
   showPreset();
 }
@@ -1030,11 +1020,6 @@ function applySettings(settings, presetId = null) {
   }
   presetId = PRESET_ALIASES[presetId] || presetId;
   state.preset = presets.some(p => p.id === presetId) ? presetId : null;
-  const ensemble = ensembles.find(e => e.id === state.ensemble);
-  if (state.preset && state.preset !== 'default' && ensemble && !ensemble.members.includes(state.preset)) {
-    const home = ensembles.find(e => e.members.includes(state.preset));     // show a tab that has it
-    if (home) showEnsemble(home.id);
-  }
   refreshOutputs();
   showPreset();
   writeUrl();
@@ -1050,7 +1035,7 @@ function settingsChanged() {
 
 function showPreset() {
   const preset = presets.find(p => p.id === state.preset);
-  document.querySelectorAll('#presets button').forEach(b => b.classList.toggle('active', b.dataset.id === state.preset));
+  $('presets').value = preset ? preset.id : '';
   document.querySelectorAll('.key').forEach(k => {
     const n = +k.dataset.note;
     k.classList.toggle('suggested', !!(preset && preset.keys && n >= preset.keys[0] && n <= preset.keys[1]));

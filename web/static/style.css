@@ -62,17 +62,6 @@ select { width: 100%; padding: 6px; border-radius: 6px; border: 1px solid var(--
 .segmented button.active { background: var(--accent); color: #fff; }
 button.primary { padding: 7px 16px; border: 0; border-radius: 6px; background: var(--accent); color: #fff; cursor: pointer; font: inherit; }
 button.primary:disabled { opacity: 0.5; cursor: default; }
-.ensembleTabs { display: flex; gap: 14px; margin-bottom: 8px; }
-.ensembleTabs button { border: 0; border-bottom: 2px solid transparent; background: none; padding: 2px 0; color: var(--muted);
-  cursor: pointer; font: inherit; font-size: 12px; }
-.ensembleTabs button.active { color: var(--text); border-bottom-color: var(--accent); }
-.presetGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
-.presetGrid button { min-width: 0; hyphens: manual; overflow-wrap: anywhere; }
-.presetGrid button {
-  padding: 7px 3px; border: 1px solid var(--border); border-radius: 6px; background: var(--panel); color: var(--text);
-  cursor: pointer; font: inherit; font-size: 12px; font-weight: 600;
-}
-.presetGrid button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 #presetHint { margin: 8px 0 4px; min-height: 2.6em; }
 button.link { border: 0; background: none; padding: 0; color: var(--accent); cursor: pointer; font: inherit; font-size: 12px; }
 button.link.recording { color: #c0392b; font-weight: 600; }
