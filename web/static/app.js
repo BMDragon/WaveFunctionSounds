@@ -1020,15 +1020,18 @@ async function loadPresets() {
     presets = [];
   }
   // one menu: Default, then each ensemble's instruments (an instrument in several ensembles is
-  // listed in each), and "Custom sound" while the settings match no preset
+  // listed once, under the first), and "Custom sound" while the settings match no preset
   const menu = $('presets');
   const option = (id, name, parent = menu) => parent.appendChild(Object.assign(document.createElement('option'), { value: id, textContent: name }));
   option('', 'Custom sound').hidden = true;
   if (presets.some(p => p.id === 'default')) option('default', 'Default');
   const groups = ensembles.length ? ensembles : [{ name: 'Instruments', members: presets.map(p => p.id).filter(id => id !== 'default') }];
+  const listed = new Set();
   groups.forEach(ensemble => {
+    const members = ensemble.members.filter(id => !listed.has(id)).map(id => presets.find(p => p.id === id)).filter(Boolean);
+    if (!members.length) return;
     const group = menu.appendChild(Object.assign(document.createElement('optgroup'), { label: ensemble.name }));
-    ensemble.members.map(id => presets.find(p => p.id === id)).filter(Boolean).forEach(p => option(p.id, p.name, group));
+    members.forEach(p => { listed.add(p.id); option(p.id, p.name, group); });
   });
   menu.addEventListener('change', () => {
     const preset = presets.find(p => p.id === menu.value);
