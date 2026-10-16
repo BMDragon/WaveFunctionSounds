@@ -43,8 +43,8 @@ the other potentials exactly; `timeEvolution.py` gives the survival-probability 
 ## Samples
 `samples/` holds pieces rendered with every part on its instrument preset, by
 `samples/renderEnsemble.py piece.mid out.wav`: Brahms's Academic Festival Overture (orchestral MIDI
-sequenced by David Siu) and Hungarian Dance No. 2 (a piano MIDI, played on the piano preset), both from
-https://www.midiworld.com/brahms.htm.
+sequenced by David Siu, https://www.midiworld.com/brahms.htm) and Hungarian Dance No. 5 (Doug Fetter's
+1989 MIDI for piano and clarinet, via https://bitmidi.com/hungarian-dance-no-5-mid).
 
 ## Tests
 `python3 tests/test_potentials.py` checks every potential across the web app's slider ranges
