@@ -8,6 +8,8 @@ const KEYMAP = {
   q: 60, 2: 61, w: 62, 3: 63, e: 64, r: 65, 5: 66, t: 67, 6: 68, y: 69, 7: 70, u: 71,
   i: 72, 9: 73, o: 74, 0: 75, p: 76,
 };
+// the same keys by physical position (e.code), so Shift or a keyboard layout can't change them
+const CODEMAP = Object.fromEntries(Object.entries(KEYMAP).map(([k, n]) => [/\d/.test(k) ? `Digit${k}` : `Key${k.toUpperCase()}`, n]));
 const midiFreq = n => 440 * Math.pow(2, (n - 69) / 12);
 const noteName = n => NAMES[n % 12] + (Math.floor(n / 12) - 1);
 const range = (a, b) => Array.from({ length: b - a }, (_, i) => a + i);
@@ -424,15 +426,33 @@ function startVoice(n, note, velocity) {
   gain.gain.setTargetAtTime(peak * +$('sustainLevel').value, now + attack, decaySeconds());   // decay towards the sustain level
   output.connect(gain).connect(master);
   voices[n] = { sources, gain, sustained: false };
+  if (!+$('sustainLevel').value) {
+    // with no sustain the note dies away even while held: stop it once it is below -100 dB
+    sources.forEach(source => source.stop(now + attack + Math.log(1e5) * decaySeconds()));
+  }
   keyElement(n)?.classList.add('active');
   if (state.focus !== n) {
     state.focus = n;
-    scheduleUpdate(150);
+    focusChanged = true;
   }
+}
+
+// The charts follow the last note played, but redrawing them while keys are down delays the
+// keys that follow, so they catch up once every key is up
+let focusChanged = false;
+function chartsCatchUp() {
+  if (!focusChanged || heldKeys.size) return;
+  clearTimeout(updateTimer);
+  updateTimer = setTimeout(() => {
+    if (heldKeys.size) return;                  // playing again: wait for the next release
+    focusChanged = false;
+    update();
+  }, 150);
 }
 
 function noteOff(n) {
   heldKeys.delete(n);
+  chartsCatchUp();
   keyElement(n)?.classList.remove('active');
   const voice = voices[n];
   if (!voice) return;
@@ -492,13 +512,15 @@ document.addEventListener('keydown', e => {
     setPedal(!$('sustain').checked);
     return;
   }
-  const n = KEYMAP[e.key.toLowerCase()];
+  const n = CODEMAP[e.code];
   if (n !== undefined && !e.repeat) { e.preventDefault(); noteOn(n); }
 });
 document.addEventListener('keyup', e => {
-  const n = KEYMAP[e.key.toLowerCase()];
+  const n = CODEMAP[e.code];
   if (n !== undefined) noteOff(n);
 });
+// keys released while the page is not focused never send keyup: let go of them all
+window.addEventListener('blur', () => [...heldKeys].forEach(noteOff));
 
 // ---------- charts ----------
 
