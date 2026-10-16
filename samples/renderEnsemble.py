@@ -1,9 +1,16 @@
 import argparse
 import json
 import math
+import multiprocessing
 import os
 import re
 import sys
+
+# The parts render in parallel on half the cores, one maths-library thread each (set before
+# numpy loads)
+WORKERS = max(1, (os.cpu_count() or 2) // 2)
+for variable in ('OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS'):
+    os.environ[variable] = '1'
 
 import numpy as np
 import mido
@@ -135,6 +142,9 @@ def renderPart(notes, presetId, nSeconds):
     return unSospiro.render(notes, content, nSeconds=nSeconds, attackTime=preset['attack'], decayTime=preset['decay'],
                             releaseTime=preset['release'], sustainLevel=preset['sustain'])
 
+def renderJob(job):
+    return renderPart(*job)
+
 def main():
     parser = argparse.ArgumentParser(description='Render a MIDI file with the WaveFunctionSounds instrument presets')
     parser.add_argument('midi')
@@ -147,7 +157,7 @@ def main():
     first = min(n[0] for p in parts.values() for n in p['notes'])
     last = max(n[1] for p in parts.values() for n in p['notes']) - first
     nSeconds = min(args.seconds or last + 3, last + 3)
-    mix = np.zeros(int(nSeconds * unSospiro.sampleRate))
+    jobs = []                           # (notes, preset id) for each part, or each drum of a drum track
     for (index, channel), part in sorted(parts.items()):
         notes = [(s - first, e - first, n, v) for s, e, n, v in part['notes'] if s - first < nSeconds]
         if not notes:
@@ -157,12 +167,17 @@ def main():
             byPreset = {}
             for note in notes:
                 byPreset.setdefault(presetForDrum(note[2]), []).append(note)
-            for drum, hits in byPreset.items():
-                mix += renderPart(hits, drum, nSeconds)
+            jobs += [(hits, drum, nSeconds) for drum, hits in byPreset.items()]
             print(f'{part["name"] or "track " + str(index):<28} -> drum kit: {", ".join(sorted(byPreset))} ({len(notes)} hits)')
             continue
-        mix += renderPart(notes, presetId, nSeconds)
+        jobs.append((notes, presetId, nSeconds))
         print(f'{part["name"] or "track " + str(index):<28} -> {PRESETS[presetId]["name"]:<16} ({why}; {len(notes)} notes)')
+    # the parts in parallel, added up in their order (so the result doesn't depend on which
+    # finishes first)
+    mix = np.zeros(int(nSeconds * unSospiro.sampleRate))
+    with multiprocessing.Pool(min(WORKERS, len(jobs))) as pool:
+        for audio in pool.imap(renderJob, jobs):
+            mix += audio
     write(args.out, unSospiro.sampleRate, np.int16(mix / np.abs(mix).max() * 0.95 * 32767))
     print(f'wrote {args.out}: {nSeconds:.1f} s')
 
