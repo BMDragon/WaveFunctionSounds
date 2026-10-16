@@ -9,7 +9,8 @@ along the ERB scale with filters one ERB wide, and the dB difference averaged wi
 of the spectrum counting more ("Match", lower is closer: under 4 very close, 4-6 close, 6-8 fair,
 above 11 poor). Every potential, slider, level weighting and sound the app has was searched
 (hand-set weights and drawn potentials were not), the closest settings refined and snapped to
-slider positions. "Survival prob." is the time-evolution sound. Envelopes are medians over the
+slider positions. "On ground scale" is the wavefunctions on the ground state's scale and
+"Survival prob." the time-evolution sound. Envelopes are medians over the
 notes. Attack = rise from 10% to 90% / 0.8, measured on each note's clean start: for bowed and
 blown instruments up to the note's steady level, ignoring any later swell above it; for struck
 and plucked ones up to the peak.
@@ -22,25 +23,25 @@ Flute           Hydrogen atom   0.0776 me  Z = 1, l = 14                     Wav
 Oboe            Double well       5.01 me  18.6 nm, 0.355 eV                 Wavefunctions   Boltzmann (thermal)  T = pitch    44 ms   1.00 s  100%    40 ms   10.4
 English horn    Finite well      0.288 me  19.1 nm, 1.45 eV                  Wavefunctions   Boltzmann (thermal)      245 K    25 ms   1.00 s  100%   100 ms    8.4
 B♭ clarinet     Hydrogen atom    0.309 me  Z = 2, l = 0                      Wavefunctions   Boltzmann (thermal)   19,953 K   297 ms   1.00 s  100%    20 ms   10.0
-Bass clarinet   Finite well       4.68 me  19.4 nm, 3.24 eV                  Wavefunctions   1 / level                    -   116 ms   1.00 s  100%    40 ms    9.9
+Bass clarinet   Double well      0.195 me  17.6 nm, 0.209 eV                 On ground scale Equal                        -   116 ms   1.00 s  100%    40 ms    9.8
 Bassoon         Morse             4.27 me  17.8 nm, 4.79 eV                  Survival prob.  1 / level                    -    72 ms   1.00 s  100%    50 ms   12.2
 Contrabassoon   Oscillator       0.603 me  10.6 nm                           Survival prob.  1 / level                    -    81 ms   1.00 s  100%    70 ms   12.3
 Horn            Double well       5.01 me  19.4 nm, 0.288 eV                 Wavefunctions   Boltzmann (thermal)  T = pitch    59 ms   1.00 s  100%    30 ms    9.9
 Trumpet         Double well       5.01 me  19.7 nm, 0.468 eV                 Wavefunctions   Boltzmann (thermal)  T = pitch   141 ms   1.00 s  100%    50 ms    8.2
 Trombone        Morse             0.12 me  8.0 nm, 3.55 eV                   Wavefunctions   Equal                        -   134 ms   1.00 s  100%   110 ms    8.1
-Bass trombone   Morse             2.88 me  15.8 nm, 0.933 eV                 Wavefunctions   Boltzmann (thermal)    8,318 K    28 ms   1.00 s  100%    30 ms    7.1
+Bass trombone   V-shaped |x|       1.1 me  14.5 nm, 0.174 eV                 Wavefunctions   Boltzmann (thermal)    4,365 K    28 ms   1.00 s  100%    30 ms    7.1
 Tuba            Finite well       1.05 me  5.8 nm, 3.47 eV                   Wavefunctions   Equal                        -    31 ms   1.00 s  100%    90 ms   13.2
 Timpani         Lattice           1.05 me  7.2 nm, 0.331 eV, 77%, 0.43 pi    Survival prob.  1 / level                    -    12 ms   471 ms    0%   470 ms    6.0
 Snare drum      Rectangle (2D)  0.0692 me  4.9 nm, H/W 3.85                  Survival prob.  Boltzmann (thermal)   12,882 K     9 ms    48 ms    0%    50 ms    7.1
 Bass drum       Morse             0.12 me  11.5 nm, 0.0741 eV                Wavefunctions   Boltzmann (thermal)      275 K    22 ms   403 ms    0%   400 ms    5.9
 Crash cymbals   Rectangle (2D)  0.0891 me  9.6 nm, H/W 1.18                  Survival prob.  Boltzmann (thermal)   10,000 K    28 ms   845 ms    0%   840 ms    5.2
-Triangle        V-shaped |x|     0.389 me  16.7 nm, 0.115 eV                 Wavefunctions   Equal                        -     6 ms   1.77 s    0%   1.77 s   11.2
-Glockenspiel    Lattice          0.692 me  1.1 nm, 0.0776 eV, 14%, 0.80 pi   Survival prob.  Boltzmann (thermal)   12,303 K     6 ms   1.08 s    0%   1.08 s    9.5
-Xylophone       Hydrogen atom    0.832 me  Z = 10, l = 8                     Wavefunctions   Boltzmann (thermal)  T = pitch     6 ms    50 ms    0%    50 ms    7.1
+Triangle        V-shaped |x|      1.05 me  7.4 nm, 0.0676 eV                 Wavefunctions   Equal                        -     6 ms   1.77 s    0%   1.77 s   11.2
+Glockenspiel    Morse             3.31 me  18.7 nm, 3.16 eV                  On ground scale Boltzmann (thermal)    1,905 K     6 ms   1.08 s    0%   1.08 s    9.3
+Xylophone       Hydrogen atom    0.832 me  Z = 10, l = 8                     Wavefunctions   Boltzmann (thermal)  T = pitch     6 ms    50 ms    0%    50 ms    7.0
 Chimes          Finite well      0.537 me  6.3 nm, 0.646 eV                  Wavefunctions   Equal                        -    12 ms   3.61 s    0%   2.00 s   10.5
-Harp            Hydrogen atom   0.0977 me  Z = 2, l = 1                      Wavefunctions   Boltzmann (thermal)    1,259 K    19 ms   818 ms    0%   820 ms   12.3
+Harp            Hydrogen atom   0.0708 me  Z = 1, l = 0                      On ground scale Boltzmann (thermal)    7,762 K    19 ms   818 ms    0%   820 ms   11.8
 Piano           Hydrogen atom     4.27 me  Z = 1, l = 2                      Wavefunctions   Boltzmann (thermal)    7,244 K    22 ms   6.00 s    0%   150 ms   15.6
-Celesta         Hydrogen atom     1.41 me  Z = 7, l = 8                      Wavefunctions   Boltzmann (thermal)  T = pitch    22 ms   793 ms    0%   150 ms    7.0
+Celesta         Oscillator       0.603 me  10.6 nm                           On ground scale 1 / level                    -    22 ms   793 ms    0%   150 ms    6.8
 Violin          Hydrogen atom    0.138 me  Z = 10, l = 1                     Wavefunctions   1 / level                    -   394 ms   1.00 s  100%   110 ms    7.3
 Viola           Hydrogen atom     0.49 me  Z = 4, l = 8                      Wavefunctions   Boltzmann (thermal)    1,585 K   669 ms   1.00 s  100%    80 ms    8.3
 Cello           Oscillator       0.603 me  10.6 nm                           Survival prob.  1 / level                    -   103 ms   1.00 s  100%   200 ms    6.0
@@ -56,10 +57,10 @@ Baritone sax    Hydrogen atom     4.27 me  Z = 1, l = 2                      Wav
 B♭ clarinet     Hydrogen atom    0.309 me  Z = 2, l = 0                      Wavefunctions   Boltzmann (thermal)   19,953 K   297 ms   1.00 s  100%    20 ms   10.0
 Trumpet         Double well       5.01 me  19.7 nm, 0.468 eV                 Wavefunctions   Boltzmann (thermal)  T = pitch   141 ms   1.00 s  100%    50 ms    8.2
 Trombone        Morse             0.12 me  8.0 nm, 3.55 eV                   Wavefunctions   Equal                        -   134 ms   1.00 s  100%   110 ms    8.1
-Bass trombone   Morse             2.88 me  15.8 nm, 0.933 eV                 Wavefunctions   Boltzmann (thermal)    8,318 K    28 ms   1.00 s  100%    30 ms    7.1
+Bass trombone   V-shaped |x|       1.1 me  14.5 nm, 0.174 eV                 Wavefunctions   Boltzmann (thermal)    4,365 K    28 ms   1.00 s  100%    30 ms    7.1
 Piano           Hydrogen atom     4.27 me  Z = 1, l = 2                      Wavefunctions   Boltzmann (thermal)    7,244 K    22 ms   6.00 s    0%   150 ms   15.6
 Guitar          Morse             2.51 me  7.3 nm, 4.57 eV                   Survival prob.  1 / level                    -    41 ms   1.47 s    0%   1.47 s    8.2
-Vibraphone      Lattice         0.0575 me  18.4 nm, 0.105 eV, 82%, 0.95 pi   Survival prob.  Boltzmann (thermal)      407 K     6 ms   2.01 s    0%   2.00 s   12.5
+Vibraphone      Oscillator      0.0871 me  15.5 nm                           On ground scale Boltzmann (thermal)    5,370 K     6 ms   2.01 s    0%   2.00 s   11.4
 Double bass     Morse             2.63 me  10.3 nm, 1.45 eV                  Survival prob.  1 / level                    -   228 ms   1.00 s  100%   290 ms    6.7
 Electric bass   Lattice           0.11 me  15.3 nm, 0.182 eV, 74%, 0.67 pi   Survival prob.  Boltzmann (thermal)    2,291 K    16 ms   1.99 s    0%   1.99 s    7.2
 Kick drum       Morse             0.12 me  4.8 nm, 0.195 eV                  Wavefunctions   Boltzmann (thermal)      324 K    16 ms   192 ms    0%   190 ms    5.2
@@ -79,7 +80,7 @@ Bassoon         Morse             4.27 me  17.8 nm, 4.79 eV                  Sur
 Contrabassoon   Oscillator       0.603 me  10.6 nm                           Survival prob.  1 / level                    -    81 ms   1.00 s  100%    70 ms   12.3
 E♭ clarinet     Hydrogen atom    0.617 me  Z = 1, l = 0                      Wavefunctions   Boltzmann (thermal)    9,333 K    66 ms   1.00 s  100%    30 ms    9.5
 B♭ clarinet     Hydrogen atom    0.309 me  Z = 2, l = 0                      Wavefunctions   Boltzmann (thermal)   19,953 K   297 ms   1.00 s  100%    20 ms   10.0
-Bass clarinet   Finite well       4.68 me  19.4 nm, 3.24 eV                  Wavefunctions   1 / level                    -   116 ms   1.00 s  100%    40 ms    9.9
+Bass clarinet   Double well      0.195 me  17.6 nm, 0.209 eV                 On ground scale Equal                        -   116 ms   1.00 s  100%    40 ms    9.8
 Soprano sax     Morse             4.47 me  18.6 nm, 2.51 eV                  Survival prob.  1 / level                    -    31 ms   1.00 s  100%    60 ms    8.2
 Alto sax        Oscillator       0.603 me  10.6 nm                           Survival prob.  1 / level                    -    28 ms   1.00 s  100%   120 ms    6.7
 Tenor sax       Double well       4.27 me  17.4 nm, 4.68 eV                  Survival prob.  1 / level                    -    50 ms   1.00 s  100%   120 ms    8.1
@@ -87,19 +88,19 @@ Baritone sax    Hydrogen atom     4.27 me  Z = 1, l = 2                      Wav
 Trumpet         Double well       5.01 me  19.7 nm, 0.468 eV                 Wavefunctions   Boltzmann (thermal)  T = pitch   141 ms   1.00 s  100%    50 ms    8.2
 Horn            Double well       5.01 me  19.4 nm, 0.288 eV                 Wavefunctions   Boltzmann (thermal)  T = pitch    59 ms   1.00 s  100%    30 ms    9.9
 Trombone        Morse             0.12 me  8.0 nm, 3.55 eV                   Wavefunctions   Equal                        -   134 ms   1.00 s  100%   110 ms    8.1
-Bass trombone   Morse             2.88 me  15.8 nm, 0.933 eV                 Wavefunctions   Boltzmann (thermal)    8,318 K    28 ms   1.00 s  100%    30 ms    7.1
+Bass trombone   V-shaped |x|       1.1 me  14.5 nm, 0.174 eV                 Wavefunctions   Boltzmann (thermal)    4,365 K    28 ms   1.00 s  100%    30 ms    7.1
 Tuba            Finite well       1.05 me  5.8 nm, 3.47 eV                   Wavefunctions   Equal                        -    31 ms   1.00 s  100%    90 ms   13.2
 Double bass     Morse             2.63 me  10.3 nm, 1.45 eV                  Survival prob.  1 / level                    -   228 ms   1.00 s  100%   290 ms    6.7
 Timpani         Lattice           1.05 me  7.2 nm, 0.331 eV, 77%, 0.43 pi    Survival prob.  1 / level                    -    12 ms   471 ms    0%   470 ms    6.0
 Snare drum      Rectangle (2D)  0.0692 me  4.9 nm, H/W 3.85                  Survival prob.  Boltzmann (thermal)   12,882 K     9 ms    48 ms    0%    50 ms    7.1
 Bass drum       Morse             0.12 me  11.5 nm, 0.0741 eV                Wavefunctions   Boltzmann (thermal)      275 K    22 ms   403 ms    0%   400 ms    5.9
 Crash cymbals   Rectangle (2D)  0.0891 me  9.6 nm, H/W 1.18                  Survival prob.  Boltzmann (thermal)   10,000 K    28 ms   845 ms    0%   840 ms    5.2
-Glockenspiel    Lattice          0.692 me  1.1 nm, 0.0776 eV, 14%, 0.80 pi   Survival prob.  Boltzmann (thermal)   12,303 K     6 ms   1.08 s    0%   1.08 s    9.5
-Xylophone       Hydrogen atom    0.832 me  Z = 10, l = 8                     Wavefunctions   Boltzmann (thermal)  T = pitch     6 ms    50 ms    0%    50 ms    7.1
-Marimba         Lattice           4.57 me  1.4 nm, 0.0832 eV, 84%, 0.90 pi   Survival prob.  Boltzmann (thermal)      794 K    12 ms   274 ms    0%   270 ms   10.1
-Vibraphone      Lattice         0.0575 me  18.4 nm, 0.105 eV, 82%, 0.95 pi   Survival prob.  Boltzmann (thermal)      407 K     6 ms   2.01 s    0%   2.00 s   12.5
+Glockenspiel    Morse             3.31 me  18.7 nm, 3.16 eV                  On ground scale Boltzmann (thermal)    1,905 K     6 ms   1.08 s    0%   1.08 s    9.3
+Xylophone       Hydrogen atom    0.832 me  Z = 10, l = 8                     Wavefunctions   Boltzmann (thermal)  T = pitch     6 ms    50 ms    0%    50 ms    7.0
+Marimba         Oscillator       0.513 me  11.5 nm                           On ground scale Boltzmann (thermal)    1,585 K    12 ms   274 ms    0%   270 ms    8.9
+Vibraphone      Oscillator      0.0871 me  15.5 nm                           On ground scale Boltzmann (thermal)    5,370 K     6 ms   2.01 s    0%   2.00 s   11.4
 Chimes          Finite well      0.537 me  6.3 nm, 0.646 eV                  Wavefunctions   Equal                        -    12 ms   3.61 s    0%   2.00 s   10.5
-Harp            Hydrogen atom   0.0977 me  Z = 2, l = 1                      Wavefunctions   Boltzmann (thermal)    1,259 K    19 ms   818 ms    0%   820 ms   12.3
+Harp            Hydrogen atom   0.0708 me  Z = 1, l = 0                      On ground scale Boltzmann (thermal)    7,762 K    19 ms   818 ms    0%   820 ms   11.8
 Piano           Hydrogen atom     4.27 me  Z = 1, l = 2                      Wavefunctions   Boltzmann (thermal)    7,244 K    22 ms   6.00 s    0%   150 ms   15.6
 
 Details
@@ -133,22 +134,22 @@ Baritone sax
   Sustain / release:    100% / 60 ms
   Range:                C2-Ab4; matched at C2, E2, Ab2, C3, F#3, C4, E4, A4
   Match:                9.4 (loose), against MTG Solo Saxophones
-  Other potentials:     Morse 9.7, Finite well 10.2, Lattice 10.3, Double well 10.5, Oscillator 10.6
+  Other potentials:     Morse 9.7, Finite well 10.2, Lattice 10.3, Double well 10.3, Oscillator 10.6
 
 Bass clarinet
 -------------
   Ensembles:            Orchestra, Wind ensemble
-  Potential:            Finite well
-  Mass:                 4.68 m_e
-  Well width:           19.4 nm
-  Well depth:           3.24 eV
-  Sound:                The wavefunctions
-  Level weights:        1 / level
+  Potential:            Double well
+  Mass:                 0.195 m_e
+  Well separation:      17.6 nm
+  Barrier height:       0.209 eV
+  Sound:                The wavefunctions on the ground state's scale
+  Level weights:        Equal
   Attack / decay:       116 ms / 1.00 s
   Sustain / release:    100% / 40 ms
   Range:                D2-F5; matched at C#2, D2, G2, C3, F#3, C4, B4, Bb5
-  Match:                9.9 (loose), against Iowa MIS
-  Other potentials:     Infinite well 10.0, Double well 10.0, Lattice 10.7, Morse 11.0, Hydrogen atom 11.1
+  Match:                9.8 (loose), against Iowa MIS
+  Other potentials:     Finite well 9.9, Infinite well 10.0, Lattice 10.7, Morse 11.0, Hydrogen atom 11.1
 
 Bass drum
 ---------
@@ -169,18 +170,18 @@ Bass drum
 Bass trombone
 -------------
   Ensembles:            Orchestra, Big band, Wind ensemble
-  Potential:            Morse
-  Mass:                 2.88 m_e
-  Range:                15.8 nm
-  Dissociation energy:  0.933 eV
+  Potential:            V-shaped |x|
+  Mass:                 1.1 m_e
+  Width:                14.5 nm
+  Height at the edges:  0.174 eV
   Sound:                The wavefunctions
   Level weights:        Boltzmann (thermal)
-  Temperature:          Fixed, 8,318 K
+  Temperature:          Fixed, 4,365 K
   Attack / decay:       28 ms / 1.00 s
   Sustain / release:    100% / 30 ms
   Range:                Bb1-G4; matched at C#1, F1, Bb1, C2, Eb2, F#2, C3, Eb3
   Match:                7.1 (fair), against Iowa MIS
-  Other potentials:     V-shaped |x| 7.1, Rectangle (2D) 7.2, Finite well 7.3, Lattice 7.7, Infinite well 7.7
+  Other potentials:     Morse 7.1, Rectangle (2D) 7.2, Finite well 7.3, Lattice 7.7, Infinite well 7.7
 
 Bassoon
 -------
@@ -216,18 +217,16 @@ B♭ clarinet
 Celesta
 -------
   Ensembles:            Orchestra
-  Potential:            Hydrogen atom
-  Mass:                 1.41 m_e
-  Nuclear charge Z:     7
-  Angular momentum l:   8
-  Sound:                The wavefunctions
-  Level weights:        Boltzmann (thermal)
-  Temperature:          T in K = pitch in Hz
+  Potential:            Oscillator
+  Mass:                 0.603 m_e
+  Ground-state width:   10.6 nm
+  Sound:                The wavefunctions on the ground state's scale
+  Level weights:        1 / level
   Attack / decay:       22 ms / 793 ms
   Sustain / release:    0% / 150 ms
   Range:                C4-C8; matched at C4, E4, Ab4, C5, E5, C6, Ab6, Ab7
-  Match:                7.0 (fair), against Sonatina Symphonic Orchestra
-  Other potentials:     Lattice 7.1, Double well 7.1, V-shaped |x| 7.2, Finite well 7.2, Morse 7.2
+  Match:                6.8 (fair), against Sonatina Symphonic Orchestra
+  Other potentials:     Morse 6.9, Hydrogen atom 7.0, Lattice 7.1, Double well 7.1, V-shaped |x| 7.2
 
 Cello
 -----
@@ -256,7 +255,7 @@ Chimes
   Sustain / release:    0% / 2.00 s
   Range:                C4-F5; matched at C4, G4, C5
   Match:                10.5 (loose), against VSCO-2 CE
-  Other potentials:     Double well 11.4, V-shaped |x| 13.2, Rectangle (2D) 13.3, Oscillator 13.4, Morse 13.4
+  Other potentials:     Double well 11.4, Oscillator 12.9, V-shaped |x| 13.2, Rectangle (2D) 13.3, Morse 13.4
 
 Contrabassoon
 -------------
@@ -335,7 +334,7 @@ English horn
   Sustain / release:    100% / 100 ms
   Range:                E3-C6; matched at E3, F3, Ab3, C4, F#4, C5, F5, B5
   Match:                8.4 (loose), against Philharmonia
-  Other potentials:     Morse 8.4, Hydrogen atom 8.6, Double well 8.9, Oscillator 9.0, Lattice 9.4
+  Other potentials:     Morse 8.4, Hydrogen atom 8.6, Double well 8.8, Oscillator 9.0, Lattice 9.4
 
 E♭ clarinet
 -----------
@@ -351,7 +350,7 @@ E♭ clarinet
   Sustain / release:    100% / 30 ms
   Range:                G3-G6; matched at G3, C4, F#4, C5, F#5, C6, E6, A6
   Match:                9.5 (loose), against Iowa MIS
-  Other potentials:     Double well 9.9, Morse 10.5, Finite well 10.5, Oscillator 10.9, Lattice 11.6
+  Other potentials:     Double well 9.9, Morse 10.5, Finite well 10.5, Oscillator 10.8, Lattice 11.6
 
 Flute
 -----
@@ -372,20 +371,18 @@ Flute
 Glockenspiel
 ------------
   Ensembles:            Orchestra, Wind ensemble
-  Potential:            Lattice
-  Mass:                 0.692 m_e
-  Lattice spacing:      1.1 nm
-  Barrier height:       0.0776 eV
-  Barrier width:        14% of the spacing
-  Bloch phase:          0.80 pi
-  Sound:                Time evolution (survival probability)
+  Potential:            Morse
+  Mass:                 3.31 m_e
+  Range:                18.7 nm
+  Dissociation energy:  3.16 eV
+  Sound:                The wavefunctions on the ground state's scale
   Level weights:        Boltzmann (thermal)
-  Temperature:          Fixed, 12,303 K
+  Temperature:          Fixed, 1,905 K
   Attack / decay:       6 ms / 1.08 s
   Sustain / release:    0% / 1.08 s
   Range:                G5-C8; matched at C5, F#5, C6, G6, C7, E7, Ab7, E8
-  Match:                9.5 (loose), against Iowa MIS
-  Other potentials:     Double well 9.8, Finite well 10.1, Morse 10.9, V-shaped |x| 10.9, Hydrogen atom 11.0
+  Match:                9.3 (loose), against Iowa MIS
+  Other potentials:     Oscillator 9.4, Lattice 9.5, Double well 9.8, Finite well 10.1, V-shaped |x| 10.9
 
 Guitar
 ------
@@ -406,17 +403,17 @@ Harp
 ----
   Ensembles:            Orchestra, Wind ensemble
   Potential:            Hydrogen atom
-  Mass:                 0.0977 m_e
-  Nuclear charge Z:     2
-  Angular momentum l:   1
-  Sound:                The wavefunctions
+  Mass:                 0.0708 m_e
+  Nuclear charge Z:     1
+  Angular momentum l:   0
+  Sound:                The wavefunctions on the ground state's scale
   Level weights:        Boltzmann (thermal)
-  Temperature:          Fixed, 1,259 K
+  Temperature:          Fixed, 7,762 K
   Attack / decay:       19 ms / 818 ms
   Sustain / release:    0% / 820 ms
   Range:                C1-G7; matched at B1, F2, C3, B3, C5, G5, D6, B6
-  Match:                12.3 (poor), against VSCO-2 CE
-  Other potentials:     Finite well 12.4, Morse 12.5, Double well 12.5, Lattice 12.6, Oscillator 13.4
+  Match:                11.8 (poor), against VSCO-2 CE
+  Other potentials:     Finite well 12.4, Morse 12.4, Double well 12.5, Lattice 12.6, Oscillator 13.4
 
 Hi-hat
 ------
@@ -468,20 +465,17 @@ Kick drum
 Marimba
 -------
   Ensembles:            Wind ensemble
-  Potential:            Lattice
-  Mass:                 4.57 m_e
-  Lattice spacing:      1.4 nm
-  Barrier height:       0.0832 eV
-  Barrier width:        84% of the spacing
-  Bloch phase:          0.90 pi
-  Sound:                Time evolution (survival probability)
+  Potential:            Oscillator
+  Mass:                 0.513 m_e
+  Ground-state width:   11.5 nm
+  Sound:                The wavefunctions on the ground state's scale
   Level weights:        Boltzmann (thermal)
-  Temperature:          Fixed, 794 K
+  Temperature:          Fixed, 1,585 K
   Attack / decay:       12 ms / 274 ms
   Sustain / release:    0% / 270 ms
   Range:                A2-C7; matched at C2, F#2, C3, F#3, C4, C5, C6, C7
-  Match:                10.1 (loose), against Iowa MIS
-  Other potentials:     Finite well 10.1, Double well 10.2, V-shaped |x| 10.5, Morse 10.6, Hydrogen atom 10.6
+  Match:                8.9 (loose), against Iowa MIS
+  Other potentials:     Morse 9.6, Lattice 10.1, Finite well 10.1, Double well 10.2, V-shaped |x| 10.5
 
 Oboe
 ----
@@ -529,7 +523,7 @@ Piccolo
   Sustain / release:    100% / 20 ms
   Range:                D5-C8; matched at G5, C6, G6, C7, G7
   Match:                6.6 (fair), against VSCO-2 CE
-  Other potentials:     Finite well 6.8, Double well 7.0, Morse 7.9, Lattice 7.9, Rectangle (2D) 8.9
+  Other potentials:     Finite well 6.8, Double well 7.0, Morse 7.0, V-shaped |x| 7.2, Lattice 7.9
 
 Ride cymbal
 -----------
@@ -561,7 +555,7 @@ Snare drum
   Sustain / release:    0% / 50 ms
   Play:                 Eb3 (the pitch it was matched at)
   Match:                7.1 (fair), against VSCO-2 CE
-  Other potentials:     Finite well 7.2, Double well 7.5, Lattice 7.6, Morse 7.6, Oscillator 7.6
+  Other potentials:     Finite well 7.2, Double well 7.4, Morse 7.6, Lattice 7.6, Oscillator 7.6
 
 Soprano sax
 -----------
@@ -614,16 +608,16 @@ Triangle
 --------
   Ensembles:            Orchestra
   Potential:            V-shaped |x|
-  Mass:                 0.389 m_e
-  Width:                16.7 nm
-  Height at the edges:  0.115 eV
+  Mass:                 1.05 m_e
+  Width:                7.4 nm
+  Height at the edges:  0.0676 eV
   Sound:                The wavefunctions
   Level weights:        Equal
   Attack / decay:       6 ms / 1.77 s
   Sustain / release:    0% / 1.77 s
   Play:                 A5 (the pitch it was matched at)
   Match:                11.2 (poor), against Iowa MIS
-  Other potentials:     Oscillator 11.5, Lattice 11.7, Double well 12.6, Finite well 14.2, Infinite well 14.3
+  Other potentials:     Oscillator 11.5, Lattice 11.7, Double well 11.9, Finite well 14.2, Infinite well 14.3
 
 Trombone
 --------
@@ -669,25 +663,22 @@ Tuba
   Sustain / release:    100% / 90 ms
   Range:                E1-Bb3; matched at C1, Eb1, F#1, C2, F#2, C3, F#3, C4
   Match:                13.2 (poor), against Iowa MIS
-  Other potentials:     Morse 13.4, Hydrogen atom 13.5, Rectangle (2D) 13.5, Double well 13.6, Lattice 13.9
+  Other potentials:     Double well 13.3, Morse 13.4, Hydrogen atom 13.5, Rectangle (2D) 13.5, Lattice 13.9
 
 Vibraphone
 ----------
   Ensembles:            Big band, Wind ensemble
-  Potential:            Lattice
-  Mass:                 0.0575 m_e
-  Lattice spacing:      18.4 nm
-  Barrier height:       0.105 eV
-  Barrier width:        82% of the spacing
-  Bloch phase:          0.95 pi
-  Sound:                Time evolution (survival probability)
+  Potential:            Oscillator
+  Mass:                 0.0871 m_e
+  Ground-state width:   15.5 nm
+  Sound:                The wavefunctions on the ground state's scale
   Level weights:        Boltzmann (thermal)
-  Temperature:          Fixed, 407 K
+  Temperature:          Fixed, 5,370 K
   Attack / decay:       6 ms / 2.01 s
   Sustain / release:    0% / 2.00 s
   Range:                F3-F6; matched at C3, F#3, C4, F#4, C5, F#5, C6, F6
-  Match:                12.5 (poor), against Iowa MIS
-  Other potentials:     Double well 12.7, Hydrogen atom 14.0, Morse 14.2, Finite well 14.2, Oscillator 14.3
+  Match:                11.4 (poor), against Iowa MIS
+  Other potentials:     Morse 12.4, Double well 12.5, Lattice 12.5, Hydrogen atom 14.0, Finite well 14.2
 
 Viola
 -----
@@ -733,8 +724,8 @@ Xylophone
   Attack / decay:       6 ms / 50 ms
   Sustain / release:    0% / 50 ms
   Range:                F4-C8; matched at F4, C5, F#5, C6, F#6, C7, F#7, C8
-  Match:                7.1 (fair), against Iowa MIS
-  Other potentials:     Finite well 7.1, Morse 7.1, Lattice 7.1, Double well 7.1, Circle (2D) 7.1
+  Match:                7.0 (fair), against Iowa MIS
+  Other potentials:     Morse 7.1, Finite well 7.1, Lattice 7.1, Double well 7.1, Circle (2D) 7.1
 
 Limits of the model
 -------------------
