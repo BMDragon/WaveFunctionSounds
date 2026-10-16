@@ -12,6 +12,7 @@ class LinearPotential(NumericalPotential):
     # side holds Ai(|x|/a - E/e). Even states need Ai' = 0 at x = 0 and odd states Ai = 0, so
     # the energies are e times minus the zeros of Ai' and of Ai, taken in turn.
     symmetric = True
+    foldSamples = 2048
 
     def __init__(self, mass=electronMass, width=5e-9, height=1.6 * eV):
         self.width = width                # L (m)
@@ -61,6 +62,15 @@ class LinearPotential(NumericalPotential):
         x = np.asarray(x, float)
         value = self.norm[n] * self.airy(np.abs(x) / self.a + self.y0[n])
         return value if self.parity[n] == 1 else np.sign(x) * value
+
+    # In units of a (and of the ground state's width, which is a fixed multiple of it) every
+    # V-shaped potential has the same states, so the coefficients are worked out once and shared.
+    shared = {}
+
+    def coefficientRow(self, n):
+        if n not in LinearPotential.shared:
+            LinearPotential.shared[n] = super().coefficientRow(n)
+        return LinearPotential.shared[n]
 
     def turningPoints(self, n):
         edge = self.eng[n] / self.slope
