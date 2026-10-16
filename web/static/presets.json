@@ -1193,6 +1193,33 @@
    ],
    "match": 11.7,
    "notes": 8
+  },
+  {
+   "id": "harpsichord",
+   "name": "Harpsichord",
+   "potential": "doublewell",
+   "mass": 0.05128613839913648,
+   "length": 1.0,
+   "depth": 0.05623413251903491,
+   "barrierFraction": 0.2,
+   "blochPhase": 0.8,
+   "aspect": 1.5,
+   "charge": 1,
+   "ell": 0,
+   "sound": "states",
+   "weighting": "inverse",
+   "temperatureMode": "pitch",
+   "temperature": 220,
+   "attack": 0.041,
+   "decay": 1.308,
+   "sustain": 0.0,
+   "release": 0.15,
+   "keys": [
+    29,
+    89
+   ],
+   "match": 11.6,
+   "notes": 8
   }
  ]
 }

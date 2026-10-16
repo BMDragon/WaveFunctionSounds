@@ -43,7 +43,7 @@ NAMES = [
     (r'timpani|pauken', 'timpani'), (r'snare', 'snare_drum'), (r'bass drum|gran cassa', 'bass_drum'), (r'kick', 'kick_drum'),
     (r'hi-?hat', 'hi_hat'), (r'ride', 'ride_cymbal'), (r'cymbal|piatti|becken', 'crash_cymbals'), (r'triangle', 'triangle'),
     (r'glock', 'glockenspiel'), (r'xylo', 'xylophone'), (r'marimba', 'marimba'), (r'vibra', 'vibraphone'),
-    (r'chime|tubular', 'chimes'), (r'harpsichord|cembalo', 'harp'),   # plucked strings, as the harp's
+    (r'chime|tubular', 'chimes'), (r'harpsichord|cembalo|clavecin', 'harpsichord'),
     (r'harp', 'harp'), (r'celest', 'celesta'), (r'piano|klavier', 'piano'),
     (r'electric bass|bass guitar|e-?bass', 'electric_bass'), (r'guitar|gitarre', 'guitar'),
     (r'cello|violoncello', 'cello'), (r'viola|bratsche', 'viola'), (r'violin|violine|geige', 'violin'),
@@ -52,7 +52,7 @@ NAMES = [
 
 def presetForProgram(program):
     # General MIDI program (0-127) -> preset
-    table = [(0, 7, 'piano'), (8, 8, 'celesta'), (9, 9, 'glockenspiel'), (11, 11, 'vibraphone'), (12, 12, 'marimba'),
+    table = [(0, 5, 'piano'), (6, 6, 'harpsichord'), (7, 7, 'piano'), (8, 8, 'celesta'), (9, 9, 'glockenspiel'), (11, 11, 'vibraphone'), (12, 12, 'marimba'),
              (13, 13, 'xylophone'), (14, 14, 'chimes'), (24, 31, 'guitar'), (32, 32, 'double_bass'), (33, 39, 'electric_bass'),
              (40, 40, 'violin'), (41, 41, 'viola'), (42, 42, 'cello'), (43, 43, 'double_bass'), (44, 45, 'violin'),
              (46, 46, 'harp'), (47, 47, 'timpani'), (48, 51, 'violin'), (56, 56, 'trumpet'), (57, 57, 'tenor_trombone'),

@@ -49,7 +49,7 @@ the other potentials exactly; `timeEvolution.py` gives the survival-probability 
 - Dvořák, Slavonic Dance in F, Op. 46 No. 4 (orchestral MIDI; one stray flute note after the final
   chord removed)
 - Handel, "La Réjouissance" from Music for the Royal Fireworks (oboes, bassoon, horns, trumpets,
-  timpani, strings, and harpsichord continuo on the harp preset, its strings being plucked)
+  timpani, strings and harpsichord continuo)
 - Fats Waller, "Ain't Misbehavin'" (1929, public domain in the US; bass, piano, guitar, vibraphone
   and drums, rendered with `--drum 35=kick_drum`)
 

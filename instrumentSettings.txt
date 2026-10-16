@@ -434,6 +434,21 @@ Harp
   Match:                15.4 (poor), against VSCO-2 CE
   Other potentials:     Morse 15.7, Lattice 15.7, Oscillator 16.2, Rectangle (2D) 16.9, Hydrogen atom 17.0
 
+Harpsichord
+-----------
+  Ensembles:            none (added for Baroque continuo)
+  Potential:            Double well
+  Mass:                 0.0513 m_e
+  Well separation:      1.0 nm
+  Barrier height:       0.0562 eV
+  Sound:                The wavefunctions
+  Level weights:        1 / level
+  Attack / decay:       41 ms / 1.31 s
+  Sustain / release:    0% / 150 ms
+  Range:                F1-F6; matched at Bb1, F#2, D3, Bb3, E4, C5, Ab5, E6
+  Match:                11.6 (loose), against VCSL
+  Other potentials:     Hydrogen atom 13.5, Morse 14.3, Lattice 14.4, Oscillator 14.9, Finite well 15.1
+
 Hi-hat
 ------
   Ensembles:            Big band
