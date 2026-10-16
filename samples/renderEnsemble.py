@@ -43,7 +43,8 @@ NAMES = [
     (r'timpani|pauken', 'timpani'), (r'snare', 'snare_drum'), (r'bass drum|gran cassa', 'bass_drum'), (r'kick', 'kick_drum'),
     (r'hi-?hat', 'hi_hat'), (r'ride', 'ride_cymbal'), (r'cymbal|piatti|becken', 'crash_cymbals'), (r'triangle', 'triangle'),
     (r'glock', 'glockenspiel'), (r'xylo', 'xylophone'), (r'marimba', 'marimba'), (r'vibra', 'vibraphone'),
-    (r'chime|tubular', 'chimes'), (r'harp', 'harp'), (r'celest', 'celesta'), (r'piano|klavier', 'piano'),
+    (r'chime|tubular', 'chimes'), (r'harpsichord|cembalo', 'harp'),   # plucked strings, as the harp's
+    (r'harp', 'harp'), (r'celest', 'celesta'), (r'piano|klavier', 'piano'),
     (r'electric bass|bass guitar|e-?bass', 'electric_bass'), (r'guitar|gitarre', 'guitar'),
     (r'cello|violoncello', 'cello'), (r'viola|bratsche', 'viola'), (r'violin|violine|geige', 'violin'),
     (r'contrabass|double bass|kontrabass|^basses?$|string bass', 'double_bass'),
