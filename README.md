@@ -46,7 +46,9 @@ the other potentials exactly; `timeEvolution.py` gives the survival-probability 
 `samples/` holds pieces rendered with every part on its instrument preset, by
 `samples/renderEnsemble.py piece.mid out.wav`: Brahms's Academic Festival Overture (orchestral MIDI
 sequenced by David Siu) and Dvořák's Slavonic Dance in F, Op. 46 No. 4 (orchestral MIDI, with one
-stray flute note after the final chord removed), both from https://www.midiworld.com.
+stray flute note after the final chord removed), both from https://www.midiworld.com, and Fats
+Waller's "Ain't Misbehavin'" (1929, public domain in the US; a MIDI for bass, piano, guitar, vibraphone
+and drums from https://bitmidi.com/aint-misbehavin-mid, rendered with `--drum 35=kick_drum`).
 
 ## Tests
 `python3 tests/test_potentials.py` checks every potential across the web app's slider ranges

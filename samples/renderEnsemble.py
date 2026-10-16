@@ -21,6 +21,7 @@ from scipy.io.wavfile import write
 # drum and cymbal presets). Not part of the web app.
 #
 # Usage: python3 samples/renderEnsemble.py piece.mid out.wav [--seconds 90] [--map "Accordion=english_horn" ...]
+#        [--drum 35=kick_drum ...]   (a drum-kit note on a chosen preset, e.g. a jazz kit's kick)
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))     # samples/ sits in the repo
 sys.path.insert(0, os.path.join(REPO, 'backend'))
@@ -151,8 +152,10 @@ def main():
     parser.add_argument('out')
     parser.add_argument('--seconds', type=float, default=None, help='length to render (default: the whole piece)')
     parser.add_argument('--map', action='append', default=[], help='"track-name regex=preset id" to override a match')
+    parser.add_argument('--drum', action='append', default=[], help='"note=preset id": a drum-kit note on that preset')
     args = parser.parse_args()
     overrides = [tuple(m.split('=', 1)) for m in args.map]
+    drums = {int(note): preset for note, preset in (d.split('=', 1) for d in args.drum)}
     parts = readParts(args.midi)
     first = min(n[0] for p in parts.values() for n in p['notes'])
     last = max(n[1] for p in parts.values() for n in p['notes']) - first
@@ -166,7 +169,7 @@ def main():
         if presetId == 'drums':
             byPreset = {}
             for note in notes:
-                byPreset.setdefault(presetForDrum(note[2]), []).append(note)
+                byPreset.setdefault(drums.get(note[2]) or presetForDrum(note[2]), []).append(note)
             jobs += [(hits, drum, nSeconds) for drum, hits in byPreset.items()]
             print(f'{part["name"] or "track " + str(index):<28} -> drum kit: {", ".join(sorted(byPreset))} ({len(notes)} hits)')
             continue
