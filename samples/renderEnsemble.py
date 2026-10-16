@@ -54,7 +54,7 @@ def presetForProgram(program):
 
 def presetForDrum(note):
     # General MIDI percussion key -> preset
-    if note in (35, 36):
+    if note in (35, 36, 41, 43):        # kick and the low floor toms: an orchestra's bass drum
         return 'bass_drum'
     if note in (37, 38, 39, 40):
         return 'snare_drum'
@@ -114,11 +114,11 @@ def choosePreset(part, channel, overrides):
     for pattern, preset in overrides:
         if re.search(pattern, part['name'], re.I):
             return preset, 'override'
+    if channel == 9:                    # the drum channel: each hit by its note
+        return 'drums', 'drum kit'
     for pattern, preset in NAMES:
         if re.search(pattern, part['name'], re.I):
             return preset, 'name'
-    if channel == 9:
-        return 'drums', 'drum kit'
     if part['program'] is not None and presetForProgram(part['program']):
         return presetForProgram(part['program']), 'GM program'
     return 'default', 'no preset fits'
