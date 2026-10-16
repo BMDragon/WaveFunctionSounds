@@ -1008,31 +1008,23 @@ function selectPotential(value) {
   document.querySelectorAll('#potential button').forEach(b => b.classList.toggle('active', b.dataset.value === value));
 }
 
-let ensembles = [];
 const PRESET_ALIASES = { trombone: 'tenor_trombone', snare: 'snare_drum' };     // ids used by older links
 
 async function loadPresets() {
   try {
     const data = await (await fetch('presets.json')).json();
     presets = data.presets;
-    ensembles = data.ensembles || [];
   } catch (error) {
     presets = [];
   }
-  // one menu: Default, then each ensemble's instruments (an instrument in several ensembles is
-  // listed once, under the first), and "Custom sound" while the settings match no preset
+  // one menu: Default, then every instrument in alphabetical order, and "Custom sound" while the
+  // settings match no preset
   const menu = $('presets');
-  const option = (id, name, parent = menu) => parent.appendChild(Object.assign(document.createElement('option'), { value: id, textContent: name }));
+  const option = (id, name) => menu.appendChild(Object.assign(document.createElement('option'), { value: id, textContent: name }));
   option('', 'Custom sound').hidden = true;
   if (presets.some(p => p.id === 'default')) option('default', 'Default');
-  const groups = ensembles.length ? ensembles : [{ name: 'Instruments', members: presets.map(p => p.id).filter(id => id !== 'default') }];
-  const listed = new Set();
-  groups.forEach(ensemble => {
-    const members = ensemble.members.filter(id => !listed.has(id)).map(id => presets.find(p => p.id === id)).filter(Boolean);
-    if (!members.length) return;
-    const group = menu.appendChild(Object.assign(document.createElement('optgroup'), { label: ensemble.name }));
-    members.forEach(p => { listed.add(p.id); option(p.id, p.name, group); });
-  });
+  presets.filter(p => p.id !== 'default').sort((a, b) => a.name.localeCompare(b.name, 'en'))
+    .forEach(p => option(p.id, p.name));
   menu.addEventListener('change', () => {
     const preset = presets.find(p => p.id === menu.value);
     if (preset) applySettings(preset, preset.id);
