@@ -37,7 +37,7 @@ Bass drum       Morse             0.12 me  11.5 nm, 0.0741 eV                Wav
 Crash cymbals   Rectangle (2D)  0.0891 me  9.6 nm, H/W 1.18                  Survival prob.  Boltzmann (thermal)   10,000 K    28 ms   845 ms    0%   840 ms    5.2
 Triangle        V-shaped |x|      1.05 me  7.4 nm, 0.0676 eV                 Wavefunctions   Equal                        -     6 ms   1.77 s    0%   1.77 s   11.2
 Glockenspiel    Morse             3.31 me  18.7 nm, 3.16 eV                  On ground scale Boltzmann (thermal)    1,905 K     6 ms   1.08 s    0%   1.08 s    9.3
-Xylophone       Hydrogen atom    0.832 me  Z = 10, l = 8                     Wavefunctions   Boltzmann (thermal)  T = pitch     6 ms    50 ms    0%    50 ms    7.0
+Xylophone       Hydrogen atom    0.832 me  Z = 10, l = 8                     Wavefunctions   Boltzmann (thermal)  T = pitch     6 ms    50 ms    0%    50 ms    7.1
 Chimes          Finite well      0.537 me  6.3 nm, 0.646 eV                  Wavefunctions   Equal                        -    12 ms   3.61 s    0%   2.00 s   10.5
 Harp            Hydrogen atom   0.0708 me  Z = 1, l = 0                      On ground scale Boltzmann (thermal)    7,762 K    19 ms   818 ms    0%   820 ms   11.8
 Piano           Hydrogen atom     4.27 me  Z = 1, l = 2                      Wavefunctions   Boltzmann (thermal)    7,244 K    22 ms   6.00 s    0%   150 ms   15.6
@@ -96,7 +96,7 @@ Snare drum      Rectangle (2D)  0.0692 me  4.9 nm, H/W 3.85                  Sur
 Bass drum       Morse             0.12 me  11.5 nm, 0.0741 eV                Wavefunctions   Boltzmann (thermal)      275 K    22 ms   403 ms    0%   400 ms    5.9
 Crash cymbals   Rectangle (2D)  0.0891 me  9.6 nm, H/W 1.18                  Survival prob.  Boltzmann (thermal)   10,000 K    28 ms   845 ms    0%   840 ms    5.2
 Glockenspiel    Morse             3.31 me  18.7 nm, 3.16 eV                  On ground scale Boltzmann (thermal)    1,905 K     6 ms   1.08 s    0%   1.08 s    9.3
-Xylophone       Hydrogen atom    0.832 me  Z = 10, l = 8                     Wavefunctions   Boltzmann (thermal)  T = pitch     6 ms    50 ms    0%    50 ms    7.0
+Xylophone       Hydrogen atom    0.832 me  Z = 10, l = 8                     Wavefunctions   Boltzmann (thermal)  T = pitch     6 ms    50 ms    0%    50 ms    7.1
 Marimba         Oscillator       0.513 me  11.5 nm                           On ground scale Boltzmann (thermal)    1,585 K    12 ms   274 ms    0%   270 ms    8.9
 Vibraphone      Oscillator      0.0871 me  15.5 nm                           On ground scale Boltzmann (thermal)    5,370 K     6 ms   2.01 s    0%   2.00 s   11.4
 Chimes          Finite well      0.537 me  6.3 nm, 0.646 eV                  Wavefunctions   Equal                        -    12 ms   3.61 s    0%   2.00 s   10.5
@@ -724,7 +724,7 @@ Xylophone
   Attack / decay:       6 ms / 50 ms
   Sustain / release:    0% / 50 ms
   Range:                F4-C8; matched at F4, C5, F#5, C6, F#6, C7, F#7, C8
-  Match:                7.0 (fair), against Iowa MIS
+  Match:                7.1 (fair), against Iowa MIS
   Other potentials:     Morse 7.1, Finite well 7.1, Lattice 7.1, Double well 7.1, Circle (2D) 7.1
 
 Limits of the model

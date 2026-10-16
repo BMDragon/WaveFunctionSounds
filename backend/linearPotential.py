@@ -13,6 +13,7 @@ class LinearPotential(NumericalPotential):
     # the energies are e times minus the zeros of Ai' and of Ai, taken in turn.
     symmetric = True
     foldSamples = 2048      # on the ground state's scale nothing reaches above harmonic 1024
+    ownSamples = 2048       # nor on each state's own unit (below 1e-7 there)
 
     def __init__(self, mass=electronMass, width=5e-9, height=1.6 * eV):
         self.width = width                # L (m)
@@ -64,9 +65,14 @@ class LinearPotential(NumericalPotential):
         return value if self.parity[n] == 1 else np.sign(x) * value
 
     # In units of a (and of the ground state's width, a fixed multiple of it) every V-shaped
-    # potential has the same states, so on the ground state's scale their coefficients are
-    # worked out once and shared
-    sharedGround = {}
+    # potential has the same states, so their coefficients (on their own units and on the ground
+    # state's) are worked out once and shared
+    sharedGround, sharedOwn = {}, {}
+
+    def coefficientRow(self, n):
+        if n not in LinearPotential.sharedOwn:
+            LinearPotential.sharedOwn[n] = super().coefficientRow(n)
+        return LinearPotential.sharedOwn[n]
 
     def groundRow(self, n):
         if n not in LinearPotential.sharedGround:

@@ -16,6 +16,7 @@ class MorsePotential(NumericalPotential):
     # copies; those few are left out (counted in `unresolved`).
     weakest = 1e-6
     foldSamples = 2048      # on the ground state's scale nothing reaches above harmonic 1024
+    ownSamples = 2048       # nor on each state's own unit (below 1e-12 there)
 
     def __init__(self, mass=electronMass, range_=5e-9, depth=1.6 * eV):
         self.range = range_               # r, the range of the potential (m)

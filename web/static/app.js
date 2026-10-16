@@ -220,13 +220,21 @@ function refreshOutputs() {
   $('temperatureRow').hidden = p.temperatureMode !== 'fixed';
 }
 
-let updateTimer = null;
-function scheduleUpdate(delay = 250) {
+// One request at a time: a change made while a request is in flight waits for it and then
+// sends only the newest settings, so a slider responds at once and keeps up while dragged.
+let updateTimer = null, inFlight = false, pending = false;
+function scheduleUpdate(delay = 10) {
   clearTimeout(updateTimer);
-  updateTimer = setTimeout(update, delay);
+  updateTimer = setTimeout(requestUpdate, delay);     // a moment, to take every change made at once together
+}
+
+function requestUpdate() {
+  if (inFlight) pending = true;
+  else update();
 }
 
 async function update() {
+  inFlight = true;
   const id = ++state.requestId;
   setStatus('Computing…');
   const body = { ...params(), focusFreq: midiFreq(state.focus), plotStates: 8,
@@ -244,6 +252,12 @@ async function update() {
     drawAll();
   } catch (error) {
     if (id === state.requestId) setStatus(`Error: ${error.message}`);
+  } finally {
+    inFlight = false;
+    if (pending) {
+      pending = false;
+      update();
+    }
   }
 }
 
@@ -449,7 +463,7 @@ function chartsCatchUp() {
   updateTimer = setTimeout(() => {
     if (heldKeys.size) return;                  // playing again: wait for the next release
     focusChanged = false;
-    update();
+    requestUpdate();
   }, 150);
 }
 

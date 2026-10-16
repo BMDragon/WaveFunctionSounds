@@ -53,7 +53,17 @@ class Hydrogen(NumericalPotential):
         root = math.sqrt(max(self.coulomb**2 + 4 * E * L, 0))
         return (-self.coulomb + root) / (2 * E) if L else 0.0, (-self.coulomb - root) / (2 * E)
 
+    # In units of a / Z the states depend only on l, so their coefficients on their own units are
+    # shared per (l, n) too
+    sharedOwn = {}
+
     def coefficientRow(self, i):
+        key = (self.l, i)
+        if key not in Hydrogen.sharedOwn:
+            Hydrogen.sharedOwn[key] = self.ownRow(i)
+        return Hydrogen.sharedOwn[key]
+
+    def ownRow(self, i):
         # Fourier coefficients of the i-th wrapped state over one period. Sampled four times as
         # finely as the other potentials, since the states wiggle near the nucleus on a scale
         # much smaller than their size (the harmonics kept then change by under 1e-5 at 2^21
@@ -62,7 +72,7 @@ class Hydrogen(NumericalPotential):
         u = np.linspace(0, 1, samples, False)
         left, right = self.turningPoints(i)
         width, centre = right - left, (left + right) / 2
-        reach = right + 12 * math.sqrt(self.kinetic / -self.eng[i]) + self.a     # past the tail
+        reach = right + 24 * math.sqrt(self.kinetic / -self.eng[i]) + self.a / self.Z     # past the tail
         images = np.arange(math.floor((centre - reach) / width - 1/2) - 1, math.ceil(centre / width + 3/2) + 2)
         flip = (self.n[i] - self.l - 1) % 2 == 0          # an even number of nodes
         wrapped = np.zeros(samples)

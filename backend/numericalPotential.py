@@ -191,7 +191,8 @@ class NumericalPotential:
 
     def coefficientRow(self, n):
         # Fourier coefficients of the n-th wrapped state over one period
-        u = np.linspace(0, 1, self.coefficientSamples, False)
+        N = self.ownSamples or self.coefficientSamples
+        u = np.linspace(0, 1, N, False)
         left, right = self.turningPoints(n)
         width, centre = right - left, (left + right) / 2
         low, high = self.extent(n)
@@ -200,7 +201,9 @@ class NumericalPotential:
         flip = self.parity[n] == 1 if self.parity[n] else n % 2 == 0     # n nodes: flip when n is even
         sign = (-1.0)**np.abs(images) if flip else np.ones(len(images))
         wrapped = math.sqrt(width) * (sign @ self.state(n, X))
-        return 2 * np.fft.rfft(wrapped) / self.coefficientSamples
+        row = np.zeros(self.coefficientSamples // 2 + 1, complex)
+        row[:N // 2 + 1] = (2 * np.fft.rfft(wrapped) / N)[:len(row)]
+        return row
 
     def computeCoefficients(self, wrapping='own'):
         # every state's coefficients
@@ -213,6 +216,7 @@ class NumericalPotential:
     # and, where a state is wider than a unit, it carries over into the neighbouring units and
     # adds there, like the finite well's tails. Each state is sampled once across its extent and
     # folded into one period, which is the same as sampling its Fourier transform at pi m / W.
+    ownSamples = None       # samples per period on a state's own unit (2048 where nothing reaches above harmonic 1024)
     tapered = False         # taper the slowly varying outer region (hydrogen's far-reaching states)
     foldSamples = None      # samples per period when folding (2048 where nothing reaches above harmonic 1024)
 
