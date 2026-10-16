@@ -319,19 +319,6 @@ def checkEndToEnd():
         audio = unSospiro.render(notes, lambda f, sr: model.harmonicContent(f, sr), nSeconds=2)
         if not np.all(np.isfinite(audio)) or np.abs(audio).max() == 0:
             problems.append(f'{potential}: render produced silence or non-finite samples')
-    # wrapping on the ground state's unit: the oscillator's Hermite functions are their own
-    # Fourier transforms, so state n's copies (unit W = 2 oscillator lengths, period 2W) give
-    # |c_m| = (1/2) sqrt(W) |1 + sign (-1)^m| sqrt(2 pi) |psi_n(pi m / W)| exactly
-    import harmonicOscillator
-    C = harmonicOscillator.computeCoefficients() if harmonicOscillator.stateCoefficients is None else harmonicOscillator.stateCoefficients
-    kappa = np.pi * np.arange(1, 40) / 2
-    worst = 0
-    for n, psi in zip(range(60), harmonicOscillator.hermiteFunctions(kappa, 60)):
-        sign = -1 if n % 2 == 0 else 1
-        exact = 0.5 * math.sqrt(2) * np.abs(1 + sign * (-1.0)**np.arange(1, 40)) * math.sqrt(2 * math.pi) * np.abs(psi)
-        worst = max(worst, np.abs(np.abs(C[n, 1:40]) - exact).max())
-    if worst > 1e-6:
-        problems.append(f'oscillator states wrapped on the ground state unit differ from their Fourier transforms by {worst:.1e}')
     # 2D boxes: partials at the exact wavenumber ratios, and the additive renderer they need
     from scipy.special import jn_zeros
     from scipy.integrate import trapezoid

@@ -15,7 +15,6 @@ class MorsePotential(NumericalPotential):
     # state bound by less than 1e-6 of D reaches so far that wrapping it costs thousands of
     # copies; those few are left out (counted in `unresolved`).
     weakest = 1e-6
-    foldSamples = 2048
 
     def __init__(self, mass=electronMass, range_=5e-9, depth=1.6 * eV):
         self.range = range_               # r, the range of the potential (m)

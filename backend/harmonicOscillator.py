@@ -22,28 +22,29 @@ def hermiteFunctions(x, count):
         yield current
         previous, current = current, math.sqrt(2/(n+1)) * x * current - math.sqrt(n/(n+1)) * previous
 
-# x is measured in units of a. As in the square wells, one unit is the width of the ground
-# state, between its turning points at +-1, and one period is two units. Every state is laid
-# on that scale: copies of it go in each unit, the higher (wider) states carrying over into the
-# neighbouring units and adding there, and even (symmetric) states flip sign from one copy to
-# the next.
+# x is measured in units of a. Each state's unit is the width of the region its energy
+# allows, between the turning points at +-sqrt(2n+1); for a square well that width is L at
+# every energy. As in the square wells, one period is two units, copies of each state are
+# laid in neighbouring units with their tails overlapping, and even (symmetric) states flip
+# sign from one unit to the next. Each state is normalized over its own unit, so state n
+# has n+1 half-oscillations per unit like the square wells.
 coefficientSamples = 8192
 stateCoefficients = None
 
 def computeCoefficients():
-    # Fourier coefficients over one period (from x = -1, two units long) of every state's
-    # copies, sum over j of sign^j psi(x - 2j): each Hermite function is sampled once on a grid
-    # aligned with the period, beyond every kept state's turning point, and folded. In units of
-    # a they are the same for every oscillator.
-    N = coefficientSamples
-    h = 4 / N
-    i = np.arange(math.floor(-36.5 / h), math.ceil(38.5 / h))
-    x = -1 + i * h
+    # Fourier coefficients of every wrapped state over one period, from the Hermite
+    # functions on a fine grid interpolated at every copy of the state that reaches its
+    # period. In units of a they are the same for every oscillator.
+    grid = np.arange(-37.5, 37.5, 1e-3)         # beyond every kept state's turning point
+    u = np.linspace(0, 1, coefficientSamples, False)
     coefficients = []
-    for n, psi in enumerate(hermiteFunctions(x, numStates)):
-        folded = np.bincount(i % N, psi, N)
-        wrapped = math.sqrt(2) * (folded + (-1 if n % 2 == 0 else 1) * np.roll(folded, N // 2))
-        coefficients.append(2 * np.fft.rfft(wrapped) / N)
+    for n, psi in enumerate(hermiteFunctions(grid, numStates)):
+        width = 2 * math.sqrt(2*n + 1)
+        images = np.arange(-math.ceil(1/2 + 6/width) - 1, math.ceil(1/2 + 6/width) + 2)
+        X = width * (2*u[None, :] - 1/2) - width * images[:, None]
+        sign = (-1.0)**np.abs(images) if n % 2 == 0 else np.ones(len(images))
+        wrapped = math.sqrt(width) * (sign @ np.interp(X, grid, psi, left=0, right=0))
+        coefficients.append(2 * np.fft.rfft(wrapped) / coefficientSamples)
     return np.array(coefficients)
 
 class HarmonicOscillator:

@@ -18,12 +18,12 @@ class NumericalPotential:
     # holds every state up to a given energy, and an initial energy guess. Positions are in
     # nm and energies in eV throughout.
     #
-    # As in the square wells, one unit is the width of the ground state, between its turning
-    # points (for a square well that is L), and one period of the sound is two units. Every
-    # state is laid on that same scale: copies of it go in each unit, and wherever a state is
-    # wider than a unit (the higher states, and every state's tails) it carries over into the
-    # neighbouring units and adds there. States with an even number of nodes flip sign from one
-    # copy to the next (for a symmetric potential, exactly the symmetric states).
+    # As in the other potentials, each state's unit is the width of the region its energy
+    # allows (between its outermost turning points; for a square well that is L at every
+    # energy). One period is two units, copies of the state are laid in neighbouring units
+    # with their tails overlapping, and states with an even number of nodes flip sign from
+    # one unit to the next (for a symmetric potential, exactly the symmetric states, which
+    # is what decides it there). Each state is normalized over its own unit.
     coefficientSamples = 8192
     maxStates = 120
     maxPoints = 30000
@@ -189,64 +189,18 @@ class NumericalPotential:
         support = np.nonzero(np.abs(psi) > 1e-7 * np.abs(psi).max())[0]
         return self.x[support[0]], self.x[support[-1]]
 
-    # What is folded: the state across its extent. Where high states reach far beyond the
-    # ground state (hydrogen, Morse) their outer region, where they vary slowly (|E - V| below
-    # kinetic (pi / 8W)^2, so they neither oscillate nor decay within eight units), can't reach
-    # the harmonics, only the dropped constant; it is tapered smoothly to zero over 64 units
-    # instead of being sampled finely all the way out (checked against folding every state in
-    # full: harmonics within about 1e-5).
-    tapered = False
-    # samples per period when folding; states with nothing above harmonic 1024 (Morse and
-    # V-shaped below 1e-11 there, hydrogen 1e-6) need only 2048, the rest of the row being zero
-    foldSamples = None
-
-    def taper(self, n):
-        W = self.unit()[0]
-        limit = (math.pi / W / 8)**2 * self.kinetic
-        low, high = self.extent(n)
-        x = np.linspace(low, high, 20001)
-        fast = np.nonzero(np.abs(self.eng[n] - self.potential(x)) > limit)[0]
-        start = x[fast[-1]] if len(fast) else x[0]
-        return start, start + 64 * W
-
-    def foldExtent(self, n):
-        low, high = self.extent(n)
-        return (low, min(high, self.taper(n)[1])) if self.tapered else (low, high)
-
-    def foldState(self, n, x):
-        if not self.tapered:
-            return self.state(n, x)
-        start, end = self.taper(n)
-        x = np.asarray(x, float)
-        window = np.where(x <= start, 1.0, np.where(x >= end, 0.0, np.cos(np.pi / 2 * (x - start) / (end - start))**2))
-        return self.state(n, x) * window
-
-    def unit(self):
-        # (width, centre) of one unit: the ground state's classically allowed region
-        left, right = self.turningPoints(0)
-        return right - left, (left + right) / 2
-
     def coefficientRow(self, n):
-        # Fourier coefficients over one period (two units, starting half a unit before the
-        # unit's centre) of the n-th state's copies, sum over j of sign^j psi(x - j W). The
-        # state is sampled once across its whole extent and folded: samples a period apart
-        # add, and the copies one unit apart add with the sign. In units of W, so that a
-        # state normalized over all space gets sqrt(W).
-        W, centre = self.unit()
-        N = self.foldSamples or self.coefficientSamples
-        h = 2 * W / N
-        start = centre - W / 2
-        low, high = self.foldExtent(n)
-        first, last = math.floor((low - start) / h), math.ceil((high - start) / h)
-        folded = np.zeros(N)
-        for i0 in range(first, last + 1, 1 << 21):            # in chunks, for very wide states
-            i = np.arange(i0, min(i0 + (1 << 21), last + 1))
-            folded += np.bincount(i % N, self.foldState(n, start + i * h), N)
+        # Fourier coefficients of the n-th wrapped state over one period
+        u = np.linspace(0, 1, self.coefficientSamples, False)
+        left, right = self.turningPoints(n)
+        width, centre = right - left, (left + right) / 2
+        low, high = self.extent(n)
+        images = np.arange(math.floor((centre - high) / width - 1/2) - 1, math.ceil((centre - low) / width + 3/2) + 2)
+        X = centre + width * (2*u[None, :] - 1/2) - width * images[:, None]
         flip = self.parity[n] == 1 if self.parity[n] else n % 2 == 0     # n nodes: flip when n is even
-        wrapped = math.sqrt(W) * (folded + (-1 if flip else 1) * np.roll(folded, N // 2))
-        row = np.zeros(self.coefficientSamples // 2 + 1, complex)
-        row[:N // 2 + 1] = (2 * np.fft.rfft(wrapped) / N)[:len(row)]
-        return row
+        sign = (-1.0)**np.abs(images) if flip else np.ones(len(images))
+        wrapped = math.sqrt(width) * (sign @ self.state(n, X))
+        return 2 * np.fft.rfft(wrapped) / self.coefficientSamples
 
     def computeCoefficients(self):
         # every state's coefficients

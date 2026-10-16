@@ -11,12 +11,10 @@ class Hydrogen(NumericalPotential):
     # momentum l. Its radial states u(r) = r R(r) live on r > 0 in the effective potential
     # V(r) = -Z e^2 / (4 pi eps0 r) + hbar^2 l (l + 1) / (2 m r^2), with energies
     # E_n = -Z^2 Ry (m / m_e) / n^2 for n = l + 1, l + 2, ... and analytic (Laguerre) states.
-    # As in the other potentials, one unit is the ground state's allowed region (from r = 0
-    # when l = 0, where it meets the nucleus), and every state is wrapped on that scale, the
-    # wider ones carrying over into neighbouring units.
+    # As in the other potentials, each state's unit is the region its energy allows, between
+    # its turning points (from r = 0 when l = 0, where the state meets the nucleus), and it is
+    # wrapped into one period of two units.
     maxStates = 60
-    tapered = True          # a high state reaches about n^2 times further than the ground state
-    foldSamples = 2048      # harmonics above 1024 are below 1e-6 (from the kink at the nucleus)
 
     def __init__(self, mass=electronMass, Z=1, l=0):
         self.mass = mass
@@ -53,23 +51,25 @@ class Hydrogen(NumericalPotential):
         root = math.sqrt(max(self.coulomb**2 + 4 * E * L, 0))
         return (-self.coulomb + root) / (2 * E) if L else 0.0, (-self.coulomb - root) / (2 * E)
 
-    def state(self, i, r):
-        return self.u(i, r)
-
-    # In units of the ground state's width (a / Z times a number fixed by l) the states depend
-    # only on l, so the coefficients are worked out once per (l, n) and shared.
-    shared = {}
-
     def coefficientRow(self, i):
-        key = (self.l, i)
-        if key not in Hydrogen.shared:
-            Hydrogen.shared[key] = super().coefficientRow(i)
-        return Hydrogen.shared[key]
-
-
-    def extent(self, i):
-        # from the nucleus to where the tail has fallen by about exp(-24)
-        return 0.0, self.turningPoints(i)[1] + 24 * math.sqrt(self.kinetic / -self.eng[i]) + self.a
+        # Fourier coefficients of the i-th wrapped state over one period. Sampled four times as
+        # finely as the other potentials, since the states wiggle near the nucleus on a scale
+        # much smaller than their size (the harmonics kept then change by under 1e-5 at 2^21
+        # samples).
+        samples = 4 * self.coefficientSamples
+        u = np.linspace(0, 1, samples, False)
+        left, right = self.turningPoints(i)
+        width, centre = right - left, (left + right) / 2
+        reach = right + 12 * math.sqrt(self.kinetic / -self.eng[i]) + self.a     # past the tail
+        images = np.arange(math.floor((centre - reach) / width - 1/2) - 1, math.ceil(centre / width + 3/2) + 2)
+        flip = (self.n[i] - self.l - 1) % 2 == 0          # an even number of nodes
+        wrapped = np.zeros(samples)
+        for image in images:
+            r = centre + width * (2*u - 1/2) - width * image
+            inside = (r > 0) & (r < reach)
+            if inside.any():
+                wrapped[inside] += (-1.0)**abs(image) * self.u(i, r[inside]) if flip else self.u(i, r[inside])
+        return (2 * np.fft.rfft(wrapped * math.sqrt(width)) / samples)[:self.coefficientSamples // 2 + 1]
 
     def plotData(self, count):
         # Radius (nm), effective potential (meV, clipped below the lowest level shown),
