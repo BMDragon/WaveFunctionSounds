@@ -39,7 +39,8 @@ class Box2D:
             return 1 / np.arange(1, len(self.eng) + 1)
         return np.exp(-(self.eng - self.eng[0]) * eV / (2 * kB * temperature))
 
-    def harmonicContent(self, freq, sampleRate=44100, temperature=None, weighting='boltzmann'):
+    def harmonicContent(self, freq, sampleRate=44100, temperature=None, weighting='boltzmann', wrapping='own'):
+        # `wrapping` makes no difference here (every state already shares one unit, or none is wrapped)
         # Partial ratios k_n / k_1 and amplitudes -i a_n (a sine, like the 1D well's states),
         # states at the same ratio merged; the temperature in K equals freq in Hz unless given,
         # and only partials below the Nyquist frequency are kept

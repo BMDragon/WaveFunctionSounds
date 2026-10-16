@@ -15,6 +15,8 @@ class Hydrogen(NumericalPotential):
     # its turning points (from r = 0 when l = 0, where the state meets the nucleus), and it is
     # wrapped into one period of two units.
     maxStates = 60
+    tapered = True          # on the ground state's scale: a high state reaches ~n^2 times further
+    foldSamples = 2048      # harmonics above 1024 below 1e-6 (from the kink at the nucleus)
 
     def __init__(self, mass=electronMass, Z=1, l=0):
         self.mass = mass
@@ -70,6 +72,23 @@ class Hydrogen(NumericalPotential):
             if inside.any():
                 wrapped[inside] += (-1.0)**abs(image) * self.u(i, r[inside]) if flip else self.u(i, r[inside])
         return (2 * np.fft.rfft(wrapped * math.sqrt(width)) / samples)[:self.coefficientSamples // 2 + 1]
+
+    def state(self, i, r):
+        return self.u(i, r)
+
+    def extent(self, i):
+        # from the nucleus to where the tail has fallen by about exp(-24)
+        return 0.0, self.turningPoints(i)[1] + 24 * math.sqrt(self.kinetic / -self.eng[i]) + self.a
+
+    # In units of the ground state's width (a / Z times a number fixed by l) the states depend
+    # only on l, so on the ground state's scale their coefficients are shared per (l, n)
+    sharedGround = {}
+
+    def groundRow(self, i):
+        key = (self.l, i)
+        if key not in Hydrogen.sharedGround:
+            Hydrogen.sharedGround[key] = super().groundRow(i)
+        return Hydrogen.sharedGround[key]
 
     def plotData(self, count):
         # Radius (nm), effective potential (meV, clipped below the lowest level shown),

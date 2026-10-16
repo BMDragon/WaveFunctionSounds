@@ -116,7 +116,8 @@ class FiniteSquareWell:
         total += norm[1] * sign**np.abs(nearestLeft) * np.exp(alpha * (x - nearestLeft + 1/2)) / (1 - ratio)
         return total
 
-    def harmonicContent(self, freq, sampleRate=44100, temperature=None, weighting='boltzmann'):
+    def harmonicContent(self, freq, sampleRate=44100, temperature=None, weighting='boltzmann', wrapping='own'):
+        # `wrapping` makes no difference here (every state already shares one unit, or none is wrapped)
         # Harmonic numbers m and complex amplitudes c_m of one period, so the waveform is
         # Re(sum c_m exp(2 pi i m freq t)). The temperature in kelvin equals freq in Hz
         # unless given, and only harmonics below the Nyquist frequency are kept so nothing

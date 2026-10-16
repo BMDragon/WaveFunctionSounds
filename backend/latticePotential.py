@@ -185,7 +185,8 @@ class LatticePotential:
             return 1 / np.arange(1, len(self.eng) + 1)
         return np.exp(-(self.eng - self.eng[0]) * eV / (2 * kB * temperature))
 
-    def harmonicContent(self, freq, sampleRate=44100, temperature=None, weighting='boltzmann'):
+    def harmonicContent(self, freq, sampleRate=44100, temperature=None, weighting='boltzmann', wrapping='own'):
+        # `wrapping` makes no difference here (every state already shares one unit, or none is wrapped)
         # Partial frequencies as multiples r of freq, with complex amplitudes c, so the
         # waveform is Re(sum c exp(2 pi i r freq t)). For phi = 0 or pi the partials are
         # harmonics and are returned in the same form as the other potentials (r = 1, 2, ...).

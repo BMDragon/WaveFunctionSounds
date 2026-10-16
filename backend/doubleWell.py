@@ -27,7 +27,7 @@ class DoubleWell(NumericalPotential):
     def statesBelowBarrier(self):
         return int((self.eng < self.V0).sum())
 
-    def tunnellingGroups(self, freq, sampleRate=44100, temperature=None, weighting='boltzmann'):
+    def tunnellingGroups(self, freq, sampleRate=44100, temperature=None, weighting='boltzmann', wrapping='own'):
         # The particle starts in the left well. Each pair below the barrier (even state n, odd
         # state n + 1) with amplitudes a_e, a_o is played as the combination localized on the
         # left, a_e psi_e + s a_o psi_o, with s the sign that makes the two add for x < 0. Its
@@ -39,7 +39,7 @@ class DoubleWell(NumericalPotential):
         # Returns [(m, c, rate)] with harmonicContent's m and c for each group.
         m = np.arange(1, min(int(np.ceil(sampleRate / (2*freq))), self.coefficientSamples // 2))
         amps = self.amplitudes(temperature or freq, weighting)
-        C = self.coefficientsFor(amps)[:, m]
+        C = self.coefficientsFor(amps, wrapping)[:, m]
         left = self.x < 0
         dx = self.x[1] - self.x[0]
         groups, centred, n = [], np.zeros(len(m), complex), 0

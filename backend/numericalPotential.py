@@ -202,30 +202,94 @@ class NumericalPotential:
         wrapped = math.sqrt(width) * (sign @ self.state(n, X))
         return 2 * np.fft.rfft(wrapped) / self.coefficientSamples
 
-    def computeCoefficients(self):
+    def computeCoefficients(self, wrapping='own'):
         # every state's coefficients
-        return np.array([self.coefficientRow(n) for n in range(len(self.eng))])
+        row = self.coefficientRow if wrapping == 'own' else self.groundRow
+        return np.array([row(n) for n in range(len(self.eng))])
 
-    def coefficientsFor(self, amps):
-        # The coefficient matrix with every state that `amps` weights computed; a state is only
-        # worked out the first time a note gives it a weight above 1e-12 of the largest
+    # The other way to wrap (the "on the ground state's scale" sound): one unit is the ground
+    # state's width, between its turning points, for every state, as in the square wells, and
+    # one period is two units. Higher states keep their real size: their copies sit a unit apart
+    # and, where a state is wider than a unit, it carries over into the neighbouring units and
+    # adds there, like the finite well's tails. Each state is sampled once across its extent and
+    # folded into one period, which is the same as sampling its Fourier transform at pi m / W.
+    tapered = False         # taper the slowly varying outer region (hydrogen's far-reaching states)
+    foldSamples = None      # samples per period when folding (2048 where nothing reaches above harmonic 1024)
+
+    def unit(self):
+        # (width, centre) of the ground state's classically allowed region
+        left, right = self.turningPoints(0)
+        return right - left, (left + right) / 2
+
+    def taper(self, n):
+        # Out where a state varies slowly, |E - V| below kinetic (pi / 8W)^2 (it neither oscillates
+        # nor decays within eight units), it can't reach the harmonics, only the dropped constant;
+        # it is tapered smoothly to zero over 64 units (harmonics within about 1e-5)
+        W = self.unit()[0]
+        limit = (math.pi / W / 8)**2 * self.kinetic
+        low, high = self.extent(n)
+        x = np.linspace(low, high, 20001)
+        fast = np.nonzero(np.abs(self.eng[n] - self.potential(x)) > limit)[0]
+        start = x[fast[-1]] if len(fast) else x[0]
+        return start, start + 64 * W
+
+    def foldExtent(self, n):
+        low, high = self.extent(n)
+        return (low, min(high, self.taper(n)[1])) if self.tapered else (low, high)
+
+    def foldState(self, n, x):
+        if not self.tapered:
+            return self.state(n, x)
+        start, end = self.taper(n)
+        x = np.asarray(x, float)
+        window = np.where(x <= start, 1.0, np.where(x >= end, 0.0, np.cos(np.pi / 2 * (x - start) / (end - start))**2))
+        return self.state(n, x) * window
+
+    def groundRow(self, n):
+        # Fourier coefficients over one period (two units from half a unit before the unit's
+        # centre) of sum over j of sign^j psi(x - j W): samples a period apart add, and the copies
+        # one unit apart add with the sign; times sqrt(W)
+        W, centre = self.unit()
+        N = self.foldSamples or self.coefficientSamples
+        h = 2 * W / N
+        start = centre - W / 2
+        low, high = self.foldExtent(n)
+        first, last = math.floor((low - start) / h), math.ceil((high - start) / h)
+        folded = np.zeros(N)
+        for i0 in range(first, last + 1, 1 << 21):            # in chunks, for very wide states
+            i = np.arange(i0, min(i0 + (1 << 21), last + 1))
+            folded += np.bincount(i % N, self.foldState(n, start + i * h), N)
+        flip = self.parity[n] == 1 if self.parity[n] else n % 2 == 0
+        wrapped = math.sqrt(W) * (folded + (-1 if flip else 1) * np.roll(folded, N // 2))
+        row = np.zeros(self.coefficientSamples // 2 + 1, complex)
+        row[:N // 2 + 1] = (2 * np.fft.rfft(wrapped) / N)[:len(row)]
+        return row
+
+    def coefficientsFor(self, amps, wrapping='own'):
+        # The coefficient matrix (each state on its own unit, or 'ground': on the ground state's)
+        # with every state that `amps` weights computed; a state is only worked out the first
+        # time a note gives it a weight above 1e-12 of the largest
         if self.stateCoefficients is None:
             self.stateCoefficients = np.zeros((len(self.eng), self.coefficientSamples // 2 + 1), complex)
             self.coefficientsDone = np.zeros(len(self.eng), bool)
+            self.groundCoefficients = np.zeros_like(self.stateCoefficients)
+            self.groundDone = np.zeros(len(self.eng), bool)
+        matrix, done, row = ((self.stateCoefficients, self.coefficientsDone, self.coefficientRow) if wrapping == 'own'
+                             else (self.groundCoefficients, self.groundDone, self.groundRow))
         amps = np.abs(amps)
-        for n in np.nonzero((amps > 1e-12 * amps.max()) & ~self.coefficientsDone)[0]:
-            self.stateCoefficients[n] = self.coefficientRow(n)
-            self.coefficientsDone[n] = True
-        return self.stateCoefficients
+        for n in np.nonzero((amps > 1e-12 * amps.max()) & ~done)[0]:
+            matrix[n] = row(n)
+            done[n] = True
+        return matrix
 
-    def harmonicContent(self, freq, sampleRate=44100, temperature=None, weighting='boltzmann'):
+    def harmonicContent(self, freq, sampleRate=44100, temperature=None, weighting='boltzmann', wrapping='own'):
         # Harmonic numbers m and complex amplitudes c_m of one period, so the waveform is
         # Re(sum c_m exp(2 pi i m freq t)). The temperature in kelvin equals freq in Hz
         # unless given, and only harmonics below the Nyquist frequency are kept so nothing
-        # aliases.
+        # aliases. `wrapping`: each state on its own unit ('own') or on the ground state's.
         m = np.arange(1, min(int(np.ceil(sampleRate / (2*freq))), self.coefficientSamples // 2))
         amps = self.amplitudes(temperature or freq, weighting)
-        return m, amps @ self.coefficientsFor(amps)[:, m]
+        return m, amps @ self.coefficientsFor(amps, wrapping)[:, m]
 
     def plotData(self, count):
         # Position (nm), potential (meV), level energies (meV) and the first `count`

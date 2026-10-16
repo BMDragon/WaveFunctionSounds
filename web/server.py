@@ -108,6 +108,10 @@ def tunnelling(m, req):
 def survival(req):
     return req.get('sound') == 'survival'
 
+def wrapping(req):
+    # sound 'ground': the wavefunctions wrapped on the ground state's unit instead of each its own
+    return 'ground' if req.get('sound') == 'ground' else 'own'
+
 def stateCount(m):
     # how many states a model keeps
     if isinstance(m, infiniteSquareWell.InfiniteSquareWell):
@@ -119,13 +123,14 @@ def stateCount(m):
     return len(m.eng)
 
 def content(m, req, f, sr, weighting):
-    # the partials of a note: the wavefunctions' (harmonicContent) or, for sound = 'survival',
-    # the survival probability's (see timeEvolution)
+    # the partials of a note: the wavefunctions' (harmonicContent, each state on its own unit or,
+    # for sound = 'ground', on the ground state's) or, for sound = 'survival', the survival
+    # probability's (see timeEvolution)
     T = temperatureFor(req, f)
     if survival(req):
         count = stateCount(m)
         return timeEvolution.survivalContent(m.energies(count), levelAmplitudes(m, T, weighting, count), f, sr)
-    return m.harmonicContent(f, sr, T, weighting)
+    return m.harmonicContent(f, sr, T, weighting, wrapping(req))
 
 def noteContent(m, req, f, weighting):
     # the partials of one note, dropping the negligible ones; with tunnelling, also the
@@ -139,7 +144,7 @@ def noteContent(m, req, f, weighting):
         keep[np.argsort(-np.abs(c), kind='stable')[:liveSurvivalPartials]] = True     # the lowest, among equals
     note = {'m': harm[keep].tolist(), 're': c[keep].real.tolist(), 'im': c[keep].imag.tolist()}
     if tunnelling(m, req):
-        groups = m.tunnellingGroups(f, sampleRate, temperatureFor(req, f), weighting)
+        groups = m.tunnellingGroups(f, sampleRate, temperatureFor(req, f), weighting, wrapping(req))
         biggest = max(np.abs(gc).max() for _, gc, _ in groups)
         note['groups'] = []
         for gm, gc, rate in groups:
@@ -244,7 +249,7 @@ def renderPiece(req):
         raise ValueError(f'could not read that MIDI file ({type(error).__name__})')
     if tunnelling(m, req):
         renderer = unSospiro.renderStereo
-        partials = lambda f, sr: m.tunnellingGroups(f, sr, temperatureFor(req, f), weighting)
+        partials = lambda f, sr: m.tunnellingGroups(f, sr, temperatureFor(req, f), weighting, wrapping(req))
     else:
         renderer = unSospiro.render
         partials = lambda f, sr: content(m, req, f, sr, weighting)

@@ -47,6 +47,23 @@ def computeCoefficients():
         coefficients.append(2 * np.fft.rfft(wrapped) / coefficientSamples)
     return np.array(coefficients)
 
+# The same on the ground state's scale: one unit is the ground state's width (turning points at
+# +-1, so 2 in units of a) for every state, the wider ones carrying over into the neighbouring
+# units; each Hermite function is sampled once on a grid aligned with the period and folded.
+groundCoefficients = None
+
+def computeGroundCoefficients():
+    N = coefficientSamples
+    h = 4 / N
+    i = np.arange(math.floor(-36.5 / h), math.ceil(38.5 / h))
+    x = -1 + i * h
+    coefficients = []
+    for n, psi in enumerate(hermiteFunctions(x, numStates)):
+        folded = np.bincount(i % N, psi, N)
+        wrapped = math.sqrt(2) * (folded + (-1 if n % 2 == 0 else 1) * np.roll(folded, N // 2))
+        coefficients.append(2 * np.fft.rfft(wrapped) / N)
+    return np.array(coefficients)
+
 class HarmonicOscillator:
     def __init__(self, mass=electronMass, length=5e-9):
         self.mass = mass        # kg
@@ -77,16 +94,22 @@ class HarmonicOscillator:
             return 1 / np.arange(1, numStates + 1)
         return self.boltzmannWeights(temperature)
 
-    def harmonicContent(self, freq, sampleRate=44100, temperature=None, weighting='boltzmann'):
+    def harmonicContent(self, freq, sampleRate=44100, temperature=None, weighting='boltzmann', wrapping='own'):
         # Harmonic numbers m and complex amplitudes c_m of one period, so the waveform is
         # Re(sum c_m exp(2 pi i m freq t)). The temperature in kelvin equals freq in Hz
         # unless given, and only harmonics below the Nyquist frequency are kept so nothing
         # aliases.
-        global stateCoefficients
-        if stateCoefficients is None:
-            stateCoefficients = computeCoefficients()
+        global stateCoefficients, groundCoefficients
+        if wrapping == 'ground':
+            if groundCoefficients is None:
+                groundCoefficients = computeGroundCoefficients()
+            C = groundCoefficients
+        else:
+            if stateCoefficients is None:
+                stateCoefficients = computeCoefficients()
+            C = stateCoefficients
         m = np.arange(1, min(int(np.ceil(sampleRate / (2*freq))), coefficientSamples // 2))
-        return m, self.amplitudes(temperature or freq, weighting) @ stateCoefficients[:, m]
+        return m, self.amplitudes(temperature or freq, weighting) @ C[:, m]
 
     def plotData(self, count):
         # Position (nm), potential (meV), level energies (meV) and the first `count`

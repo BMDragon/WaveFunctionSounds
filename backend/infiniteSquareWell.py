@@ -34,7 +34,8 @@ class InfiniteSquareWell:
         theta = self.E1 / (kB * temperature)
         return np.exp(-theta * (levels**2 - 1) / 2)
 
-    def harmonicContent(self, freq, sampleRate=44100, temperature=None, weighting='boltzmann'):
+    def harmonicContent(self, freq, sampleRate=44100, temperature=None, weighting='boltzmann', wrapping='own'):
+        # `wrapping` makes no difference here (every state already shares one unit, or none is wrapped)
         # Harmonic numbers m and complex amplitudes c_m of one period, so the waveform is
         # Re(sum c_m exp(2 pi i m freq t)). Level n is a sine on harmonic n, the temperature
         # in kelvin equals freq in Hz unless given, and only harmonics below the Nyquist

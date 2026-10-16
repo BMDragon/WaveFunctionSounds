@@ -29,7 +29,7 @@ function params() {
     temperature: Math.pow(10, +$('temperature').value),
     barrierFraction: +$('barrierFraction').value,
     blochPhase: +$('blochPhase').value,
-    ...($('sound').value === 'survival' ? { sound: 'survival' } : {}),
+    ...($('sound').value !== 'states' ? { sound: $('sound').value } : {}),
     ...(state.potential === 'hydrogen' ? { Z: +$('charge').value, l: +$('ell').value } : {}),
     ...(state.potential === 'rectangle' ? { aspect: +$('aspect').value } : {}),
     ...(state.potential === 'custom' ? { shape: encodeShape(state.shape) } : {}),
@@ -203,10 +203,13 @@ function refreshOutputs() {
   $('chargeRow').hidden = $('ellRow').hidden = !kind.atom;
   $('chargeOut').textContent = $('charge').value;
   $('ellOut').textContent = $('ell').value;
-  $('soundHint').textContent = $('sound').value === 'survival'
-    ? 'The particle starts in the superposition of the states with these weights, and you hear the probability of ' +
-      'still finding it in that state, |⟨ψ(0)|ψ(t)⟩|²: partials at the energy differences, with E₁ − E₀ at the key.'
-    : 'Each state is a partial; the wavefunction, laid end to end, is one period of the sound.';
+  $('soundHint').textContent = {
+    survival: 'The particle starts in the superposition of the states with these weights, and you hear the probability of ' +
+              'still finding it in that state, |⟨ψ(0)|ψ(t)⟩|²: partials at the energy differences, with E₁ − E₀ at the key.',
+    ground: 'Each state laid out at its real size on the ground state\'s width as the unit: the wider, higher states carry ' +
+            'over into neighbouring units instead of being squeezed to fit, so each sounds near its own wavenumber.',
+    states: 'Each state is a partial; the wavefunction, laid end to end, is one period of the sound.',
+  }[$('sound').value];
   $('tunnellingRow').hidden ||= $('sound').value === 'survival';
   $('aspectOut').textContent = (+$('aspect').value).toFixed(2);
   $('potentialHint').textContent = kind.hint;
@@ -982,7 +985,7 @@ const SETTINGS = {
   charge: ['Z', () => +$('charge').value, v => { $('charge').value = v; }],
   ell: ['l', () => +$('ell').value, v => { $('ell').value = v; }],
   aspect: ['ar', () => +$('aspect').value, v => { $('aspect').value = v; }],
-  sound: ['snd', () => $('sound').value, v => { $('sound').value = v === 'survival' ? 'survival' : 'states'; }],
+  sound: ['snd', () => $('sound').value, v => { $('sound').value = ['survival', 'ground'].includes(v) ? v : 'states'; }],
   tunnelling: ['tu', () => +$('tunnelling').checked, v => { $('tunnelling').checked = !!+v; }],
   weighting: ['w', () => $('weighting').value, v => { $('weighting').value = v; }],
   temperatureMode: ['tm', () => document.querySelector('input[name=tmode]:checked').value,

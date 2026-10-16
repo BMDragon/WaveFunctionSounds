@@ -16,8 +16,10 @@ python3 web/server.py        # then open http://localhost:8000
 - Instrument presets for the orchestra, big band and wind ensemble (the closest each potential gets
   to the real instrument; see `instrumentSettings.txt`), and a link to share any sound.
 - Record what you play to WAV, or render Un sospiro or your own MIDI file.
-- *Sound*: the wavefunctions (each state a partial), or their time evolution: the survival
-  probability |⟨ψ(0)|ψ(t)⟩|², with partials at the energy differences and E₁ − E₀ at the key.
+- *Sound*: the wavefunctions (each state a partial, wrapped on its own width), the wavefunctions on
+  the ground state's scale (every state at its real size on the ground state's width, the wider
+  ones carrying over into neighbouring units), or their time evolution: the survival probability
+  |⟨ψ(0)|ψ(t)⟩|², with partials at the energy differences and E₁ − E₀ at the key.
 - *Tunnelling* (double well): the particle starts in the left well and each pair of levels moves
   between the speakers at its tunnelling rate (the splitting in K, read as Hz).
 - *Customize*: draw your own potential, or set the level weights by hand.

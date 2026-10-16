@@ -319,6 +319,28 @@ def checkEndToEnd():
         audio = unSospiro.render(notes, lambda f, sr: model.harmonicContent(f, sr), nSeconds=2)
         if not np.all(np.isfinite(audio)) or np.abs(audio).max() == 0:
             problems.append(f'{potential}: render produced silence or non-finite samples')
+    # the sound on the ground state's scale: the oscillator's Hermite functions are their own
+    # Fourier transforms, so state n's copies (unit W = 2 oscillator lengths, period 2W) give
+    # |c_m| = (1/2) sqrt(W) |1 + sign (-1)^m| sqrt(2 pi) |psi_n(pi m / W)| exactly
+    import harmonicOscillator
+    C = harmonicOscillator.computeGroundCoefficients()
+    kappa = np.pi * np.arange(1, 40) / 2
+    worst = 0
+    for n, psi in zip(range(60), harmonicOscillator.hermiteFunctions(kappa, 60)):
+        sign = -1 if n % 2 == 0 else 1
+        exact = 0.5 * math.sqrt(2) * np.abs(1 + sign * (-1.0)**np.arange(1, 40)) * math.sqrt(2 * math.pi) * np.abs(psi)
+        worst = max(worst, np.abs(np.abs(C[n, 1:40]) - exact).max())
+    if worst > 1e-6:
+        problems.append(f'oscillator states on the ground state scale differ from their Fourier transforms by {worst:.1e}')
+    for potential in ('infinite', 'finite', 'oscillator', 'doublewell', 'morse', 'lattice', 'linear', 'circle', 'hydrogen'):
+        req = base | dict(potential=potential, sound='ground', freqs=freqs[::12])
+        try:
+            json.dumps(server.describe(req), allow_nan=False)
+        except Exception as error:
+            problems.append(f'{potential} on the ground state scale: describe failed: {type(error).__name__}: {error}')
+    morse = server.requestModel(base | dict(potential='morse'))
+    if np.abs(morse.groundRow(0) - morse.coefficientRow(0)).max() > 1e-4 * np.abs(morse.coefficientRow(0)).max():
+        problems.append('the ground state wraps differently on its own unit and on the ground state unit')
     # 2D boxes: partials at the exact wavenumber ratios, and the additive renderer they need
     from scipy.special import jn_zeros
     from scipy.integrate import trapezoid
