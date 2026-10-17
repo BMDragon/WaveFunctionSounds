@@ -22,6 +22,7 @@ from scipy.io.wavfile import write
 #
 # Usage: python3 samples/renderEnsemble.py piece.mid out.wav [--seconds 90] [--map "Accordion=english_horn" ...]
 #        [--drum 35=kick_drum ...]   (a drum-kit note on a chosen preset, e.g. a jazz kit's kick)
+#        [--mute Harpsichord ...]    (leave out the tracks whose names match)
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))     # samples/ sits in the repo
 sys.path.insert(0, os.path.join(REPO, 'backend'))
@@ -154,6 +155,7 @@ def main():
     parser.add_argument('--seconds', type=float, default=None, help='length to render (default: the whole piece)')
     parser.add_argument('--map', action='append', default=[], help='"track-name regex=preset id" to override a match')
     parser.add_argument('--drum', action='append', default=[], help='"note=preset id": a drum-kit note on that preset')
+    parser.add_argument('--mute', action='append', default=[], help='track-name regex: leave those tracks out')
     args = parser.parse_args()
     overrides = [tuple(m.split('=', 1)) for m in args.map]
     drums = {int(note): preset for note, preset in (d.split('=', 1) for d in args.drum)}
@@ -165,6 +167,9 @@ def main():
     for (index, channel), part in sorted(parts.items()):
         notes = [(s - first, e - first, n, v) for s, e, n, v in part['notes'] if s - first < nSeconds]
         if not notes:
+            continue
+        if any(re.search(pattern, part['name'], re.I) for pattern in args.mute):
+            print(f'{part["name"] or "track " + str(index):<28} -> (muted)')
             continue
         presetId, why = choosePreset(part, channel, overrides)
         if presetId == 'drums':
