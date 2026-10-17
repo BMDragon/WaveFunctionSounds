@@ -23,6 +23,8 @@ python3 web/server.py        # then open http://localhost:8000
 - *Tunnelling* (double well): the particle starts in the left well and each pair of levels moves
   between the speakers at its tunnelling rate (the splitting in K, read as Hz).
 - *Customize*: draw your own potential, or set the level weights by hand.
+- *Loudness*: every note, live or rendered, is scaled to the same perceived loudness for the same
+  velocity, whatever the sound (by its K-weighted RMS, ITU-R BS.1770), with a limiter on the output.
 
 ## Potentials
 Each script in `backend/` writes a 220 Hz sample to `audio/` when run, and `backend/unSospiro.py`
@@ -44,7 +46,8 @@ the other potentials exactly; `timeEvolution.py` gives the survival-probability 
 
 ## Samples
 `samples/` holds pieces rendered with every part on its instrument preset, by
-`samples/renderEnsemble.py piece.mid out.wav`:
+`samples/renderEnsemble.py piece.mid out.wav`, following each channel's volume (CC 7) and
+expression (CC 11) as well as the velocities:
 - Brahms, Academic Festival Overture (orchestral MIDI sequenced by David Siu)
 - Dvořák, Slavonic Dance in F, Op. 46 No. 4 (orchestral MIDI; one stray flute note after the final
   chord removed)

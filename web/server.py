@@ -142,7 +142,8 @@ def noteContent(m, req, f, weighting):
     if survival(req) and keep.sum() > liveSurvivalPartials:
         keep = np.zeros(len(c), bool)
         keep[np.argsort(-np.abs(c), kind='stable')[:liveSurvivalPartials]] = True     # the lowest, among equals
-    note = {'m': harm[keep].tolist(), 're': c[keep].real.tolist(), 'im': c[keep].imag.tolist()}
+    note = {'m': harm[keep].tolist(), 're': c[keep].real.tolist(), 'im': c[keep].imag.tolist(),
+            'level': unSospiro.loudnessGain(harm, c, f)}     # scales the note to the common loudness
     if tunnelling(m, req):
         groups = m.tunnellingGroups(f, sampleRate, temperatureFor(req, f), weighting, wrapping(req))
         biggest = max(np.abs(gc).max() for _, gc, _ in groups)
@@ -151,6 +152,7 @@ def noteContent(m, req, f, weighting):
             keep = np.abs(gc) > 1e-6 * biggest
             note['groups'].append({'m': gm[keep].tolist(), 're': gc[keep].real.tolist(),
                                    'im': gc[keep].imag.tolist(), 'rate': rate})
+        note['level'] = unSospiro.groupsGain(groups, f)
     return note
 
 def notes(req):

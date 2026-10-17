@@ -144,6 +144,41 @@ def noteTimes(start, end, length, attackTime, decayTime, releaseTime, sustainLev
     envelope[t > held] *= np.exp(-(t[t > held] - held) / releaseTime)
     return i0, t, envelope
 
+# Level calibration: every note is played at the same perceived loudness for the same velocity,
+# whatever its timbre, measured by the K-weighted RMS of ITU-R BS.1770 (a high shelf of about +4 dB
+# above 2 kHz and a high-pass below about 60 Hz, here as the standard's 48 kHz filters). Notes
+# scaled to peak at most 1 (as the partials' amplitudes summed) differ in that loudness by ~16 dB
+# between smooth and spiky timbres; each is scaled to the median of the presets, -9.4 dB, the
+# correction capped at +-20 dB.
+LOUDNESS_TARGET = 10**(-9.4 / 20)
+_K = ([1.53512485958697, -2.69169618940638, 1.19839281085285], [1.0, -1.69065929318241, 0.73248077421585],
+      [1.0, -2.0, 1.0], [1.0, -1.99004745483398, 0.99007225036621])
+
+def kWeighting(f):
+    # |H(f)| of the BS.1770 K-weighting filters
+    from scipy.signal import freqz
+    f = np.minimum(np.abs(np.asarray(f, float)), 23999)
+    return np.abs(freqz(_K[0], _K[1], worN=f, fs=48000)[1] * freqz(_K[2], _K[3], worN=f, fs=48000)[1])
+
+def loudnessGain(m, c, freq):
+    # the factor that brings a note, scaled to sum(|c|) = 1, to the target K-weighted RMS
+    m, c = np.asarray(m, float), np.asarray(c)
+    total = np.abs(c).sum()
+    if not total:
+        return 1.0
+    krms = math.sqrt((np.abs(c)**2 * kWeighting(m * freq)**2).sum() / 2) / total
+    return float(np.clip(LOUDNESS_TARGET / max(krms, 1e-12), 0.1, 10.0))
+
+def groupsGain(groups, freq):
+    # the same for a note split into groups of partials scaled together by their summed |c|: the
+    # loudness of the whole note, heard from both sides
+    total = sum(np.abs(c).sum() for m, c, rate in groups)
+    allM = np.concatenate([np.asarray(m, float) for m, c, rate in groups])
+    allC = np.concatenate([np.asarray(c) for m, c, rate in groups])
+    merged, index = np.unique(np.round(allM, 9), return_inverse=True)
+    whole = np.zeros(len(merged), complex); np.add.at(whole, index, allC)
+    return loudnessGain(merged, whole, freq) * np.abs(whole).sum() / total if total else 1.0
+
 def render(notes, harmonicContent, nSeconds=nSeconds, attackTime=attackTime, decayTime=decayTime,
            releaseTime=releaseTime, sustainLevel=sustainLevel):
     out = np.zeros(int(nSeconds * sampleRate))
@@ -151,8 +186,9 @@ def render(notes, harmonicContent, nSeconds=nSeconds, attackTime=attackTime, dec
         m, c = harmonicContent(freq, sampleRate)
         if not np.abs(c).sum():
             return None
+        gain = loudnessGain(m, c, freq)
         m, c = audible(m, c)
-        return partialWave(m, c, freq, t) / np.abs(c).sum()
+        return gain * partialWave(m, c, freq, t) / np.abs(c).sum()
     timed, waves = pitchWaves(notes, content, len(out), attackTime, decayTime, releaseTime, sustainLevel)
     for i0, envelope, note, velocity in timed:
         if waves[note] is not None:
@@ -170,9 +206,10 @@ def renderStereo(notes, groupContent, nSeconds=nSeconds, attackTime=attackTime, 
     def content(freq, t):
         groups = groupContent(freq, sampleRate)
         total = sum(np.abs(c).sum() for m, c, rate in groups)
+        gain = groupsGain(groups, freq)
         left = np.zeros(len(t)); right = np.zeros(len(t))
         for m, c, rate in groups:
-            wave = partialWave(*audible(m, c), freq, t) / total
+            wave = gain * partialWave(*audible(m, c), freq, t) / total
             share = 0.5 if rate is None else (1 + np.cos(2 * np.pi * rate * t)) / 2
             left += share * wave
             right += (1 - share) * wave

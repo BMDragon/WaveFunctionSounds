@@ -265,7 +265,7 @@ function setStatus(text) { $('status').textContent = text; }
 
 // ---------- audio ----------
 
-let ctx = null, master = null, analyser = null, playerSource = null;
+let ctx = null, master = null, limiter = null, analyser = null, playerSource = null;
 const voices = {};
 
 let additiveReady = null;      // the oscillator bank for partials at any frequencies
@@ -293,10 +293,14 @@ function audio() {
     additiveReady = ctx.audioWorklet.addModule('additive.js');
     master = ctx.createGain();
     master.gain.value = +$('volume').value;
+    // a limiter last, as notes brought to the same loudness can peak higher together
+    limiter = ctx.createDynamicsCompressor();
+    limiter.threshold.value = -3; limiter.knee.value = 0; limiter.ratio.value = 20;
+    limiter.attack.value = 0.002; limiter.release.value = 0.1;
     analyser = ctx.createAnalyser();
     analyser.fftSize = 8192;
     analyser.smoothingTimeConstant = 0;
-    master.connect(analyser);
+    master.connect(limiter).connect(analyser);
     analyser.connect(ctx.destination);
     requestAnimationFrame(drawSpectrogram);
     drawSpectrogramAxis();
@@ -435,7 +439,7 @@ function startVoice(n, note, velocity) {
   if (!note.m.length) return;
   audio();
   if (voices[n]) releaseVoice(n, 0.01);
-  const now = ctx.currentTime, attack = attackSeconds(), peak = 0.3 * velocity / 127;
+  const now = ctx.currentTime, attack = attackSeconds(), peak = 0.3 * (note.level || 1) * velocity / 127;
   const { output, sources } = note.groups ? tunnellingVoice(note, midiFreq(n), now) : buildVoice(note, midiFreq(n), now);
   const gain = ctx.createGain();
   gain.gain.setValueAtTime(0, now);

@@ -1,4 +1,5 @@
 import argparse
+import functools
 import json
 import math
 import multiprocessing
@@ -80,7 +81,9 @@ def presetForDrum(note):
 
 def readParts(path):
     # {(track index, channel): {'name', 'program', 'notes': [(start, end, note, velocity)]}}, times in
-    # seconds on the file's tempo map; sustain-pedal (CC 64) held notes last until the pedal lifts
+    # seconds on the file's tempo map; sustain-pedal (CC 64) held notes last until the pedal lifts.
+    # Also {channel: {7 or 11: [(time, value)]}}: the channel volume and expression changes, which
+    # act on a channel whichever track sends them
     midi = mido.MidiFile(path)
     tempo, ticks = [(0, 500000)], 0
     for msg in mido.merge_tracks(midi.tracks):
@@ -95,7 +98,7 @@ def readParts(path):
             t += mido.tick2second(at - last, midi.ticks_per_beat, current)
             last, current = at, value
         return t + mido.tick2second(tick - last, midi.ticks_per_beat, current)
-    parts = {}
+    parts, controls = {}, {}
     for index, track in enumerate(midi.tracks):
         name = next((m.name for m in track if m.type == 'track_name'), '')
         tick, held, pedal, sustained = 0, {}, {}, {}
@@ -114,11 +117,35 @@ def readParts(path):
                     sustained.setdefault(msg.channel, []).append((start, msg.note, velocity))
                 else:
                     part['notes'].append((start, seconds(tick), msg.note, velocity))
+            elif msg.type == 'control_change' and msg.control in (7, 11):
+                controls.setdefault(msg.channel, {}).setdefault(msg.control, []).append((seconds(tick), msg.value))
             elif msg.type == 'control_change' and msg.control == 64:
                 pedal[msg.channel] = msg.value >= 64
                 if not pedal[msg.channel]:
                     part['notes'] += [(s, seconds(tick), n, v) for s, n, v in sustained.pop(msg.channel, [])]
-    return {k: v for k, v in parts.items() if v['notes']}
+    for channel in controls.values():
+        for events in channel.values():
+            events.sort(key=lambda e: e[0])     # stable: same-time changes keep their order
+    return {k: v for k, v in parts.items() if v['notes']}, controls
+
+# The level of a channel, from its volume (CC 7) and expression (CC 11) as General MIDI sets
+# them: (CC7/127)^2 (CC11/127)^2, i.e. 40 log10 of each in dB, from 100 and 127 until changed.
+# Each change is ramped over 10 ms, as an instant step clicks.
+DEFAULTS = {7: 100, 11: 127}
+RAMP = 0.01
+
+def channelGain(events, first, nSamples, sr):
+    t = np.arange(nSamples) / sr + first
+    gain = np.ones(nSamples)
+    for control, default in DEFAULTS.items():
+        times = np.array([e[0] for e in events.get(control, [])])
+        values = np.array([default] + [e[1] for e in events.get(control, [])], float)
+        level = (values[np.searchsorted(times, t, side='right')] / 127)**2
+        width = max(1, int(RAMP * sr))
+        padded = np.concatenate([np.full(width - 1, level[0]), level])
+        running = np.cumsum(np.concatenate([[0], padded]))
+        gain *= (running[width:] - running[:-width]) / width       # the trailing 10 ms average
+    return gain
 
 def choosePreset(part, channel, overrides):
     for pattern, preset in overrides:
@@ -146,7 +173,9 @@ def renderPart(notes, presetId, nSeconds):
                             releaseTime=preset['release'], sustainLevel=preset['sustain'])
 
 def renderJob(job):
-    return renderPart(*job)
+    notes, presetId, nSeconds, gain = job
+    audio = renderPart(notes, presetId, nSeconds)
+    return audio * gain(len(audio))
 
 def main():
     parser = argparse.ArgumentParser(description='Render a MIDI file with the WaveFunctionSounds instrument presets')
@@ -159,11 +188,11 @@ def main():
     args = parser.parse_args()
     overrides = [tuple(m.split('=', 1)) for m in args.map]
     drums = {int(note): preset for note, preset in (d.split('=', 1) for d in args.drum)}
-    parts = readParts(args.midi)
+    parts, controls = readParts(args.midi)
     first = min(n[0] for p in parts.values() for n in p['notes'])
     last = max(n[1] for p in parts.values() for n in p['notes']) - first
     nSeconds = min(args.seconds or last + 3, last + 3)
-    jobs = []                           # (notes, preset id) for each part, or each drum of a drum track
+    jobs = []                           # (notes, preset id, seconds, channel level) for each part, or each drum of a drum track
     for (index, channel), part in sorted(parts.items()):
         notes = [(s - first, e - first, n, v) for s, e, n, v in part['notes'] if s - first < nSeconds]
         if not notes:
@@ -172,14 +201,15 @@ def main():
             print(f'{part["name"] or "track " + str(index):<28} -> (muted)')
             continue
         presetId, why = choosePreset(part, channel, overrides)
+        gain = functools.partial(channelGain, controls.get(channel, {}), first, sr=unSospiro.sampleRate)
         if presetId == 'drums':
             byPreset = {}
             for note in notes:
                 byPreset.setdefault(drums.get(note[2]) or presetForDrum(note[2]), []).append(note)
-            jobs += [(hits, drum, nSeconds) for drum, hits in byPreset.items()]
+            jobs += [(hits, drum, nSeconds, gain) for drum, hits in byPreset.items()]
             print(f'{part["name"] or "track " + str(index):<28} -> drum kit: {", ".join(sorted(byPreset))} ({len(notes)} hits)')
             continue
-        jobs.append((notes, presetId, nSeconds))
+        jobs.append((notes, presetId, nSeconds, gain))
         print(f'{part["name"] or "track " + str(index):<28} -> {PRESETS[presetId]["name"]:<16} ({why}; {len(notes)} notes)')
     # the parts in parallel, added up in their order (so the result doesn't depend on which
     # finishes first)
