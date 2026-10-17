@@ -29,10 +29,10 @@ Bass clarinet   Double well          2 me  12.9 nm, 0.0537 eV                Gro
 Bassoon         Hydrogen atom   0.0891 me  Z = 2, l = 14                     Wavefunctions       Boltzmann (thermal)       21 K    72 ms   1.00 s  100%    50 ms   15.9
 Contrabassoon   Double well       4.79 me  19.8 nm, 0.0741 eV                Wavefunctions       Boltzmann (thermal)  T = pitch    81 ms   1.00 s  100%    70 ms   17.2
 Horn            Double well       2.09 me  6.3 nm, 0.0851 eV                 Ground-state scale  Boltzmann (thermal)  T = pitch   187 ms   1.00 s  100%    50 ms   16.2
-Trumpet         Double well       4.79 me  19.9 nm, 0.501 eV                 Wavefunctions       Boltzmann (thermal)  T = pitch   141 ms   1.00 s  100%    50 ms   11.1
-Trombone        Oscillator        0.11 me  17.4 nm                           Time evolution      Boltzmann (thermal)    1,175 K   134 ms   1.00 s  100%   110 ms   12.3
+Trumpet         Double well       5.01 me  19.7 nm, 0.417 eV                 Wavefunctions       Boltzmann (thermal)  T = pitch    44 ms   1.00 s  100%    40 ms   11.9
+Trombone        Double well       5.01 me  19.9 nm, 0.295 eV                 Wavefunctions       Boltzmann (thermal)  T = pitch    56 ms   1.00 s  100%    40 ms   13.9
 Bass trombone   Morse             4.17 me  19.5 nm, 3.72 eV                  Wavefunctions       Boltzmann (thermal)   17,783 K    28 ms   1.00 s  100%    30 ms   11.4
-Tuba            Finite well       1.05 me  5.8 nm, 3.47 eV                   Wavefunctions       Equal                        -    31 ms   1.00 s  100%    90 ms   20.0
+Tuba            Double well       0.38 me  11.2 nm, 0.0513 eV                Ground-state scale  Boltzmann (thermal)  T = pitch    69 ms   1.00 s  100%    80 ms   16.4
 Timpani         Lattice           2.88 me  2.3 nm, 2.09 eV, 48%, 0.18 pi     Time evolution      Boltzmann (thermal)    5,623 K    12 ms   471 ms    0%   470 ms   10.5
 Snare drum      Double well       3.24 me  12.9 nm, 0.282 eV                 Wavefunctions       Boltzmann (thermal)    3,802 K     9 ms    48 ms    0%    50 ms   10.2
 Bass drum       Lattice           2.19 me  11.3 nm, 4.17 eV, 51%, 0.50 pi    Wavefunctions       Boltzmann (thermal)       44 K    22 ms   403 ms    0%   400 ms    8.1
@@ -44,10 +44,10 @@ Chimes          Finite well      0.537 me  6.3 nm, 0.646 eV                  Wav
 Harp            Double well       1.07 me  1.4 nm, 0.0813 eV                 Time evolution      Boltzmann (thermal)    2,138 K    19 ms   818 ms    0%   820 ms   15.4
 Piano           Hydrogen atom   0.0741 me  Z = 4, l = 0                      Wavefunctions       Boltzmann (thermal)   19,953 K    22 ms   6.00 s    0%   150 ms   19.7
 Celesta         Lattice          0.151 me  5.8 nm, 0.0813 eV, 88%, 0.00 pi   Time evolution      Boltzmann (thermal)      129 K    22 ms   793 ms    0%   150 ms    9.0
-Violin          Double well     0.0851 me  17.6 nm, 0.832 eV                 Ground-state scale  Boltzmann (thermal)    3,388 K   394 ms   1.00 s  100%   110 ms    9.2
-Viola           Hydrogen atom    0.138 me  Z = 10, l = 8                     Wavefunctions       Boltzmann (thermal)    2,630 K   669 ms   1.00 s  100%    80 ms   11.1
-Cello           Hydrogen atom     1.91 me  Z = 4, l = 8                      Wavefunctions       Boltzmann (thermal)    5,623 K   103 ms   1.00 s  100%   200 ms    7.9
-Double bass     Hydrogen atom     1.35 me  Z = 7, l = 8                      Wavefunctions       Boltzmann (thermal)   11,482 K   228 ms   1.00 s  100%   290 ms    9.4
+Violin          Hydrogen atom   0.0933 me  Z = 7, l = 14                     Wavefunctions       Boltzmann (thermal)      282 K   128 ms   1.00 s  100%   110 ms    9.9
+Viola           Morse            0.275 me  14.2 nm, 0.0525 eV                Wavefunctions       Boltzmann (thermal)      105 K   253 ms   1.00 s  100%   240 ms    9.7
+Cello           Hydrogen atom    0.617 me  Z = 7, l = 14                     Wavefunctions       Boltzmann (thermal)    1,585 K   166 ms   1.00 s  100%    90 ms    8.7
+Double bass     Hydrogen atom     1.48 me  Z = 7, l = 8                      Wavefunctions       Boltzmann (thermal)   12,589 K   209 ms   1.00 s  100%   200 ms    8.4
 
 Big band
 --------
@@ -57,13 +57,13 @@ Alto sax        Hydrogen atom   0.0646 me  Z = 10, l = 8                     Wav
 Tenor sax       Hydrogen atom    0.309 me  Z = 7, l = 8                      Wavefunctions       Boltzmann (thermal)    2,630 K    50 ms   1.00 s  100%   120 ms   11.6
 Baritone sax    Double well       5.01 me  20.0 nm, 0.427 eV                 Wavefunctions       Boltzmann (thermal)  T = pitch    19 ms   1.00 s  100%    60 ms   14.5
 B♭ clarinet     Hydrogen atom   0.0912 me  Z = 2, l = 0                      Wavefunctions       Boltzmann (thermal)    5,754 K   297 ms   1.00 s  100%    20 ms   12.3
-Trumpet         Double well       4.79 me  19.9 nm, 0.501 eV                 Wavefunctions       Boltzmann (thermal)  T = pitch   141 ms   1.00 s  100%    50 ms   11.1
-Trombone        Oscillator        0.11 me  17.4 nm                           Time evolution      Boltzmann (thermal)    1,175 K   134 ms   1.00 s  100%   110 ms   12.3
+Trumpet         Double well       5.01 me  19.7 nm, 0.417 eV                 Wavefunctions       Boltzmann (thermal)  T = pitch    44 ms   1.00 s  100%    40 ms   11.9
+Trombone        Double well       5.01 me  19.9 nm, 0.295 eV                 Wavefunctions       Boltzmann (thermal)  T = pitch    56 ms   1.00 s  100%    40 ms   13.9
 Bass trombone   Morse             4.17 me  19.5 nm, 3.72 eV                  Wavefunctions       Boltzmann (thermal)   17,783 K    28 ms   1.00 s  100%    30 ms   11.4
 Piano           Hydrogen atom   0.0741 me  Z = 4, l = 0                      Wavefunctions       Boltzmann (thermal)   19,953 K    22 ms   6.00 s    0%   150 ms   19.7
 Guitar          Morse            0.126 me  10.7 nm, 0.0813 eV                Wavefunctions       1 / level                    -    41 ms   1.47 s    0%   1.47 s   10.1
 Vibraphone      Oscillator       0.269 me  15.4 nm                           Ground-state scale  Boltzmann (thermal)    1,778 K     6 ms   2.01 s    0%   2.00 s   15.9
-Double bass     Hydrogen atom     1.35 me  Z = 7, l = 8                      Wavefunctions       Boltzmann (thermal)   11,482 K   228 ms   1.00 s  100%   290 ms    9.4
+Double bass     Hydrogen atom     1.48 me  Z = 7, l = 8                      Wavefunctions       Boltzmann (thermal)   12,589 K   209 ms   1.00 s  100%   200 ms    8.4
 Electric bass   Lattice          0.676 me  2.5 nm, 0.372 eV, 88%, 0.55 pi    Wavefunctions       Boltzmann (thermal)    1,349 K    16 ms   1.99 s    0%   1.99 s   12.6
 Kick drum       Morse            0.417 me  2.9 nm, 0.158 eV                  Wavefunctions       Boltzmann (thermal)      339 K    16 ms   192 ms    0%   190 ms    7.3
 Snare drum      Double well       3.24 me  12.9 nm, 0.282 eV                 Wavefunctions       Boltzmann (thermal)    3,802 K     9 ms    48 ms    0%    50 ms   10.2
@@ -87,12 +87,12 @@ Soprano sax     Hydrogen atom    0.646 me  Z = 2, l = 8                      Wav
 Alto sax        Hydrogen atom   0.0646 me  Z = 10, l = 8                     Wavefunctions       Boltzmann (thermal)    1,230 K    28 ms   1.00 s  100%   120 ms    9.8
 Tenor sax       Hydrogen atom    0.309 me  Z = 7, l = 8                      Wavefunctions       Boltzmann (thermal)    2,630 K    50 ms   1.00 s  100%   120 ms   11.6
 Baritone sax    Double well       5.01 me  20.0 nm, 0.427 eV                 Wavefunctions       Boltzmann (thermal)  T = pitch    19 ms   1.00 s  100%    60 ms   14.5
-Trumpet         Double well       4.79 me  19.9 nm, 0.501 eV                 Wavefunctions       Boltzmann (thermal)  T = pitch   141 ms   1.00 s  100%    50 ms   11.1
+Trumpet         Double well       5.01 me  19.7 nm, 0.417 eV                 Wavefunctions       Boltzmann (thermal)  T = pitch    44 ms   1.00 s  100%    40 ms   11.9
 Horn            Double well       2.09 me  6.3 nm, 0.0851 eV                 Ground-state scale  Boltzmann (thermal)  T = pitch   187 ms   1.00 s  100%    50 ms   16.2
-Trombone        Oscillator        0.11 me  17.4 nm                           Time evolution      Boltzmann (thermal)    1,175 K   134 ms   1.00 s  100%   110 ms   12.3
+Trombone        Double well       5.01 me  19.9 nm, 0.295 eV                 Wavefunctions       Boltzmann (thermal)  T = pitch    56 ms   1.00 s  100%    40 ms   13.9
 Bass trombone   Morse             4.17 me  19.5 nm, 3.72 eV                  Wavefunctions       Boltzmann (thermal)   17,783 K    28 ms   1.00 s  100%    30 ms   11.4
-Tuba            Finite well       1.05 me  5.8 nm, 3.47 eV                   Wavefunctions       Equal                        -    31 ms   1.00 s  100%    90 ms   20.0
-Double bass     Hydrogen atom     1.35 me  Z = 7, l = 8                      Wavefunctions       Boltzmann (thermal)   11,482 K   228 ms   1.00 s  100%   290 ms    9.4
+Tuba            Double well       0.38 me  11.2 nm, 0.0513 eV                Ground-state scale  Boltzmann (thermal)  T = pitch    69 ms   1.00 s  100%    80 ms   16.4
+Double bass     Hydrogen atom     1.48 me  Z = 7, l = 8                      Wavefunctions       Boltzmann (thermal)   12,589 K   209 ms   1.00 s  100%   200 ms    8.4
 Timpani         Lattice           2.88 me  2.3 nm, 2.09 eV, 48%, 0.18 pi     Time evolution      Boltzmann (thermal)    5,623 K    12 ms   471 ms    0%   470 ms   10.5
 Snare drum      Double well       3.24 me  12.9 nm, 0.282 eV                 Wavefunctions       Boltzmann (thermal)    3,802 K     9 ms    48 ms    0%    50 ms   10.2
 Bass drum       Lattice           2.19 me  11.3 nm, 4.17 eV, 51%, 0.50 pi    Wavefunctions       Boltzmann (thermal)       44 K    22 ms   403 ms    0%   400 ms    8.1
@@ -244,17 +244,17 @@ Cello
 -----
   Ensembles:            Orchestra
   Potential:            Hydrogen atom
-  Mass:                 1.91 m_e
-  Nuclear charge Z:     4
-  Angular momentum l:   8
+  Mass:                 0.617 m_e
+  Nuclear charge Z:     7
+  Angular momentum l:   14
   Sound:                Wavefunctions
   Level weights:        Boltzmann (thermal)
-  Temperature:          Fixed, 5,623 K
-  Attack / decay:       103 ms / 1.00 s
-  Sustain / release:    100% / 200 ms
-  Range:                C2-E5; matched at C2, F#2, C3, F#3, C4, F4, Bb4, A5
-  Match:                7.9 (fair), against Iowa MIS
-  Other potentials:     Double well 8.6, Finite well 9.0, Oscillator 9.7, Morse 10.0, V-shaped |x| 11.9
+  Temperature:          Fixed, 1,585 K
+  Attack / decay:       166 ms / 1.00 s
+  Sustain / release:    100% / 90 ms
+  Range:                C2-E5; matched at C2, G2, C#3, Ab3, E4, B4, F5, C6
+  Match:                8.7 (fair), against Philharmonia
+  Other potentials:     Finite well 9.3, Morse 9.7, Double well 10.0, V-shaped |x| 11.3, Oscillator 11.9
 
 Chimes
 ------
@@ -309,17 +309,17 @@ Double bass
 -----------
   Ensembles:            Orchestra, Big band, Wind ensemble
   Potential:            Hydrogen atom
-  Mass:                 1.35 m_e
+  Mass:                 1.48 m_e
   Nuclear charge Z:     7
   Angular momentum l:   8
   Sound:                Wavefunctions
   Level weights:        Boltzmann (thermal)
-  Temperature:          Fixed, 11,482 K
-  Attack / decay:       228 ms / 1.00 s
-  Sustain / release:    100% / 290 ms
-  Range:                E1-G4; matched at C1, E1, C2, F#2, C3, A3, D4, G4
-  Match:                9.4 (fair), against Iowa MIS
-  Other potentials:     Finite well 10.2, Morse 10.8, Double well 10.8, Oscillator 12.2, V-shaped |x| 13.0
+  Temperature:          Fixed, 12,589 K
+  Attack / decay:       209 ms / 1.00 s
+  Sustain / release:    100% / 200 ms
+  Range:                E1-G4; matched at E1, A1, D2, G2, Eb3, Ab3, C#4, G4
+  Match:                8.4 (fair), against Philharmonia
+  Other potentials:     Finite well 9.5, Double well 9.7, Morse 10.1, Oscillator 11.2, V-shaped |x| 12.6
 
 Electric bass
 -------------
@@ -668,48 +668,50 @@ Triangle
 Trombone
 --------
   Ensembles:            Orchestra, Big band, Wind ensemble
-  Potential:            Oscillator
-  Mass:                 0.11 m_e
-  Ground-state width:   17.4 nm
-  Sound:                Time evolution (survival probability)
+  Potential:            Double well
+  Mass:                 5.01 m_e
+  Well separation:      19.9 nm
+  Barrier height:       0.295 eV
+  Sound:                Wavefunctions
   Level weights:        Boltzmann (thermal)
-  Temperature:          Fixed, 1,175 K
-  Attack / decay:       134 ms / 1.00 s
-  Sustain / release:    100% / 110 ms
-  Range:                E2-C5; matched at E2, G2, Bb2, C3, F#3, C4, F#4, C5
-  Match:                12.3 (loose), against Iowa MIS
-  Other potentials:     Lattice 12.5, Morse 13.3, Hydrogen atom 13.6, Finite well 13.7, Double well 14.0
+  Temperature:          T in K = pitch in Hz
+  Attack / decay:       56 ms / 1.00 s
+  Sustain / release:    100% / 40 ms
+  Range:                E2-C5; matched at E2, A2, D3, G3, C4, F#4, B4, E5
+  Match:                13.9 (loose), against Philharmonia
+  Other potentials:     Hydrogen atom 16.6, Morse 16.6, Finite well 17.3, Oscillator 17.9, V-shaped |x| 18.5
 
 Trumpet
 -------
   Ensembles:            Orchestra, Big band, Wind ensemble
   Potential:            Double well
-  Mass:                 4.79 m_e
-  Well separation:      19.9 nm
-  Barrier height:       0.501 eV
+  Mass:                 5.01 m_e
+  Well separation:      19.7 nm
+  Barrier height:       0.417 eV
   Sound:                Wavefunctions
   Level weights:        Boltzmann (thermal)
   Temperature:          T in K = pitch in Hz
-  Attack / decay:       141 ms / 1.00 s
-  Sustain / release:    100% / 50 ms
-  Range:                F#3-Bb5; matched at E3, G3, C4, F#4, C5, G5, B5, Eb6
-  Match:                11.1 (loose), against Iowa MIS
-  Other potentials:     Hydrogen atom 17.1, Oscillator 17.1, Finite well 17.2, Morse 17.2, V-shaped |x| 18.3
+  Attack / decay:       44 ms / 1.00 s
+  Sustain / release:    100% / 40 ms
+  Range:                F#3-Bb5; matched at E3, A3, D4, G4, D5, G5, C6, E6
+  Match:                11.9 (loose), against Philharmonia
+  Other potentials:     Hydrogen atom 15.2, Morse 15.4, Finite well 15.4, Oscillator 16.7, V-shaped |x| 17.3
 
 Tuba
 ----
   Ensembles:            Orchestra, Wind ensemble
-  Potential:            Finite well
-  Mass:                 1.05 m_e
-  Well width:           5.8 nm
-  Well depth:           3.47 eV
-  Sound:                Wavefunctions
-  Level weights:        Equal
-  Attack / decay:       31 ms / 1.00 s
-  Sustain / release:    100% / 90 ms
-  Range:                E1-Bb3; matched at C1, Eb1, F#1, C2, F#2, C3, F#3, C4
-  Match:                20.0 (poor), against Iowa MIS
-  Other potentials:     Hydrogen atom 20.3, Morse 20.4, Lattice 20.8, Oscillator 21.1, Double well 21.1
+  Potential:            Double well
+  Mass:                 0.38 m_e
+  Well separation:      11.2 nm
+  Barrier height:       0.0513 eV
+  Sound:                Ground-state scale
+  Level weights:        Boltzmann (thermal)
+  Temperature:          T in K = pitch in Hz
+  Attack / decay:       69 ms / 1.00 s
+  Sustain / release:    100% / 80 ms
+  Range:                E1-Bb3; matched at F1, Bb1, Eb2, Ab2, D3, G3, C4, F4
+  Match:                16.4 (poor), against Philharmonia
+  Other potentials:     Morse 17.0, Hydrogen atom 17.0, Finite well 17.2, Oscillator 18.4, Lattice 18.5
 
 Vibraphone
 ----------
@@ -729,34 +731,34 @@ Vibraphone
 Viola
 -----
   Ensembles:            Orchestra
-  Potential:            Hydrogen atom
-  Mass:                 0.138 m_e
-  Nuclear charge Z:     10
-  Angular momentum l:   8
+  Potential:            Morse
+  Mass:                 0.275 m_e
+  Range:                14.2 nm
+  Dissociation energy:  0.0525 eV
   Sound:                Wavefunctions
   Level weights:        Boltzmann (thermal)
-  Temperature:          Fixed, 2,630 K
-  Attack / decay:       669 ms / 1.00 s
-  Sustain / release:    100% / 80 ms
-  Range:                C3-E6; matched at C3, F#3, C4, F#4, C5, F5, Bb5, A6
-  Match:                11.1 (loose), against Iowa MIS
-  Other potentials:     Double well 11.8, Finite well 12.2, Morse 12.5, Oscillator 12.6, Infinite well 14.5
+  Temperature:          Fixed, 105 K
+  Attack / decay:       253 ms / 1.00 s
+  Sustain / release:    100% / 240 ms
+  Range:                C3-E6; matched at C3, A3, Bb4, F5, B5, Eb6, Ab6, C7
+  Match:                9.7 (fair), against Philharmonia
+  Other potentials:     Hydrogen atom 9.8, Double well 10.9, Oscillator 11.2, Finite well 12.4, Lattice 12.4
 
 Violin
 ------
   Ensembles:            Orchestra
-  Potential:            Double well
-  Mass:                 0.0851 m_e
-  Well separation:      17.6 nm
-  Barrier height:       0.832 eV
-  Sound:                Ground-state scale
+  Potential:            Hydrogen atom
+  Mass:                 0.0933 m_e
+  Nuclear charge Z:     7
+  Angular momentum l:   14
+  Sound:                Wavefunctions
   Level weights:        Boltzmann (thermal)
-  Temperature:          Fixed, 3,388 K
-  Attack / decay:       394 ms / 1.00 s
+  Temperature:          Fixed, 282 K
+  Attack / decay:       128 ms / 1.00 s
   Sustain / release:    100% / 110 ms
-  Range:                G3-E7; matched at G3, D4, A4, E5, Ab5, C6, Ab6, E7
-  Match:                9.2 (fair), against Iowa MIS
-  Other potentials:     Finite well 9.5, Hydrogen atom 9.5, Morse 10.0, Oscillator 10.6, V-shaped |x| 11.1
+  Range:                G3-E7; matched at G3, C#4, F#4, Eb5, Bb5, Eb6, A6, G7
+  Match:                9.9 (fair), against Philharmonia
+  Other potentials:     Morse 10.5, Finite well 10.8, Double well 11.0, V-shaped |x| 12.4, Oscillator 12.4
 
 Xylophone
 ---------
